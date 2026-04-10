@@ -1,0 +1,6 @@
+@GalponERP.Api_HostAddress = http://localhost:5167
+
+GET {{GalponERP.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

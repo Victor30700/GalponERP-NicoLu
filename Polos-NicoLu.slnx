@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="GalponERP.Api/GalponERP.Api.csproj" />
+  <Project Path="GalponERP.Application/GalponERP.Application.csproj" />
+  <Project Path="GalponERP.Domain/GalponERP.Domain.csproj" />
+  <Project Path="GalponERP.Infrastructure/GalponERP.Infrastructure.csproj" />
+</Solution>

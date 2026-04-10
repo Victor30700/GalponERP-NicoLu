@@ -1,0 +1,29 @@
+## Ignorar binarios y carpetas de build
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+## Visual Studio
+.vs/
+[Dd]ebug/
+[Rr]elease/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.patch
+*.diff
+
+## Visual Studio Code
+.vscode/
+
+## Archivos de configuración con secretos (CRÍTICO)
+firebase-admin.json
+appsettings.json
+appsettings.Development.json
+
+## Base de datos y otros
+*.db
+*.log
