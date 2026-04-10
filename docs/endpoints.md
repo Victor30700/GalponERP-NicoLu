@@ -111,3 +111,151 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "puntoEquilibrioKilos": 8859.1
 }
 ```
+
+## 5. USUARIOS
+
+### Registrar Usuario
+- **URL:** `/api/Usuarios`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "firebaseUid": "FIREBASE_UID_STRING",
+  "nombre": "Nombre del Usuario",
+  "rol": "Admin|Operario"
+}
+```
+- **Salida (JSON):**
+```json
+{
+  "usuarioId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
+### Obtener Todos los Usuarios
+- **URL:** `/api/Usuarios`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada:** N/A
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "firebaseUid": "FIREBASE_UID_STRING",
+    "nombre": "Nombre del Usuario",
+    "rol": "Admin|Operario"
+  }
+]
+```
+
+### Actualizar Usuario
+- **URL:** `/api/Usuarios/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombre": "Nuevo Nombre",
+  "rol": "Admin|Operario"
+}
+```
+- **Salida:** `204 No Content`
+
+### Eliminar Usuario (Soft Delete)
+- **URL:** `/api/Usuarios/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer)
+- **Salida:** `204 No Content`
+
+## 6. GALPONES
+
+### Crear Galpón
+- **URL:** `/api/Galpones`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "nombre": "Galpón 01",
+  "capacidad": 5000,
+  "ubicacion": "Zona Norte"
+}
+```
+- **Salida (JSON):**
+```json
+{
+  "galponId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
+### Listar Galpones
+- **URL:** `/api/Galpones`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Galpón 01",
+    "capacidad": 5000,
+    "ubicacion": "Zona Norte",
+    "isActive": true
+  }
+]
+```
+
+### Editar Galpón
+- **URL:** `/api/Galpones/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombre": "Galpón 01 Modificado",
+  "capacidad": 5500,
+  "ubicacion": "Zona Norte"
+}
+```
+- **Salida:** `204 No Content`
+
+## 7. CATÁLOGOS
+
+### Obtener Clientes
+- **URL:** `/api/Catalogos/clientes`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada:** N/A
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Nombre del Cliente",
+    "ruc": "1234567890",
+    "direccion": "Dirección",
+    "telefono": "0999999999"
+  }
+]
+```
+
+### Obtener Productos
+- **URL:** `/api/Catalogos/productos`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada:** N/A
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Balanceado Inicio",
+    "tipo": "Alimento",
+    "unidadMedida": "Kg"
+  }
+]
+```

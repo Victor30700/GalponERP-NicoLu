@@ -7,6 +7,7 @@ using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,5 +93,29 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seeding Automático del Admin
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<GalponERP.Infrastructure.Persistence.GalponDbContext>();
+        var adminUid = "utq0GMrQZESnNsyQWUEFOV5fKf23";
+        var existingAdmin = context.Usuarios.FirstOrDefault(u => u.FirebaseUid == adminUid);
+        
+        if (existingAdmin == null)
+        {
+            var admin = new GalponERP.Domain.Entities.Usuario(Guid.NewGuid(), adminUid, "Admin Maestro", "Admin");
+            context.Usuarios.Add(admin);
+            context.SaveChanges();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Un error ocurrió durante el seeding del Administrador.");
+    }
+}
 
 app.Run();

@@ -1,5 +1,23 @@
 # BITÁCORA DE ARQUITECTURA - GALPON ERP
 
+## SPRINT 9.3: Seeding Automático y Gestión Total
+Se ha automatizado la creación del administrador inicial y se han completado los CRUDs de usuarios y galpones.
+
+### Cambios Realizados:
+- **Seeding Automático (Program.cs):**
+  - Se implementó un bloque de inicialización que verifica la existencia del usuario "Admin Maestro" con el Firebase UID `utq0GMrQZESnNsyQWUEFOV5fKf23`.
+  - Si no existe, se crea automáticamente en la base de datos local para asegurar que el primer acceso tenga permisos de administración.
+- **Gestión de Usuarios:**
+  - Se añadieron `ActualizarUsuarioCommand` (edición de nombre y rol) y `EliminarUsuarioCommand` (Soft Delete mediante la propiedad `IsActive` de la entidad base).
+  - Se expusieron los endpoints `PUT /api/usuarios/{id}` y `DELETE /api/usuarios/{id}`.
+- **Gestión de Galpones:**
+  - Se creó la entidad `Galpon` con soporte para CRUD completo.
+  - Se implementaron los casos de uso: `CrearGalponCommand`, `ListarGalponesQuery` y `EditarGalponCommand`.
+  - Se creó el controlador `GalponesController` con todos los métodos protegidos por `[Authorize]`.
+- **Arquitectura:**
+  - Se integró `IGalponRepository` siguiendo el patrón de Repositorio y Unidad de Trabajo (Unit of Work).
+  - Se actualizaron las entidades para incluir métodos de actualización de estado siguiendo los principios de DDD.
+
 ## SPRINT 10: Inicialización del Frontend y Autenticación
 Se ha inicializado el proyecto Frontend usando Next.js 14 y se ha implementado la base de la autenticación con Firebase.
 

@@ -26,4 +26,17 @@ public class Galpon : Entity
 
     // Constructor para EF Core
     private Galpon() : base() { }
+
+    public void Actualizar(string nombre, int capacidad, string ubicacion)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            throw new ArgumentException("El nombre del galpón es requerido.");
+
+        if (capacidad <= 0)
+            throw new ArgumentException("La capacidad del galpón debe ser un número positivo.");
+
+        Nombre = nombre;
+        Capacidad = capacidad;
+        Ubicacion = ubicacion;
+    }
 }

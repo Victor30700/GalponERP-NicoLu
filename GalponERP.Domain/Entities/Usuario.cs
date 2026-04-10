@@ -36,4 +36,11 @@ public class Usuario : Entity
             throw new ArgumentException("El nuevo nombre no puede estar vacío.");
         Nombre = nuevoNombre;
     }
+
+    public void ActualizarRol(string nuevoRol)
+    {
+        if (string.IsNullOrWhiteSpace(nuevoRol))
+            throw new ArgumentException("El rol es obligatorio.");
+        Rol = nuevoRol;
+    }
 }
