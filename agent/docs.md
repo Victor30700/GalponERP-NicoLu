@@ -1,55 +1,31 @@
-# Documentación de Cambios - Sprint 8 (Planificación e Inteligencia)
+# BITÁCORA DE ARQUITECTURA - GALPON ERP
 
-## Tareas Completadas
+## SPRINT 10: Inicialización del Frontend y Autenticación
+Se ha inicializado el proyecto Frontend usando Next.js 14 y se ha implementado la base de la autenticación con Firebase.
 
-### 8.1 Entidad `CalendarioSanitario` y Repositorio
-- **CalendarioSanitario**: Nueva entidad para gestionar el cronograma de vacunas y tratamientos por lote.
-- **ICalendarioSanitarioRepository**: Interfaz definida en el dominio e implementada en la infraestructura.
-- **CalendarioDomainException**: Excepción específica para reglas de negocio del calendario.
+### Cambios Realizados:
+- **Proyecto Frontend:**
+  - Se creó el proyecto `frontend` usando `create-next-app` con TypeScript, Tailwind CSS y App Router.
+  - Se configuró el `src` directory para una mejor organización.
+- **Firebase Client:**
+  - Se instaló la librería `firebase`.
+  - Se creó `frontend/src/config/firebase.ts` para inicializar el SDK del cliente utilizando variables de entorno.
+- **Autenticación:**
+  - Se implementó `frontend/src/context/AuthContext.tsx` utilizando React Context para gestionar el estado del usuario de forma global.
+  - El contexto escucha cambios en el estado de autenticación mediante `onAuthStateChanged` y expone el JWT Token (`getIdToken()`) para futuras integraciones con el backend.
+- **Interfaz de Usuario (UI):**
+  - Se creó la página de login en `frontend/src/app/login/page.tsx` con un diseño limpio y responsivo usando Tailwind CSS.
+  - Se actualizó la página principal (`frontend/src/app/page.tsx`) para actuar como un dashboard protegido que redirige al login si no hay un usuario autenticado.
+- **Configuración Global:**
+  - Se envolvió la aplicación con el `AuthProvider` en `frontend/src/app/layout.tsx`.
 
-### 8.2 Servicio de Dominio `SimuladorProyeccionLote`
-- Implementación de un servicio "puro" (sin dependencias de BD) para proyectar:
-  - Consumo de alimento fraccionado por etapas (Inicio 20%, Crecimiento 35%, Engorde 45%).
-  - Utilidad bruta basada en parámetros "What-If".
-  - Peso total esperado y costos de alimentación.
+### Decisiones de Diseño:
+- **Next.js App Router:** Se eligió por sus capacidades modernas de renderizado y facilidad de enrutamiento.
+- **React Context para Auth:** Permite un acceso sencillo al estado del usuario y al token en cualquier componente del frontend sin necesidad de librerías externas de gestión de estado complejas.
+- **Seguridad en Cliente:** Aunque la validación final ocurre en el backend, el frontend gestiona la persistencia de la sesión y la obtención de tokens de forma segura a través de Firebase SDK.
 
-### 8.3 Infraestructura y Persistencia
-- **Fluent API**: Configuración de `CalendarioSanitarioConfiguration` con relación uno-a-muchos con `Lote`.
-- **Mapeo de Enums**: El estado del calendario se guarda como string (`Pendiente`, `Aplicado`).
-- **Migración**: Generada exitosamente (`AddCalendarioSanitario`).
-- **Corrección**: Se implementó `GastoOperativoConfiguration` que faltaba en la base de código anterior y causaba errores de mapeo con el Value Object `Moneda`.
-- **Dependency Injection**: Se registraron los nuevos repositorios y servicios de dominio.
+---
 
-### 8.4 Generación Automática de Calendario (Principio Abierto/Cerrado)
-- **Caso de Uso**: Se creó `CrearLoteCommand` y su Handler.
-- **Automatización**: Al crear un nuevo lote, el handler genera automáticamente los registros base de sanidad:
-  - Día 7: Vacuna Newcastle.
-  - Día 14: Vacuna Gumboro.
-- **Atomicidad**: Se utiliza el mismo `UnitOfWork` para persistir el Lote y su Calendario en una sola transacción.
-
-### 8.5 API de Planificación
-- **Controlador**: `PlanificacionController` expone dos endpoints críticos:
-  - `GET /api/planificacion/simulacion`: Permite realizar proyecciones financieras rápidas.
-  - `POST /api/planificacion/lote`: Orquesta la creación de lotes con su calendario automático.
-
-## Decisiones de Diseño
-- **Servicios Puros**: El simulador es agnóstico a la persistencia para facilitar pruebas y uso en escenarios hipotéticos.
-- **FrameworkReference**: Se añadió `Microsoft.AspNetCore.App` en la capa de infraestructura para soportar correctamente `AddHttpContextAccessor` en .NET 10.
-- **ComplexProperty**: Se mantuvo el uso de `ComplexProperty` para el Value Object `Moneda` asegurando consistencia en todas las entidades.
-
-## Documentación y Pruebas (Swagger UI)
-- **Habilitación de Swagger**: Se instaló y configuró `Swashbuckle.AspNetCore` en el proyecto `GalponERP.Api`.
-- **Endpoints Visibles**: La interfaz de Swagger UI está disponible en el entorno de desarrollo (`/swagger`) para facilitar la prueba de los endpoints de Planificación y Gestión de Lotes.
-- **Configuración .NET 10**: Se integró Swagger con el nuevo soporte nativo de OpenAPI (`AddOpenApi`) asegurando que ambos esquemas estén disponibles.
-
-# Configuración de Seguridad y Despliegue (Setup Crítico)
-
-## Base de Datos PostgreSQL
-- Se configuró la cadena de conexión `DefaultConnection` en `appsettings.Development.json`.
-- El sistema está listo para ejecutar `dotnet ef database update` una vez que las credenciales locales sean validadas por el usuario.
-- Se corrigieron problemas de mapeo en las configuraciones de EF Core para asegurar compatibilidad total con PostgreSQL.
-
-## Seguridad de Credenciales (Firebase Admin)
-- **Protección**: Se añadió `firebase-admin.json` al archivo `.gitignore` para prevenir fugas accidentales al repositorio.
-- **Inicialización**: Se implementó el código de arranque en `Program.cs` para cargar el SDK de Firebase Admin usando las credenciales del archivo JSON.
-- **Compilación**: Verificada la compatibilidad del paquete `FirebaseAdmin` con .NET 10 y el flujo de inyección de dependencias.
+## SPRINT 9: Exposición de API y Seguridad
+Se ha habilitado la capa de presentación (API) para interactuar con los casos de uso definidos en la capa de Aplicación.
+...

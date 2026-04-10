@@ -219,3 +219,61 @@
 - **Protección**: Se añadió `firebase-admin.json` al archivo `.gitignore` para prevenir fugas accidentales al repositorio.
 - **Inicialización**: Se implementó el código de arranque en `Program.cs` para cargar el SDK de Firebase Admin usando las credenciales del archivo JSON.
 - **Compilación**: Verificada la compatibilidad del paquete `FirebaseAdmin` con .NET 10 y el flujo de inyección de dependencias.
+
+# BITÁCORA DE ARQUITECTURA - GALPON ERP
+
+## SPRINT 9: Exposición de API y Seguridad
+Se ha habilitado la capa de presentación (API) para interactuar con los casos de uso definidos en la capa de Aplicación.
+
+### Cambios Realizados:
+- **Limpieza:** Se eliminaron los controladores y clases de ejemplo `WeatherForecast`.
+- **Controladores:**
+  - `LotesController`: Expone la creación y cierre de lotes.
+  - `InventarioController`: Expone la verificación de niveles de alimento para alertas tempranas.
+  - `VentasController`: Expone el registro de ventas parciales.
+  - `PlanificacionController`: Se actualizó para incluir seguridad y se movió la lógica de lotes a su propio controlador.
+- **Seguridad:**
+  - Se instaló `Microsoft.AspNetCore.Authentication.JwtBearer`.
+  - Se configuró la autenticación JWT contra Firebase Auth. El `ProjectId` se obtiene de la configuración con un fallback seguro.
+  - Se habilitó el botón **'Authorize'** en Swagger para permitir pruebas con tokens Bearer.
+  - Se añadió el middleware `UseAuthentication` al pipeline de ASP.NET Core.
+- **Documentación:**
+  - Se creó `docs/endpoints.md` detallando el contrato de la API para todos los endpoints expuestos.
+
+### Decisiones de Diseño:
+- **CQRS:** Se mantiene el uso de `IMediator` en los controladores para desacoplar la API de la lógica de negocio.
+- **Seguridad por defecto:** Se aplicó el atributo `[Authorize]` a nivel de clase en todos los controladores para garantizar que ningún endpoint sea público por error (excepto si se decide lo contrario en el futuro).
+- **Consistencia de Rutas:** Se utiliza el prefijo `api/` y el nombre del controlador en minúsculas/plural según sea conveniente.
+
+
+# BITÁCORA DE ARQUITECTURA - GALPON ERP
+
+## SPRINT 10: Inicialización del Frontend y Autenticación
+Se ha inicializado el proyecto Frontend usando Next.js 14 y se ha implementado la base de la autenticación con Firebase.
+
+### Cambios Realizados:
+- **Proyecto Frontend:**
+  - Se creó el proyecto `frontend` usando `create-next-app` con TypeScript, Tailwind CSS y App Router.
+  - Se configuró el `src` directory para una mejor organización.
+- **Firebase Client:**
+  - Se instaló la librería `firebase`.
+  - Se creó `frontend/src/config/firebase.ts` para inicializar el SDK del cliente utilizando variables de entorno.
+- **Autenticación:**
+  - Se implementó `frontend/src/context/AuthContext.tsx` utilizando React Context para gestionar el estado del usuario de forma global.
+  - El contexto escucha cambios en el estado de autenticación mediante `onAuthStateChanged` y expone el JWT Token (`getIdToken()`) para futuras integraciones con el backend.
+- **Interfaz de Usuario (UI):**
+  - Se creó la página de login en `frontend/src/app/login/page.tsx` con un diseño limpio y responsivo usando Tailwind CSS.
+  - Se actualizó la página principal (`frontend/src/app/page.tsx`) para actuar como un dashboard protegido que redirige al login si no hay un usuario autenticado.
+- **Configuración Global:**
+  - Se envolvió la aplicación con el `AuthProvider` en `frontend/src/app/layout.tsx`.
+
+### Decisiones de Diseño:
+- **Next.js App Router:** Se eligió por sus capacidades modernas de renderizado y facilidad de enrutamiento.
+- **React Context para Auth:** Permite un acceso sencillo al estado del usuario y al token en cualquier componente del frontend sin necesidad de librerías externas de gestión de estado complejas.
+- **Seguridad en Cliente:** Aunque la validación final ocurre en el backend, el frontend gestiona la persistencia de la sesión y la obtención de tokens de forma segura a través de Firebase SDK.
+
+---
+
+## SPRINT 9: Exposición de API y Seguridad
+Se ha habilitado la capa de presentación (API) para interactuar con los casos de uso definidos en la capa de Aplicación.
+...
