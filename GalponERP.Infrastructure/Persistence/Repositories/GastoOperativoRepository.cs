@@ -32,6 +32,13 @@ public class GastoOperativoRepository : IGastoOperativoRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<GastoOperativo>> ObtenerTodosAsync()
+    {
+        return await _context.GastosOperativos
+            .OrderByDescending(g => g.Fecha)
+            .ToListAsync();
+    }
+
     public void Agregar(GastoOperativo gasto)
     {
         _context.GastosOperativos.Add(gasto);

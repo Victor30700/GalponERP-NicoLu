@@ -1,6 +1,29 @@
 # CONTRATO DE API - GALPON ERP
 
-Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Firebase).
+Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Firebase), excepto el endpoint de Login.
+
+## 0. AUTENTICACIÓN
+
+### Login (Firebase Proxy)
+- **URL:** `/api/Auth/login`
+- **Método:** `POST`
+- **Autenticación:** **Anónima (No requiere Token)**
+- **Entrada (JSON):**
+```json
+{
+  "email": "usuario@ejemplo.com",
+  "password": "password123"
+}
+```
+- **Salida (JSON):**
+```json
+{
+  "idToken": "JWT_TOKEN_STRING",
+  "refreshToken": "REFRESH_TOKEN_STRING",
+  "email": "usuario@ejemplo.com",
+  "expiresIn": 3600
+}
+```
 
 ## 1. LOTES
 
@@ -43,7 +66,85 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 
-## 2. INVENTARIO
+## 2. OPERACIONES DIARIAS
+
+### Registrar Mortalidad (Bajas)
+- **URL:** `/api/Mortalidad`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "cantidad": 5,
+  "causa": "Calor excesivo",
+  "fecha": "2026-04-10T00:00:00Z"
+}
+```
+- **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID del registro)
+
+### Registrar Gasto Operativo
+- **URL:** `/api/Gastos`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "galponId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "descripcion": "Pago Luz Abril",
+  "monto": 45.50,
+  "moneda": "USD",
+  "fecha": "2026-04-10T00:00:00Z",
+  "tipoGasto": "Servicios"
+}
+```
+- **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID del gasto)
+
+### Obtener Gastos Operativos
+- **URL:** `/api/Gastos`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Query Params:** `galponId` (Guid, opcional), `loteId` (Guid, opcional)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "galponId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "descripcion": "Pago Luz Abril",
+    "monto": { "valor": 45.50, "codigo": "USD" },
+    "fecha": "2026-04-10T00:00:00Z",
+    "tipoGasto": "Servicios"
+  }
+]
+```
+
+### Obtener Calendario Sanitario por Lote
+- **URL:** `/api/CalendarioSanitario/{loteId}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "diaDeAplicacion": 7,
+    "descripcionTratamiento": "Vacuna Newcastle",
+    "estado": 0
+  }
+]
+```
+
+### Marcar Vacuna/Tratamiento como Aplicado
+- **URL:** `/api/CalendarioSanitario/{actividadId}/aplicar`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer)
+- **Salida:** `204 No Content`
+
+## 3. INVENTARIO
 
 ### Verificar Niveles de Alimento
 - **URL:** `/api/Inventario/niveles-alimento`
@@ -60,7 +161,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 
-## 3. VENTAS
+## 4. VENTAS
 
 ### Registrar Venta Parcial
 - **URL:** `/api/Ventas/parcial`
@@ -83,7 +184,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 
-## 4. PLANIFICACIÓN
+## 5. PLANIFICACIÓN
 
 ### Obtener Simulación de Rentabilidad
 - **URL:** `/api/Planificacion/simulacion`
@@ -112,7 +213,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 
-## 5. USUARIOS
+## 6. USUARIOS
 
 ### Registrar Usuario
 - **URL:** `/api/Usuarios`
@@ -170,7 +271,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - **Autenticación:** Requerida (Bearer)
 - **Salida:** `204 No Content`
 
-## 6. GALPONES
+## 7. GALPONES
 
 ### Crear Galpón
 - **URL:** `/api/Galpones`
@@ -223,7 +324,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida:** `204 No Content`
 
-## 7. CATÁLOGOS
+## 8. CATÁLOGOS
 
 ### Obtener Clientes
 - **URL:** `/api/Catalogos/clientes`

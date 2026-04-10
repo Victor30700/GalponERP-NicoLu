@@ -49,8 +49,8 @@ public class CalculadoraCostosLoteTests
         
         var gastosOperativos = new List<GastoOperativo>
         {
-            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Luz", new Moneda(50), DateTime.UtcNow),
-            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Agua", new Moneda(30), DateTime.UtcNow)
+            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Luz", new Moneda(50), DateTime.UtcNow, "Servicios"),
+            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Agua", new Moneda(30), DateTime.UtcNow, "Servicios")
         };
 
         // Act

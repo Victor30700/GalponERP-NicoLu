@@ -1,5 +1,35 @@
 # BITÁCORA DE ARQUITECTURA - GALPON ERP
 
+## SPRINT 11: Operaciones Diarias y Auth Backend
+Se han expuesto las entidades operativas del dominio y se ha facilitado la integración con un endpoint de Login en el backend.
+
+### Cambios Realizados:
+- **Autenticación (Login Backend):**
+  - Se implementó `LoginCommand` y `LoginCommandHandler` en la capa de Aplicación.
+  - El handler utiliza `HttpClient` para comunicarse directamente con la REST API de Firebase Auth, permitiendo obtener el `idToken` y `refreshToken` desde el backend.
+  - Se configuró la `ApiKey` de Firebase en `appsettings.json`.
+  - Se creó `AuthController` con el endpoint `POST /api/auth/login` (`[AllowAnonymous]`).
+- **Mortalidad (Bajas):**
+  - Se actualizó la entidad `MortalidadDiaria` para incluir el campo `Causa`.
+  - Se implementó `RegistrarMortalidadCommand` que actualiza los contadores de bajas en la entidad `Lote` y persiste el registro diario.
+  - Se creó `MortalidadController` protegido por `[Authorize]`.
+- **Gastos Operativos:**
+  - Se actualizó la entidad `GastoOperativo` para incluir el campo `TipoGasto`.
+  - Se implementaron los casos de uso `RegistrarGastoOperativoCommand` y `ObtenerGastosQuery` (con filtros por GalponId y LoteId).
+  - Se creó `GastosController` con endpoints `POST` y `GET`.
+- **Calendario Sanitario (Vacunas):**
+  - Se implementaron los casos de uso `MarcarVacunaAplicadaCommand` y `ObtenerCalendarioPorLoteQuery`.
+  - Se creó `CalendarioSanitarioController` con endpoints `GET /api/calendario/{loteId}` y `PUT /api/calendario/{actividadId}/aplicar`.
+- **Infraestructura:**
+  - Se crearon e integraron `IMortalidadRepository` y su implementación.
+  - Se actualizó `IGastoOperativoRepository` para incluir `ObtenerTodosAsync`.
+  - Se registró `HttpClient` en el contenedor de dependencias de la capa de Aplicación.
+
+### Decisiones de Diseño:
+- **Login Proxy:** Se decidió implementar el login en el backend para facilitar el uso de Swagger y herramientas de prueba, manteniendo Firebase como el proveedor de identidad centralizado.
+- **Validación en el Dominio:** El registro de mortalidad invoca métodos de la entidad `Lote` (`RegistrarBajas`), asegurando que las reglas de negocio (ej. no registrar más bajas que pollos vivos) se validen en el corazón del dominio.
+- **Flexibilidad en Gastos:** Los gastos operativos pueden asociarse a un galpón de forma general o a un lote específico, permitiendo un análisis de costos más granular.
+
 ## SPRINT 9.3: Seeding Automático y Gestión Total
 Se ha automatizado la creación del administrador inicial y se han completado los CRUDs de usuarios y galpones.
 
