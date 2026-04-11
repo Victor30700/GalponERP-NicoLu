@@ -40,6 +40,26 @@ public class LoteConfiguration : IEntityTypeConfiguration<Lote>
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(l => l.FCRFinal)
+            .HasPrecision(18, 2);
+
+        builder.Property(l => l.PorcentajeMortalidadFinal)
+            .HasPrecision(18, 2);
+
+        builder.ComplexProperty(l => l.CostoTotalFinal, b =>
+        {
+            b.Property(m => m.Monto)
+                .HasColumnName("CostoTotalFinal")
+                .HasPrecision(18, 2);
+        });
+
+        builder.ComplexProperty(l => l.UtilidadNetaFinal, b =>
+        {
+            b.Property(m => m.Monto)
+                .HasColumnName("UtilidadNetaFinal")
+                .HasPrecision(18, 2);
+        });
+
         builder.HasQueryFilter(l => l.IsActive);
     }
 }

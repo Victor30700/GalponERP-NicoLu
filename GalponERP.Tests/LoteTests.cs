@@ -81,7 +81,7 @@ public class LoteTests
     {
         // Arrange
         var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
-        lote.CerrarLote();
+        lote.CerrarLote(1.60m, new Moneda(1000), new Moneda(500), 5.0m);
 
         // Act & Assert
         Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(100));
@@ -96,5 +96,20 @@ public class LoteTests
 
         // Act & Assert
         Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(91));
+    }
+
+    [Fact]
+    public void AnularVenta_DebeRestaurarCantidadActual()
+    {
+        // Arrange
+        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
+        lote.RegistrarVenta(50); // Quedan 50
+
+        // Act
+        lote.AnularVenta(20);
+
+        // Assert
+        Assert.Equal(70, lote.CantidadActual);
+        Assert.Equal(30, lote.PollosVendidos);
     }
 }

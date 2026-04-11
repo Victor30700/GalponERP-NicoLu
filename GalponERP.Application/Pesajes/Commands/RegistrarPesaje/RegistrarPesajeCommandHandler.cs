@@ -34,7 +34,8 @@ public class RegistrarPesajeCommandHandler : IRequestHandler<RegistrarPesajeComm
             request.LoteId,
             request.Fecha,
             request.PesoPromedioGramos,
-            request.CantidadMuestreada);
+            request.CantidadMuestreada,
+            request.UsuarioId);
 
         _pesajeRepository.Agregar(pesaje);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

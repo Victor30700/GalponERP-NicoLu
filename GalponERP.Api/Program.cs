@@ -15,9 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 var firebaseConfigPath = Path.Combine(builder.Environment.ContentRootPath, "firebase-admin.json");
 if (File.Exists(firebaseConfigPath))
 {
+    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", firebaseConfigPath);
     FirebaseApp.Create(new AppOptions()
     {
-        Credential = GoogleCredential.FromFile(firebaseConfigPath)
+        Credential = GoogleCredential.GetApplicationDefault()
     });
 }
 
@@ -64,6 +65,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddHostedService<AlertaInventarioJob>();
+builder.Services.AddHostedService<AlertaSanitariaJob>();
 
 builder.Services.AddControllers();
 

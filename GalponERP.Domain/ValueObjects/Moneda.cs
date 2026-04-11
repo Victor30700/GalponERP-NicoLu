@@ -10,11 +10,6 @@ public record Moneda
 
     public Moneda(decimal monto)
     {
-        if (monto < 0)
-        {
-            throw new ArgumentException("El monto no puede ser negativo.", nameof(monto));
-        }
-
         // Redondeo estándar para transacciones financieras (2 decimales)
         Monto = Math.Round(monto, 2, MidpointRounding.AwayFromZero);
     }

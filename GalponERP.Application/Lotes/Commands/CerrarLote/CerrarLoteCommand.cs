@@ -6,6 +6,8 @@ public record CerrarLoteResponse(
     Guid LoteId,
     decimal TotalIngresos,
     decimal TotalCostos,
-    decimal UtilidadNeta);
+    decimal UtilidadNeta,
+    decimal FCR,
+    decimal PorcentajeMortalidad);
 
 public record CerrarLoteCommand(Guid LoteId) : IRequest<CerrarLoteResponse>;

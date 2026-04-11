@@ -30,7 +30,8 @@ public class RegistrarGastoOperativoCommandHandler : IRequestHandler<RegistrarGa
             request.Descripcion,
             monto,
             request.Fecha,
-            request.TipoGasto
+            request.TipoGasto,
+            request.UsuarioId
         );
 
         _gastoOperativoRepository.Agregar(gasto);

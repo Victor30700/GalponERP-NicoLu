@@ -15,8 +15,10 @@ public class Venta : Entity
     public decimal PesoTotalVendido { get; private set; }
     public Moneda PrecioPorKilo { get; private set; } = null!;
     public Moneda Total { get; private set; } = null!;
+    public Guid UsuarioId { get; private set; }
+    public EstadoPago EstadoPago { get; private set; }
 
-    public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo) 
+    public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo, Guid usuarioId, EstadoPago estadoPago = EstadoPago.Pagado) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -37,6 +39,9 @@ public class Venta : Entity
         if (precioPorKilo == null)
             throw new ArgumentNullException(nameof(precioPorKilo));
 
+        if (usuarioId == Guid.Empty)
+            throw new ArgumentException("El ID del usuario es requerido para auditoría.", nameof(usuarioId));
+
         LoteId = loteId;
         ClienteId = clienteId;
         Fecha = fecha;
@@ -44,6 +49,13 @@ public class Venta : Entity
         PesoTotalVendido = pesoTotalVendido;
         PrecioPorKilo = precioPorKilo;
         Total = precioPorKilo * pesoTotalVendido;
+        UsuarioId = usuarioId;
+        EstadoPago = estadoPago;
+    }
+
+    public void ActualizarEstadoPago(EstadoPago nuevoEstado)
+    {
+        EstadoPago = nuevoEstado;
     }
 
     // Constructor para EF Core

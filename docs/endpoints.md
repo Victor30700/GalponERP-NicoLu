@@ -2,6 +2,8 @@
 
 Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Firebase), excepto el endpoint de Login.
 
+**Nota sobre Auditoría:** El sistema registra automáticamente el `UsuarioId` de quien realiza la transacción a partir del Token JWT. El Frontend **NO** debe enviar el campo `UsuarioId` en ningún JSON de creación o registro; el backend lo extrae de forma segura desde la identidad del usuario autenticado.
+
 ## 0. AUTENTICACIÓN
 
 ### Login (Firebase Proxy)
@@ -107,7 +109,9 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "totalIngresos": 15000.00,
   "totalCostos": 10000.00,
-  "utilidadNeta": 5000.00
+  "utilidadNeta": 5000.00,
+  "fcr": 1.65,
+  "porcentajeMortalidad": 3.25
 }
 ```
 
@@ -433,6 +437,13 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "ventaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 }
 ```
+
+### Anular Venta
+- **URL:** `/api/Ventas/{id}/anular`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+- **Salida:** `204 No Content`
+- **Nota:** Esta operación marca la venta como inactiva (Soft Delete) y devuelve la cantidad de pollos vendidos al inventario del lote, siempre que el lote no esté cerrado.
 
 ## 5. PLANIFICACIÓN
 

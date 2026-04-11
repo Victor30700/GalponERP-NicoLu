@@ -25,6 +25,12 @@ public class Lote : Entity
     public Moneda CostoUnitarioPollito { get; private set; } = null!;
     public EstadoLote Estado { get; private set; }
 
+    // Snapshots Contables
+    public decimal? FCRFinal { get; private set; }
+    public Moneda? CostoTotalFinal { get; private set; }
+    public Moneda? UtilidadNetaFinal { get; private set; }
+    public decimal? PorcentajeMortalidadFinal { get; private set; }
+
     // Propiedades de navegación
     private readonly List<PesajeLote> _pesajes = new();
     public IReadOnlyCollection<PesajeLote> Pesajes => _pesajes.AsReadOnly();
@@ -89,11 +95,30 @@ public class Lote : Entity
         CantidadActual -= cantidad;
     }
 
-    public void CerrarLote()
+    public void CerrarLote(decimal fcr, Moneda costoTotal, Moneda utilidadNeta, decimal porcentajeMortalidad)
     {
         if (Estado != EstadoLote.Activo)
             throw new LoteDomainException("El lote ya no está activo.");
 
+        FCRFinal = fcr;
+        CostoTotalFinal = costoTotal;
+        UtilidadNetaFinal = utilidadNeta;
+        PorcentajeMortalidadFinal = porcentajeMortalidad;
         Estado = EstadoLote.Cerrado;
+    }
+
+    public void AnularVenta(int cantidad)
+    {
+        if (Estado == EstadoLote.Cerrado)
+            throw new LoteDomainException("No se pueden anular ventas de un lote ya cerrado.");
+
+        if (cantidad <= 0)
+            throw new LoteDomainException("La cantidad a anular debe ser positiva.");
+
+        if (cantidad > PollosVendidos)
+            throw new LoteDomainException("No se puede anular más de lo vendido.");
+
+        PollosVendidos -= cantidad;
+        CantidadActual += cantidad;
     }
 }

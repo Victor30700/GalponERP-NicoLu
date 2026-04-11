@@ -12,8 +12,9 @@ public class MortalidadDiaria : Entity
     public DateTime Fecha { get; private set; }
     public int CantidadBajas { get; private set; }
     public string Causa { get; private set; } = string.Empty;
+    public Guid UsuarioId { get; private set; }
 
-    public MortalidadDiaria(Guid id, Guid loteId, DateTime fecha, int cantidadBajas, string causa) 
+    public MortalidadDiaria(Guid id, Guid loteId, DateTime fecha, int cantidadBajas, string causa, Guid usuarioId) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -25,10 +26,14 @@ public class MortalidadDiaria : Entity
         if (string.IsNullOrWhiteSpace(causa))
             throw new LoteDomainException("La causa de la baja es obligatoria.");
 
+        if (usuarioId == Guid.Empty)
+            throw new LoteDomainException("El ID del usuario es obligatorio para auditoría.");
+
         LoteId = loteId;
         Fecha = fecha;
         CantidadBajas = cantidadBajas;
         Causa = causa;
+        UsuarioId = usuarioId;
     }
 
     // Constructor para EF Core

@@ -18,6 +18,13 @@ public class ClienteRepository : IClienteRepository
         return await _context.Set<Cliente>().FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    public async Task<Cliente?> ObtenerPorIdIncluyendoInactivosAsync(Guid id)
+    {
+        return await _context.Set<Cliente>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
     public async Task<IEnumerable<Cliente>> ObtenerTodosAsync()
     {
         return await _context.Set<Cliente>().ToListAsync();

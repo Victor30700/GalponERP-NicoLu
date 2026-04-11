@@ -39,8 +39,8 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
         int totalVivos = lotesActivos.Sum(l => l.CantidadActual);
 
         // 2. Mortalidad Mes Actual
-        var inicioMes = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
-        var finMes = inicioMes.AddMonths(1).AddDays(-1);
+        var inicioMes = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var finMes = inicioMes.AddMonths(1).AddSeconds(-1);
         var mortalidadMes = await _mortalidadRepository.ObtenerPorRangoFechasAsync(inicioMes, finMes);
         int totalMortalidadMes = mortalidadMes.Sum(m => m.CantidadBajas);
 

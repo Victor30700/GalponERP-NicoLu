@@ -14,8 +14,9 @@ public class GastoOperativo : Entity
     public Moneda Monto { get; private set; } = null!;
     public DateTime Fecha { get; private set; }
     public string TipoGasto { get; private set; } = string.Empty;
+    public Guid UsuarioId { get; private set; }
 
-    public GastoOperativo(Guid id, Guid galponId, Guid? loteId, string descripcion, Moneda monto, DateTime fecha, string tipoGasto) 
+    public GastoOperativo(Guid id, Guid galponId, Guid? loteId, string descripcion, Moneda monto, DateTime fecha, string tipoGasto, Guid usuarioId) 
         : base(id)
     {
         if (galponId == Guid.Empty)
@@ -33,12 +34,16 @@ public class GastoOperativo : Entity
         if (string.IsNullOrWhiteSpace(tipoGasto))
             throw new ArgumentException("El tipo de gasto es requerido.", nameof(tipoGasto));
 
+        if (usuarioId == Guid.Empty)
+            throw new ArgumentException("El ID del usuario es requerido para auditoría.", nameof(usuarioId));
+
         GalponId = galponId;
         LoteId = loteId;
         Descripcion = descripcion;
         Monto = monto;
         Fecha = fecha;
         TipoGasto = tipoGasto;
+        UsuarioId = usuarioId;
     }
 
     // Constructor para EF Core

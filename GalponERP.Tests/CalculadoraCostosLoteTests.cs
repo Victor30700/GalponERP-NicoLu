@@ -47,10 +47,11 @@ public class CalculadoraCostosLoteTests
         var galponId = Guid.NewGuid();
         var loteId = Guid.NewGuid();
         
+        var usuarioId = Guid.NewGuid();
         var gastosOperativos = new List<GastoOperativo>
         {
-            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Luz", new Moneda(50), DateTime.UtcNow, "Servicios"),
-            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Agua", new Moneda(30), DateTime.UtcNow, "Servicios")
+            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Luz", new Moneda(50), DateTime.UtcNow, "Servicios", usuarioId),
+            new GastoOperativo(Guid.NewGuid(), galponId, loteId, "Agua", new Moneda(30), DateTime.UtcNow, "Servicios", usuarioId)
         };
 
         // Act

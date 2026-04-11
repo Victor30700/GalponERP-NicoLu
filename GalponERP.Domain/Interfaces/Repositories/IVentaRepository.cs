@@ -8,4 +8,5 @@ public interface IVentaRepository
     Task<IEnumerable<Venta>> ObtenerPorLoteAsync(Guid loteId);
     Task<IEnumerable<Venta>> ObtenerTodasAsync();
     void Agregar(Venta venta);
+    void Actualizar(Venta venta);
 }

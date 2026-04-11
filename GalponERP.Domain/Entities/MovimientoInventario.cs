@@ -22,8 +22,9 @@ public class MovimientoInventario : Entity
     public TipoMovimiento Tipo { get; private set; }
     public DateTime Fecha { get; private set; }
     public string? Justificacion { get; private set; }
+    public Guid UsuarioId { get; private set; }
 
-    public MovimientoInventario(Guid id, Guid productoId, Guid? loteId, decimal cantidad, TipoMovimiento tipo, DateTime fecha, string? justificacion = null) 
+    public MovimientoInventario(Guid id, Guid productoId, Guid? loteId, decimal cantidad, TipoMovimiento tipo, DateTime fecha, Guid usuarioId, string? justificacion = null) 
         : base(id)
     {
         if (productoId == Guid.Empty)
@@ -32,12 +33,16 @@ public class MovimientoInventario : Entity
         if (cantidad <= 0)
             throw new InventarioDomainException("La cantidad del movimiento debe ser mayor a cero.");
 
+        if (usuarioId == Guid.Empty)
+            throw new InventarioDomainException("El ID del usuario es obligatorio para auditoría.");
+
         ProductoId = productoId;
         LoteId = loteId;
         Cantidad = cantidad;
         Tipo = tipo;
         Fecha = fecha;
         Justificacion = justificacion;
+        UsuarioId = usuarioId;
     }
 
     // Constructor para EF Core

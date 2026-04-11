@@ -37,6 +37,11 @@ public class GlobalExceptionHandler : IExceptionHandler
                 "Domain Error",
                 domainException.Message,
                 null),
+            KeyNotFoundException keyNotFoundException => (
+                StatusCodes.Status404NotFound,
+                "Not Found",
+                keyNotFoundException.Message,
+                null),
             _ => (
                 StatusCodes.Status500InternalServerError,
                 "Server Error",

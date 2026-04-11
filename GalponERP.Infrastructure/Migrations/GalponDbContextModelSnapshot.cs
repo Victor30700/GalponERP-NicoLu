@@ -42,10 +42,22 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<Guid>("LoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -65,6 +77,12 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -82,6 +100,12 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.ToTable("Clientes", (string)null);
@@ -96,6 +120,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<int>("Capacidad")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -108,6 +138,12 @@ namespace GalponERP.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -128,6 +164,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("GalponId")
                         .HasColumnType("uuid");
 
@@ -140,6 +182,15 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<string>("TipoGasto")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Monto", "GalponERP.Domain.Entities.GastoOperativo.Monto#Moneda", b1 =>
                         {
@@ -177,7 +228,17 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<decimal?>("FCRFinal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("FechaIngreso")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
@@ -193,6 +254,24 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<decimal?>("PorcentajeMortalidadFinal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "CostoTotalFinal", "GalponERP.Domain.Entities.Lote.CostoTotalFinal#Moneda", b1 =>
+                        {
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("CostoTotalFinal");
+                        });
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "CostoUnitarioPollito", "GalponERP.Domain.Entities.Lote.CostoUnitarioPollito#Moneda", b1 =>
                         {
                             b1.IsRequired();
@@ -201,6 +280,14 @@ namespace GalponERP.Infrastructure.Migrations
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("CostoUnitarioPollito");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "UtilidadNetaFinal", "GalponERP.Domain.Entities.Lote.UtilidadNetaFinal#Moneda", b1 =>
+                        {
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("UtilidadNetaFinal");
                         });
 
                     b.HasKey("Id");
@@ -224,10 +311,25 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<Guid>("LoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -250,6 +352,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -267,7 +375,18 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Fecha");
 
                     b.HasIndex("LoteId");
 
@@ -288,6 +407,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -296,6 +421,15 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.Property<decimal>("PesoPromedioGramos")
                         .HasColumnType("numeric");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -309,6 +443,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -327,6 +467,12 @@ namespace GalponERP.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -354,6 +500,12 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("FechaNacimiento")
                         .HasColumnType("timestamp with time zone");
 
@@ -378,6 +530,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<int>("Rol")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
@@ -401,7 +559,18 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("EstadoPago")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
@@ -413,6 +582,15 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<decimal>("PesoTotalVendido")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "PrecioPorKilo", "GalponERP.Domain.Entities.Venta.PrecioPorKilo#Moneda", b1 =>
                         {
@@ -437,6 +615,8 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("Fecha");
 
                     b.HasIndex("LoteId");
 

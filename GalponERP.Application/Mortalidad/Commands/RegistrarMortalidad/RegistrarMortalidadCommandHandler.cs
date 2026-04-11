@@ -39,7 +39,8 @@ public class RegistrarMortalidadCommandHandler : IRequestHandler<RegistrarMortal
             request.LoteId,
             request.Fecha,
             request.Cantidad,
-            request.Causa
+            request.Causa,
+            request.UsuarioId
         );
 
         // 3. Persistir

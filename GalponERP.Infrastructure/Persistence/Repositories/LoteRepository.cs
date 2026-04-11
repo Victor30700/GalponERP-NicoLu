@@ -27,7 +27,9 @@ public class LoteRepository : ILoteRepository
 
     public async Task<IEnumerable<Lote>> ObtenerTodosAsync()
     {
-        return await _context.Set<Lote>().ToListAsync();
+        return await _context.Set<Lote>()
+            .IgnoreQueryFilters()
+            .ToListAsync();
     }
 
     public void Agregar(Lote lote)

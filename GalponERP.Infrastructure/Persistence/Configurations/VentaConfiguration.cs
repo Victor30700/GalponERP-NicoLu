@@ -46,6 +46,14 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
             .HasForeignKey(v => v.ClienteId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(v => v.EstadoPago)
+            .IsRequired()
+            .HasDefaultValue(EstadoPago.Pagado);
+
+        builder.HasIndex(v => v.LoteId);
+        builder.HasIndex(v => v.ClienteId);
+        builder.HasIndex(v => v.Fecha);
+
         builder.HasQueryFilter(v => v.IsActive);
     }
 }

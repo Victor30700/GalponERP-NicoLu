@@ -10,14 +10,7 @@ namespace GalponERP.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "Rol",
-                table: "Usuarios",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "character varying(50)",
-                oldMaxLength: 50);
+            migrationBuilder.Sql("ALTER TABLE \"Usuarios\" ALTER COLUMN \"Rol\" TYPE integer USING (CASE WHEN \"Rol\" = 'Admin' THEN 2 WHEN \"Rol\" = 'SubAdmin' THEN 1 ELSE 0 END);");
         }
 
         /// <inheritdoc />

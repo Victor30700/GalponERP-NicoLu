@@ -11,8 +11,9 @@ public class PesajeLote : Entity
     public DateTime Fecha { get; private set; }
     public decimal PesoPromedioGramos { get; private set; }
     public int CantidadMuestreada { get; private set; }
+    public Guid UsuarioId { get; private set; }
 
-    public PesajeLote(Guid id, Guid loteId, DateTime fecha, decimal pesoPromedioGramos, int cantidadMuestreada) : base(id)
+    public PesajeLote(Guid id, Guid loteId, DateTime fecha, decimal pesoPromedioGramos, int cantidadMuestreada, Guid usuarioId) : base(id)
     {
         if (loteId == Guid.Empty)
             throw new ArgumentException("El ID del lote es obligatorio.");
@@ -23,10 +24,14 @@ public class PesajeLote : Entity
         if (cantidadMuestreada <= 0)
             throw new ArgumentException("La cantidad muestreada debe ser mayor a cero.");
 
+        if (usuarioId == Guid.Empty)
+            throw new ArgumentException("El ID del usuario es requerido para auditoría.");
+
         LoteId = loteId;
         Fecha = fecha;
         PesoPromedioGramos = pesoPromedioGramos;
         CantidadMuestreada = cantidadMuestreada;
+        UsuarioId = usuarioId;
     }
 
     // Constructor para EF Core

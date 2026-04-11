@@ -46,7 +46,8 @@ public class RegistrarVentaParcialCommandHandler : IRequestHandler<RegistrarVent
             request.Fecha,
             request.CantidadPollos,
             request.PesoTotalVendido,
-            new Moneda(request.PrecioPorKilo));
+            new Moneda(request.PrecioPorKilo),
+            request.UsuarioId);
 
         _ventaRepository.Agregar(venta);
         _loteRepository.Actualizar(lote);

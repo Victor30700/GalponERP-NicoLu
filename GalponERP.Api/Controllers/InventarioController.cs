@@ -2,6 +2,9 @@ using GalponERP.Application.Inventario.Commands.RegistrarMovimiento;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
+using GalponERP.Domain.Entities;
+using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +17,29 @@ namespace GalponERP.Api.Controllers;
 public class InventarioController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public InventarioController(IMediator mediator)
+    public InventarioController(IMediator mediator, IUsuarioRepository usuarioRepository, ICurrentUserContext currentUserContext)
     {
         _mediator = mediator;
+        _usuarioRepository = usuarioRepository;
+        _currentUserContext = currentUserContext;
+    }
+
+    private async Task<Guid> GetUsuarioIdActual()
+    {
+        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+        if (string.IsNullOrEmpty(firebaseUid)) return Guid.Empty;
+
+        var usuario = await _usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
+        
+        if (usuario != null && _currentUserContext is GalponERP.Infrastructure.Authentication.CurrentUserContext context)
+        {
+            context.SetUser(usuario.Id, firebaseUid);
+        }
+
+        return usuario?.Id ?? Guid.Empty;
     }
 
     [HttpGet("stock")]
@@ -46,6 +68,10 @@ public class InventarioController : ControllerBase
     [HttpPost("movimiento")]
     public async Task<IActionResult> RegistrarMovimiento([FromBody] RegistrarMovimientoInventarioCommand command)
     {
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
+        command.UsuarioId = usuarioId;
         var id = await _mediator.Send(command);
         return Ok(new { MovimientoId = id });
     }
@@ -58,14 +84,19 @@ public class InventarioController : ControllerBase
             return BadRequest("Se requiere una justificación para realizar un ajuste manual.");
         }
 
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
         // Mapear el tipo a Ajuste para que no afecte FCR
         var tipoAjuste = command.Tipo == TipoMovimiento.Entrada 
             ? TipoMovimiento.AjusteEntrada 
             : TipoMovimiento.AjusteSalida;
 
-        var adjustmentCommand = command with { Tipo = tipoAjuste };
+        // No podemos usar 'with' para UsuarioId, así que lo seteamos manual
+        var finalCommand = command with { Tipo = tipoAjuste };
+        finalCommand.UsuarioId = usuarioId;
 
-        var id = await _mediator.Send(adjustmentCommand);
+        var id = await _mediator.Send(finalCommand);
         return Ok(new { AjusteId = id });
     }
 

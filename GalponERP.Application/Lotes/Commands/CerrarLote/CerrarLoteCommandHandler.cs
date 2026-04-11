@@ -2,6 +2,7 @@ using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.Services;
 using GalponERP.Domain.ValueObjects;
+using GalponERP.Domain.Exceptions;
 using GalponERP.Application.Interfaces;
 using MediatR;
 
@@ -13,6 +14,7 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
     private readonly IVentaRepository _ventaRepository;
     private readonly IGastoOperativoRepository _gastoRepository;
     private readonly IInventarioRepository _inventarioRepository;
+    private readonly IProductoRepository _productoRepository;
     private readonly CalculadoraCostosLote _calculadoraCostos;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -21,6 +23,7 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         IVentaRepository ventaRepository,
         IGastoOperativoRepository gastoRepository,
         IInventarioRepository inventarioRepository,
+        IProductoRepository productoRepository,
         CalculadoraCostosLote calculadoraCostos,
         IUnitOfWork unitOfWork)
     {
@@ -28,6 +31,7 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         _ventaRepository = ventaRepository;
         _gastoRepository = gastoRepository;
         _inventarioRepository = inventarioRepository;
+        _productoRepository = productoRepository;
         _calculadoraCostos = calculadoraCostos;
         _unitOfWork = unitOfWork;
     }
@@ -36,10 +40,10 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
     {
         var lote = await _loteRepository.ObtenerPorIdAsync(request.LoteId);
         if (lote == null)
-            throw new Exception($"Lote con ID {request.LoteId} no encontrado.");
+            throw new KeyNotFoundException($"Lote con ID {request.LoteId} no encontrado.");
 
         if (lote.Estado == EstadoLote.Cerrado)
-            throw new Exception("El lote ya está cerrado.");
+            throw new LoteDomainException("El lote ya se encuentra en estado 'Cerrado'. No es necesario cerrarlo nuevamente.");
 
         // 1. Sumar ingresos de todas las Ventas asociadas al Lote
         var ventas = await _ventaRepository.ObtenerPorLoteAsync(request.LoteId);
@@ -51,7 +55,16 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         // 3. Calcular Costo de Pollitos
         var costoPollitos = lote.CostoUnitarioPollito * lote.CantidadInicial;
 
-        // 4. Calcular Costo de Alimento (Usando zero por ahora hasta que se implemente costeo de inventario)
+        // 4. Calcular Costo de Alimento y Total de Alimento en Kg
+        var movimientos = await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId);
+        var productos = await _productoRepository.ObtenerTodosAsync();
+        var idsAlimento = productos.Where(p => p.Tipo == TipoProducto.Alimento).Select(p => p.Id).ToHashSet();
+
+        decimal totalAlimentoConsumidoKg = movimientos
+            .Where(m => (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida) && idsAlimento.Contains(m.ProductoId))
+            .Sum(m => m.Cantidad);
+
+        // (Usando zero por ahora hasta que se implemente costeo de inventario)
         var costoAlimento = Moneda.Zero;
 
         // 5. Amortización (Supongamos un valor fijo o cero)
@@ -67,8 +80,16 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         // 7. Calcular Utilidad Neta
         var utilidadNeta = totalIngresos - costoTotal;
 
-        // 8. Marcar el Lote como 'Cerrado'
-        lote.CerrarLote();
+        // 8. Calcular FCR y Mortalidad
+        decimal pesoTotalVendido = ventas.Sum(v => v.PesoTotalVendido);
+        decimal fcr = _calculadoraCostos.CalcularFCR(totalAlimentoConsumidoKg, pesoTotalVendido);
+        
+        decimal porcentajeMortalidad = lote.CantidadInicial > 0 
+            ? Math.Round((decimal)lote.MortalidadAcumulada / lote.CantidadInicial * 100, 2, MidpointRounding.AwayFromZero)
+            : 0;
+
+        // 9. Marcar el Lote como 'Cerrado' y guardar snapshots
+        lote.CerrarLote(fcr, costoTotal, utilidadNeta, porcentajeMortalidad);
 
         _loteRepository.Actualizar(lote);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -77,6 +98,8 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
             lote.Id,
             totalIngresos.Monto,
             costoTotal.Monto,
-            utilidadNeta.Monto);
+            utilidadNeta.Monto,
+            fcr,
+            porcentajeMortalidad);
     }
 }

@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddScoped<IAuthenticationService, FirebaseAuthService>();
+        services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddScoped<INotificationService, FirebaseNotificationService>();
         services.AddHttpContextAccessor();
 

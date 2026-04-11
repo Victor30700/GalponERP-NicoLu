@@ -35,10 +35,11 @@ public class FirebaseAuthService : IAuthenticationService
         if (credentialPath != null)
         {
             Console.WriteLine($"[FirebaseService] Credenciales cargadas desde: {credentialPath}");
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialPath);
             _firestoreDb = new FirestoreDbBuilder
             {
                 ProjectId = projectId,
-                Credential = GoogleCredential.FromFile(credentialPath)
+                Credential = GoogleCredential.GetApplicationDefault()
             }.Build();
         }
         else

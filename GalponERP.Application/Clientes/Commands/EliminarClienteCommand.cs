@@ -19,11 +19,16 @@ public class EliminarClienteCommandHandler : IRequestHandler<EliminarClienteComm
 
     public async Task Handle(EliminarClienteCommand request, CancellationToken cancellationToken)
     {
-        var cliente = await _clienteRepository.ObtenerPorIdAsync(request.Id);
+        var cliente = await _clienteRepository.ObtenerPorIdIncluyendoInactivosAsync(request.Id);
 
         if (cliente == null)
         {
-            throw new Exception("Cliente no encontrado.");
+            throw new KeyNotFoundException($"Cliente con ID {request.Id} no encontrado.");
+        }
+
+        if (!cliente.IsActive)
+        {
+            return; // Ya está eliminado, no hacemos nada o lanzamos algo específico.
         }
 
         cliente.Desactivar();

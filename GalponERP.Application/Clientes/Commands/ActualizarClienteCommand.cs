@@ -24,11 +24,11 @@ public class ActualizarClienteCommandHandler : IRequestHandler<ActualizarCliente
 
     public async Task Handle(ActualizarClienteCommand request, CancellationToken cancellationToken)
     {
-        var cliente = await _clienteRepository.ObtenerPorIdAsync(request.Id);
+        var cliente = await _clienteRepository.ObtenerPorIdIncluyendoInactivosAsync(request.Id);
 
         if (cliente == null)
         {
-            throw new Exception("Cliente no encontrado.");
+            throw new KeyNotFoundException($"Cliente con ID {request.Id} no encontrado.");
         }
 
         cliente.Actualizar(request.Nombre, request.Ruc, request.Direccion, request.Telefono);

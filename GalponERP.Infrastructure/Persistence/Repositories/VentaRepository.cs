@@ -33,8 +33,12 @@ public class VentaRepository : IVentaRepository
     }
 
     public void Agregar(Venta venta)
-
     {
         _context.Set<Venta>().Add(venta);
+    }
+
+    public void Actualizar(Venta venta)
+    {
+        _context.Set<Venta>().Update(venta);
     }
 }
