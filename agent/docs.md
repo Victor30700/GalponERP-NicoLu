@@ -1,66 +1,44 @@
-# Bitácora de Desarrollo - GalponERP
+# BITÁCORA ARQUITECTÓNICA - GALPON ERP
 
-## Sprint : Catálogos Maestros (Fundación de Datos)
+## Decisión 14.1: Implementación de RBAC (Role-Based Access Control) con Enums
+Se ha refactorizado el sistema de roles de un esquema basado en strings constantes a un `enum RolGalpon` numérico para mayor control y tipado fuerte.
 
-### Cambios realizados:
-- **Domain:**
-    - `IProductoRepository`: Se agregaron los métodos `Agregar` y `Actualizar` para permitir el CRUD completo.
-    - `Producto.cs`: Se agregó el método `Actualizar` para permitir la modificación de múltiples propiedades.
-- **Application:**
-    - **Clientes:**
-        - `CrearClienteCommand`: Comando y manejador para registrar nuevos clientes.
-        - `ActualizarClienteCommand`: Comando y manejador para editar clientes existentes.
-        - `EliminarClienteCommand`: Comando y manejador para realizar el Soft Delete de clientes.
-        - `ListarClientesQuery`: Consulta y manejador para obtener la lista de clientes (incluyendo estado activo).
-    - **Productos:**
-        - `CrearProductoCommand`: Comando y manejador para registrar nuevos productos (Alimento, Medicamento, Insumo, etc.).
-        - `ActualizarProductoCommand`: Comando y manejador para editar productos existentes.
-        - `EliminarProductoCommand`: Comando y manejador para realizar el Soft Delete de productos.
-        - `ListarProductosQuery`: Consulta y manejador para obtener la lista de productos (incluyendo estado activo).
-- **API:**
-    - `ClientesController`: Nuevo controlador para exponer el CRUD completo de clientes en `api/Clientes`.
-    - `ProductosController`: Nuevo controlador para exponer el CRUD completo de productos en `api/Productos`.
+**Jerarquía de Roles:**
+*   `Empleado = 0`: Acceso operativo (Lotes, Mortalidad, Galpones, Inventario, Calendario).
+*   `SubAdmin = 1`: Acceso de gestión (Ventas, Gastos, Productos, Clientes, Dashboard, Planificación).
+*   `Admin = 2`: Acceso total (Gestión de Usuarios, Configuración del Sistema).
 
-### Observaciones:
-- Se optó por crear carpetas independientes para `Clientes` y `Productos` en `GalponERP.Application` para mantener la consistencia con otros dominios (Galpones, Lotes, etc.), en lugar de agruparlos bajo `Catalogos`.
-- Los endpoints existentes en `CatalogosController` se mantienen por compatibilidad, pero se recomienda usar los nuevos controladores dedicados para operaciones de catálogo maestro.
+**Mecánica de Inyección:**
+El `Rol` se almacena como un entero en la base de datos PostgreSQL mediante EF Core. Al validar el JWT de Firebase, se intercepta el evento `OnTokenValidated`, se busca al usuario por su `FirebaseUid` en la BD local y se inyecta un `ClaimTypes.Role` con el nombre del enum (Admin, SubAdmin, Empleado).
 
-## Sprint 12: Vistas de Lote e Inventario Operativo
+## Decisión 14.2: Migración RefactorRolesEnum
+Se generó una migración no destructiva para convertir la columna `Rol` de `character varying(50)` a `integer`. Se recomienda que antes de aplicar la migración en producción, se limpien o mapeen los valores de texto existentes a sus equivalentes numéricos (Admin -> 2, etc.).
 
-### Cambios realizados:
-- **Domain:**
-    - `ILoteRepository`: Se agregó `ObtenerTodosAsync` para permitir listado completo.
-- **Application:**
-    - **Lotes:**
-        - `ListarLotesQuery`: Consulta para listar lotes con filtro opcional de activos.
-        - `ObtenerDetalleLoteQuery`: Consulta detallada que consolida datos de ventas, mortalidad y gastos para calcular la utilidad estimada del lote.
-    - **Inventario:**
-        - `RegistrarMovimientoInventarioCommand`: Comando para registrar entradas/salidas de productos (alimento, medicina, etc.).
-        - `ObtenerStockActualQuery`: Consulta que calcula el balance neto de stock por producto basándose en el historial de movimientos.
-- **Infrastructure:**
-    - `LoteRepository`: Implementación del nuevo método de listado.
-- **API:**
-    - `LotesController`: Se agregaron endpoints GET para listar y obtener detalle por ID.
-    - `InventarioController`: Se agregaron endpoints para registrar movimientos y consultar stock actual.
+## Decisión 14.3: Blindaje de Controladores
+Se aplicó el atributo `[Authorize(Roles = "Admin,SubAdmin,Empleado")]` según la criticidad del endpoint, asegurando que el principio de menor privilegio se cumpla.
 
-### Observaciones:
-- La consulta de detalle de lote realiza agregaciones en memoria de múltiples repositorios. Para grandes volúmenes de datos, se podría considerar una vista materializada o una tabla de resumen en el futuro.
-- El stock actual se calcula dinámicamente. Si el historial crece demasiado, se recomienda implementar una tabla de `StockActual` que se actualice con cada movimiento.
+## Decisión 15.1: Módulo de Pesajes y Cálculo de FCR
+Se implementó la entidad `PesajeLote` para registrar el peso promedio de muestras de pollos. El Índice de Conversión Alimenticia (FCR) se calcula dinámicamente en la consulta de detalle del lote utilizando la fórmula:
+`FCR = Alimento Consumido (Kg) / Incremento de Biomasa (Kg)`.
 
-## Sprint 13: Dashboard y Reportes de Rentabilidad
+**Consideraciones Técnicas:**
+- El peso inicial del pollito se estima en 40g para el cálculo del incremento.
+- Se filtran los movimientos de inventario de tipo "Salida" para productos de tipo "Alimento" vinculados al lote.
+- Se requiere al menos un registro de pesaje para obtener el FCR actual.
 
-### Cambios realizados:
-- **Domain:**
-    - `IMortalidadRepository`: Se agregó `ObtenerPorRangoFechasAsync` para facilitar reportes temporales.
-- **Application:**
-    - **Dashboard:**
-        - `ObtenerResumenDashboardQuery`: Nueva consulta que consolida el estado actual de la granja (aves vivas), mortalidad mensual e inventario crítico en una sola respuesta.
-- **Infrastructure:**
-    - `MortalidadRepository`: Implementación del método de consulta por rango de fechas.
-- **API:**
-    - `DashboardController`: Nuevo controlador con endpoint `GET /api/dashboard/resumen`.
-    - **Seguridad:** Se realizó una auditoría y se confirmó que los 13 controladores operativos cuentan con el atributo `[Authorize]`.
+## Decisión 16.1: Venta basada en Peso
+Se refactorizó la entidad `Venta` para alejarse de un modelo de "precio unitario por pollo" hacia uno de "peso total vendido y precio por kilo", alineándose con la realidad comercial de la industria avícola.
 
-### Observaciones:
-- El dashboard reutiliza la lógica de cálculo de consumo de alimento del caso de uso de inventario para asegurar consistencia en las alertas.
-- Se mantiene `AuthController` con acceso anónimo únicamente para el proceso de autenticación.
+## Decisión 17.1: Identidad y Gestión de Catálogos
+Se implementó el endpoint `/api/usuarios/me` para permitir al frontend obtener los datos del usuario logueado y su rol (RBAC) de forma atómica. Se completó la trazabilidad de catálogos permitiendo `Update` y `Soft Delete` en Clientes y Productos.
+
+## Decisión 18.1: Trazabilidad de Inventario (Kardex) y Ajustes
+Se habilitó la consulta histórica de movimientos para auditoría. Para los ajustes manuales (mermas/robos), se extendió la entidad `MovimientoInventario` con un campo `Justificacion` obligatorio para mantener la integridad de la bitácora de almacén.
+
+## Decisión 19.1: Desacoplamiento de Históricos
+Se crearon endpoints específicos para listar Ventas y Mortalidad fuera del contexto de un solo lote, permitiendo análisis transversales de la operación.
+
+## Decisión 20.1: Inteligencia de Negocio y Proyecciones
+Se implementó un algoritmo de proyección de sacrificio que utiliza el **FCR Actual** del lote para ajustar la **Ganancia Diaria Estimada**. 
+- Si un lote tiene un FCR ineficiente (alto), el sistema proyecta un crecimiento más lento y una fecha de sacrificio más tardía.
+- Se añadió una comparativa financiera entre los últimos 5 lotes para identificar tendencias de rentabilidad y eficiencia biológica.

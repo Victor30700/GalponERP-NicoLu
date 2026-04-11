@@ -1,3 +1,4 @@
+using GalponERP.Domain.Entities;
 using MediatR;
 
 namespace GalponERP.Application.Usuarios.Queries.ObtenerUsuarios;
@@ -9,5 +10,5 @@ public record UsuarioResponse(
     string FirebaseUid,
     string Email,
     string Nombre,
-    string Rol,
+    RolGalpon Rol,
     bool IsActive);

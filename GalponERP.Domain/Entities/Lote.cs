@@ -25,6 +25,10 @@ public class Lote : Entity
     public Moneda CostoUnitarioPollito { get; private set; } = null!;
     public EstadoLote Estado { get; private set; }
 
+    // Propiedades de navegación
+    private readonly List<PesajeLote> _pesajes = new();
+    public IReadOnlyCollection<PesajeLote> Pesajes => _pesajes.AsReadOnly();
+
     public Lote(Guid id, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitarioPollito) 
         : base(id)
     {

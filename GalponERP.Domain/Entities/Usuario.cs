@@ -14,9 +14,9 @@ public class Usuario : Entity
     public DateTime FechaNacimiento { get; private set; }
     public string Direccion { get; private set; } = string.Empty;
     public string Profesion { get; private set; } = string.Empty;
-    public string Rol { get; private set; } = null!;
+    public RolGalpon Rol { get; private set; }
 
-    public Usuario(Guid id, string firebaseUid, string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string rol) : base(id)
+    public Usuario(Guid id, string firebaseUid, string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, RolGalpon rol) : base(id)
     {
         if (string.IsNullOrWhiteSpace(firebaseUid))
             throw new ArgumentException("El FirebaseUid es obligatorio.");
@@ -26,9 +26,6 @@ public class Usuario : Entity
 
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del usuario es obligatorio.");
-
-        if (string.IsNullOrWhiteSpace(rol))
-            throw new ArgumentException("El rol es obligatorio.");
 
         FirebaseUid = firebaseUid;
         Email = email;
@@ -43,16 +40,13 @@ public class Usuario : Entity
     // Constructor para EF Core
     private Usuario() : base() { }
 
-    public void ActualizarPerfil(string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string rol)
+    public void ActualizarPerfil(string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, RolGalpon rol)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("El email es obligatorio.");
 
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del usuario es obligatorio.");
-
-        if (string.IsNullOrWhiteSpace(rol))
-            throw new ArgumentException("El rol es obligatorio.");
 
         Email = email;
         Nombre = nombre;
@@ -70,10 +64,8 @@ public class Usuario : Entity
         Nombre = nuevoNombre;
     }
 
-    public void ActualizarRol(string nuevoRol)
+    public void ActualizarRol(RolGalpon nuevoRol)
     {
-        if (string.IsNullOrWhiteSpace(nuevoRol))
-            throw new ArgumentException("El rol es obligatorio.");
         Rol = nuevoRol;
     }
 }

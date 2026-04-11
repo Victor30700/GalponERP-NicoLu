@@ -30,7 +30,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Listar Lotes
 - **URL:** `/api/Lotes`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Query Params:** `soloActivos` (bool, default: true)
 - **Salida (JSON):**
 ```json
@@ -51,7 +51,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Obtener Detalle de Lote
 - **URL:** `/api/Lotes/{id}`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Salida (JSON):**
 ```json
 {
@@ -75,7 +75,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Crear Lote
 - **URL:** `/api/Lotes`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Entrada (JSON):**
 ```json
 {
@@ -94,7 +94,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Cerrar Lote
 - **URL:** `/api/Lotes/{id}/cerrar`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Entrada (JSON):**
 ```json
 {
@@ -113,10 +113,44 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 
 ## 2. OPERACIONES DIARIAS
 
+### Obtener Toda la Mortalidad Histórica
+- **URL:** `/api/Mortalidad`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "fecha": "2026-04-10T00:00:00Z",
+    "cantidadBajas": 5,
+    "causa": "Calor excesivo"
+  }
+]
+```
+
+### Obtener Mortalidad por Lote
+- **URL:** `/api/Mortalidad/lote/{loteId}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "fecha": "2026-04-10T00:00:00Z",
+    "cantidadBajas": 5,
+    "causa": "Calor excesivo"
+  }
+]
+```
+
 ### Registrar Mortalidad (Bajas)
 - **URL:** `/api/Mortalidad`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Entrada (JSON):**
 ```json
 {
@@ -128,10 +162,42 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID del registro)
 
+### Registrar Pesaje de Lote
+- **URL:** `/api/Pesajes`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Entrada (JSON):**
+```json
+{
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "fecha": "2026-04-11T10:00:00Z",
+  "pesoPromedioGramos": 1250.5,
+  "cantidadMuestreada": 50
+}
+```
+- **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID del pesaje)
+
+### Obtener Pesajes por Lote
+- **URL:** `/api/Pesajes/lote/{loteId}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "fecha": "2026-04-11T10:00:00Z",
+    "pesoPromedioGramos": 1250.5,
+    "cantidadMuestreada": 50
+  }
+]
+```
+
 ### Registrar Gasto Operativo
 - **URL:** `/api/Gastos`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):**
 ```json
 {
@@ -149,7 +215,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Obtener Gastos Operativos
 - **URL:** `/api/Gastos`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Query Params:** `galponId` (Guid, opcional), `loteId` (Guid, opcional)
 - **Salida (JSON):**
 ```json
@@ -169,7 +235,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Obtener Calendario Sanitario por Lote
 - **URL:** `/api/CalendarioSanitario/{loteId}`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Salida (JSON):**
 ```json
 [
@@ -186,7 +252,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Marcar Vacuna/Tratamiento como Aplicado
 - **URL:** `/api/CalendarioSanitario/{actividadId}/aplicar`
 - **Método:** `PUT`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Salida:** `204 No Content`
 
 ## 3. INVENTARIO
@@ -194,7 +260,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Registrar Movimiento de Inventario
 - **URL:** `/api/Inventario/movimiento`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Entrada (JSON):**
 ```json
 {
@@ -202,7 +268,8 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "cantidad": 50.5,
   "tipo": 0,
-  "fecha": "2026-04-10T10:00:00Z"
+  "fecha": "2026-04-10T10:00:00Z",
+  "justificacion": "Compra inicial"
 }
 ```
 *(Nota: Tipo 0=Entrada, 1=Salida)*
@@ -214,10 +281,30 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 
-### Obtener Stock Actual
+### Obtener Movimientos de Inventario (Kardex)
+- **URL:** `/api/Inventario/movimientos`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombreProducto": "Balanceado Inicio",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "cantidad": 50.5,
+    "tipo": "Entrada",
+    "fecha": "2026-04-10T10:00:00Z"
+  }
+]
+```
+
+### Obtener Stock Actual (Global o por Producto)
 - **URL:** `/api/Inventario/stock`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Query Params:** `productoId` (Guid, opcional)
 - **Salida (JSON):**
 ```json
 [
@@ -231,11 +318,48 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ]
 ```
 
+### Obtener Stock de un Producto Específico
+- **URL:** `/api/Inventario/productos/{id}/stock`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+{
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombreProducto": "Balanceado Inicio",
+  "tipoProducto": "Alimento",
+  "stockActual": 1250.75,
+  "unidadMedida": "Kg"
+}
+```
+
+### Realizar Ajuste de Inventario
+- **URL:** `/api/Inventario/ajuste`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Entrada (JSON):**
+```json
+{
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "cantidad": 5.0,
+  "tipo": 1,
+  "fecha": "2026-04-11T10:00:00Z",
+  "justificacion": "Saco roto en bodega"
+}
+```
+*(Nota: Aunque se envíe Tipo 0 o 1, el sistema lo registrará internamente como **AjusteEntrada** o **AjusteSalida** para no afectar los cálculos biológicos de FCR/Consumo).*
+
+- **Salida (JSON):**
+```json
+{
+  "ajusteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
 ### Verificar Niveles de Alimento
 - **URL:** `/api/Inventario/niveles-alimento`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
-- **Entrada:** N/A
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Salida (JSON):**
 ```json
 {
@@ -248,10 +372,50 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 
 ## 4. VENTAS
 
+### Obtener Todas las Ventas
+- **URL:** `/api/Ventas`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "clienteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "clienteNombre": "Distribuidora Avícola",
+    "fecha": "2026-04-10T15:00:00Z",
+    "cantidadPollos": 100,
+    "pesoTotalKg": 250.5,
+    "precioPorKilo": 2.20,
+    "total": 551.10
+  }
+]
+```
+
+### Obtener Detalle de una Venta
+- **URL:** `/api/Ventas/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "clienteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "clienteNombre": "Distribuidora Avícola",
+  "fecha": "2026-04-10T15:00:00Z",
+  "cantidadPollos": 100,
+  "pesoTotalKg": 250.5,
+  "precioPorKilo": 2.20,
+  "total": 551.10
+}
+```
+
 ### Registrar Venta Parcial
 - **URL:** `/api/Ventas/parcial`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):**
 ```json
 {
@@ -259,7 +423,8 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "clienteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "fecha": "2026-04-10T15:00:00Z",
   "cantidadPollos": 100,
-  "precioUnitario": 5.50
+  "pesoTotalVendido": 250.5,
+  "precioPorKilo": 2.20
 }
 ```
 - **Salida (JSON):**
@@ -274,7 +439,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Obtener Simulación de Rentabilidad
 - **URL:** `/api/Planificacion/simulacion`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (Query Params):**
   - `cantidadPollos` (int)
   - `pesoEsperadoPorPolloKg` (decimal)
@@ -300,10 +465,26 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 
 ## 6. USUARIOS
 
+### Obtener Perfil del Usuario Actual (Me)
+- **URL:** `/api/Usuarios/me`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "firebaseUid": "FIREBASE_UID_STRING",
+  "email": "usuario@ejemplo.com",
+  "nombre": "Juan Pérez",
+  "rol": "Admin|SubAdmin|Empleado",
+  "isActive": true
+}
+```
+
 ### Registrar Usuario
 - **URL:** `/api/Usuarios`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Entrada (JSON):**
 ```json
 {
@@ -313,7 +494,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "fechaNacimiento": "1990-05-15T00:00:00Z",
   "direccion": "Av. Principal 123",
   "profesion": "Ingeniero Agrónomo",
-  "rol": "Admin|Operario|Veterinario"
+  "rol": "Empleado|SubAdmin|Admin"
 }
 ```
 - **Salida (JSON):**
@@ -326,7 +507,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Obtener Todos los Usuarios
 - **URL:** `/api/Usuarios`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Entrada:** N/A
 - **Salida (JSON):**
 ```json
@@ -335,7 +516,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "firebaseUid": "FIREBASE_UID_STRING",
     "nombre": "Nombre del Usuario",
-    "rol": "Admin|Operario"
+    "rol": "Admin|SubAdmin|Empleado"
   }
 ]
 ```
@@ -343,13 +524,13 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Actualizar Usuario
 - **URL:** `/api/Usuarios/{id}`
 - **Método:** `PUT`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Entrada (JSON):**
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "nombre": "Nuevo Nombre",
-  "rol": "Admin|Operario"
+  "rol": "Empleado|SubAdmin|Admin"
 }
 ```
 - **Salida:** `204 No Content`
@@ -357,7 +538,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Eliminar Usuario (Soft Delete)
 - **URL:** `/api/Usuarios/{id}`
 - **Método:** `DELETE`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Salida:** `204 No Content`
 
 ## 7. GALPONES
@@ -365,7 +546,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Crear Galpón
 - **URL:** `/api/Galpones`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Entrada (JSON):**
 ```json
 {
@@ -384,7 +565,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Listar Galpones
 - **URL:** `/api/Galpones`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Salida (JSON):**
 ```json
 [
@@ -401,7 +582,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Editar Galpón
 - **URL:** `/api/Galpones/{id}`
 - **Método:** `PUT`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 - **Entrada (JSON):**
 ```json
 {
@@ -413,56 +594,30 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida:** `204 No Content`
 
-## 8. CATÁLOGOS (DEPRECADO - Usar Secciones 9 y 10)
+## 8. CATÁLOGOS (DEPRECADO)
 
 ### Obtener Clientes
 - **URL:** `/api/Catalogos/clientes`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
-- **Entrada:** N/A
-- **Salida (JSON):**
-```json
-[
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "nombre": "Nombre del Cliente",
-    "ruc": "1234567890",
-    "direccion": "Dirección",
-    "telefono": "0999999999"
-  }
-]
-```
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 
 ### Obtener Productos
 - **URL:** `/api/Catalogos/productos`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
-- **Entrada:** N/A
-- **Salida (JSON):**
-```json
-[
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "nombre": "Balanceado Inicio",
-    "tipo": "Alimento",
-    "unidadMedida": "Kg"
-  }
-]
-```
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
 
 ## 9. CLIENTES
 
 ### Crear Cliente
 - **URL:** `/api/Clientes`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):**
 ```json
 {
-  "nombre": "Distribuidora El Pollo Loco",
-  "ruc": "1712345678001",
-  "direccion": "Av. Amazonas y Colón",
-  "telefono": "022345678"
+  "nombre": "Distribuidora Avícola",
+  "telefono": "123456789",
+  "direccion": "Calle Falsa 123"
 }
 ```
 - **Salida (JSON):**
@@ -475,16 +630,14 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Listar Clientes
 - **URL:** `/api/Clientes`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Salida (JSON):**
 ```json
 [
   {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "nombre": "Distribuidora El Pollo Loco",
-    "ruc": "1712345678001",
-    "direccion": "Av. Amazonas y Colón",
-    "telefono": "022345678",
+    "nombre": "Distribuidora Avícola",
+    "telefono": "123456789",
     "isActive": true
   }
 ]
@@ -493,15 +646,14 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Actualizar Cliente
 - **URL:** `/api/Clientes/{id}`
 - **Método:** `PUT`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):**
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "nombre": "Distribuidora El Pollo Loco S.A.",
-  "ruc": "1712345678001",
-  "direccion": "Nuevas Oficinas",
-  "telefono": "022345678"
+  "nombre": "Nombre Actualizado",
+  "telefono": "987654321",
+  "direccion": "Nueva Dirección 456"
 }
 ```
 - **Salida:** `204 No Content`
@@ -509,7 +661,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Eliminar Cliente (Soft Delete)
 - **URL:** `/api/Clientes/{id}`
 - **Método:** `DELETE`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Salida:** `204 No Content`
 
 ## 10. PRODUCTOS
@@ -517,17 +669,15 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Crear Producto
 - **URL:** `/api/Productos`
 - **Método:** `POST`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):**
 ```json
 {
-  "nombre": "Balanceado Crecimiento",
-  "tipo": 0,
-  "unidadMedida": 3
+  "nombre": "Balanceado Inicio",
+  "tipo": "Alimento",
+  "unidadMedida": "Kg"
 }
 ```
-*(Nota: TipoProducto 0=Alimento, 1=Medicamento, 2=Insumo, 3=Otro | UnidadMedida 0=Kg, 1=Unidad, 2=Litro, 3=Saco)*
-
 - **Salida (JSON):**
 ```json
 {
@@ -538,15 +688,15 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Listar Productos
 - **URL:** `/api/Productos`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Salida (JSON):**
 ```json
 [
   {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "nombre": "Balanceado Crecimiento",
-    "tipo": 0,
-    "unidadMedida": 3,
+    "nombre": "Balanceado Inicio",
+    "tipo": "Alimento",
+    "unidadMedida": "Kg",
     "isActive": true
   }
 ]
@@ -555,16 +705,22 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Actualizar Producto
 - **URL:** `/api/Productos/{id}`
 - **Método:** `PUT`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):**
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "nombre": "Balanceado Crecimiento Premium",
-  "tipo": 0,
-  "unidadMedida": 3
+  "nombre": "Nombre Actualizado",
+  "tipo": "Alimento",
+  "unidadMedida": "Libras"
 }
 ```
+- **Salida:** `204 No Content`
+
+### Eliminar Producto (Soft Delete)
+- **URL:** `/api/Productos/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Salida:** `204 No Content`
 
 ## 11. DASHBOARD
@@ -572,14 +728,51 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Obtener Resumen Dashboard
 - **URL:** `/api/Dashboard/resumen`
 - **Método:** `GET`
-- **Autenticación:** Requerida (Bearer)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Salida (JSON):**
 ```json
 {
-  "totalPollosVivos": 14500,
-  "mortalidadMesActual": 125,
-  "stockAlimentoActual": 2500.75,
-  "requiereAlertaAlimento": false,
-  "diasAlimentoRestantes": 12.5
+  "totalPollosActivos": 15000,
+  "mortalidadPromedio": 2.5,
+  "fcrPromedio": 1.65,
+  "utilidadProyectada": 25000.00
 }
+```
+
+### Obtener Proyección de Sacrificio
+- **URL:** `/api/Dashboard/proyeccion-sacrificio/{loteId}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+{
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "pesoActualGramos": 1250.5,
+  "fcrActual": 1.62,
+  "diasDeVida": 25,
+  "gananciaDiariaEstimadaGramos": 48.5,
+  "pesoObjetivoGramos": 2500.0,
+  "diasRestantes": 26,
+  "fechaSacrificio": "2026-05-07T10:00:00Z"
+}
+```
+
+### Obtener Comparativa de Lotes
+- **URL:** `/api/Dashboard/comparativa-lotes`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "fechaIngreso": "2026-04-10T00:00:00Z",
+    "cantidadInicial": 5000,
+    "mortalidadTotal": 150,
+    "fcrFinal": 1.65,
+    "totalVentas": 15000.00,
+    "totalGastos": 8000.00,
+    "utilidadNeta": 7000.00
+  }
+]
 ```

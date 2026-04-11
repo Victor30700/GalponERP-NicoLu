@@ -19,7 +19,10 @@ public class RegistrarVentaParcialValidator : AbstractValidator<RegistrarVentaPa
         RuleFor(x => x.CantidadPollos)
             .GreaterThan(0).WithMessage("La cantidad de pollos debe ser mayor a cero.");
 
-        RuleFor(x => x.PrecioUnitario)
-            .GreaterThanOrEqualTo(0).WithMessage("El precio unitario no puede ser negativo.");
+        RuleFor(x => x.PesoTotalVendido)
+            .GreaterThan(0).WithMessage("El peso total vendido debe ser mayor a cero.");
+
+        RuleFor(x => x.PrecioPorKilo)
+            .GreaterThanOrEqualTo(0).WithMessage("El precio por kilo no puede ser negativo.");
     }
 }

@@ -6,7 +6,9 @@ namespace GalponERP.Domain.Entities;
 public enum TipoMovimiento
 {
     Entrada,
-    Salida
+    Salida,
+    AjusteEntrada,
+    AjusteSalida
 }
 
 /// <summary>
@@ -19,8 +21,9 @@ public class MovimientoInventario : Entity
     public decimal Cantidad { get; private set; }
     public TipoMovimiento Tipo { get; private set; }
     public DateTime Fecha { get; private set; }
+    public string? Justificacion { get; private set; }
 
-    public MovimientoInventario(Guid id, Guid productoId, Guid? loteId, decimal cantidad, TipoMovimiento tipo, DateTime fecha) 
+    public MovimientoInventario(Guid id, Guid productoId, Guid? loteId, decimal cantidad, TipoMovimiento tipo, DateTime fecha, string? justificacion = null) 
         : base(id)
     {
         if (productoId == Guid.Empty)
@@ -34,6 +37,7 @@ public class MovimientoInventario : Entity
         Cantidad = cantidad;
         Tipo = tipo;
         Fecha = fecha;
+        Justificacion = justificacion;
     }
 
     // Constructor para EF Core

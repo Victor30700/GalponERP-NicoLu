@@ -2,9 +2,11 @@ using GalponERP.Application.Usuarios.Commands.ActualizarUsuario;
 using GalponERP.Application.Usuarios.Commands.EliminarUsuario;
 using GalponERP.Application.Usuarios.Commands.RegistrarUsuario;
 using GalponERP.Application.Usuarios.Queries.ObtenerUsuarios;
+using GalponERP.Application.Usuarios.Queries.ObtenerUsuarioActual;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GalponERP.Api.Controllers;
 
@@ -20,6 +22,26 @@ public class UsuariosController : ControllerBase
         _mediator = mediator;
     }
 
+    [Authorize(Roles = "Admin,SubAdmin,Empleado")]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe()
+    {
+        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+        if (string.IsNullOrEmpty(firebaseUid))
+        {
+            return Unauthorized();
+        }
+
+        var usuario = await _mediator.Send(new ObtenerUsuarioActualQuery(firebaseUid));
+        if (usuario == null)
+        {
+            return NotFound("Usuario no registrado en la base de datos local.");
+        }
+
+        return Ok(usuario);
+    }
+
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Registrar([FromBody] RegistrarUsuarioCommand command)
     {
@@ -27,6 +49,7 @@ public class UsuariosController : ControllerBase
         return Ok(new { UsuarioId = id });
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> ObtenerTodos()
     {
@@ -34,6 +57,7 @@ public class UsuariosController : ControllerBase
         return Ok(usuarios);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarUsuarioCommand command)
     {
@@ -46,6 +70,7 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

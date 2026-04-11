@@ -35,6 +35,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = projectId,
             ValidateLifetime = true
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var firebaseUid = context.Principal?.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
+                if (string.IsNullOrEmpty(firebaseUid)) return;
+
+                using var scope = context.HttpContext.RequestServices.CreateScope();
+                var usuarioRepository = scope.ServiceProvider.GetRequiredService<GalponERP.Domain.Interfaces.Repositories.IUsuarioRepository>();
+                var usuario = await usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
+
+                if (usuario != null)
+                {
+                    var claims = new List<System.Security.Claims.Claim>
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, usuario.Rol.ToString())
+                    };
+                    var appIdentity = new System.Security.Claims.ClaimsIdentity(claims);
+                    context.Principal?.AddIdentity(appIdentity);
+                }
+            }
+        };
     });
 
 // Add services to the container.
@@ -115,7 +137,7 @@ using (var scope = app.Services.CreateScope())
                 new DateTime(1980, 1, 1), 
                 "Dirección del Galpón", 
                 "Gerente", 
-                GalponERP.Domain.Entities.RolesGalpon.Admin);
+                GalponERP.Domain.Entities.RolGalpon.Admin);
             context.Usuarios.Add(admin);
             context.SaveChanges();
         }

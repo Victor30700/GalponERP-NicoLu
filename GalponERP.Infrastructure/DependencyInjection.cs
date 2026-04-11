@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<ICalendarioSanitarioRepository, CalendarioSanitarioRepository>();
         services.AddScoped<IGalponRepository, GalponRepository>();
         services.AddScoped<IMortalidadRepository, MortalidadRepository>();
+        services.AddScoped<IPesajeLoteRepository, PesajeLoteRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddScoped<IAuthenticationService, FirebaseAuthService>();

@@ -1,3 +1,4 @@
+using GalponERP.Domain.Entities;
 using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.RegistrarUsuario;
@@ -10,4 +11,4 @@ public record RegistrarUsuarioCommand(
     DateTime FechaNacimiento,
     string Direccion,
     string Profesion,
-    string Rol) : IRequest<Guid>;
+    RolGalpon Rol) : IRequest<Guid>;

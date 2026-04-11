@@ -10,7 +10,8 @@ public record RegistrarMovimientoInventarioCommand(
     Guid? LoteId,
     decimal Cantidad,
     TipoMovimiento Tipo,
-    DateTime Fecha) : IRequest<Guid>;
+    DateTime Fecha,
+    string? Justificacion = null) : IRequest<Guid>;
 
 public class RegistrarMovimientoInventarioCommandHandler : IRequestHandler<RegistrarMovimientoInventarioCommand, Guid>
 {
@@ -31,7 +32,8 @@ public class RegistrarMovimientoInventarioCommandHandler : IRequestHandler<Regis
             request.LoteId,
             request.Cantidad,
             request.Tipo,
-            request.Fecha);
+            request.Fecha,
+            request.Justificacion);
 
         _inventarioRepository.RegistrarMovimiento(movimiento);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

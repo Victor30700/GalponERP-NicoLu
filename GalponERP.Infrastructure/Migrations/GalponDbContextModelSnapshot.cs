@@ -253,6 +253,9 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Justificacion")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("LoteId")
                         .HasColumnType("uuid");
 
@@ -271,6 +274,34 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("MovimientosInventario", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.PesajeLote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CantidadMuestreada")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PesoPromedioGramos")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoteId");
+
+                    b.ToTable("PesajesLote");
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.Producto", b =>
@@ -344,10 +375,8 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Rol")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Rol")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -381,14 +410,18 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<Guid>("LoteId")
                         .HasColumnType("uuid");
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "PrecioUnitario", "GalponERP.Domain.Entities.Venta.PrecioUnitario#Moneda", b1 =>
+                    b.Property<decimal>("PesoTotalVendido")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "PrecioPorKilo", "GalponERP.Domain.Entities.Venta.PrecioPorKilo#Moneda", b1 =>
                         {
                             b1.IsRequired();
 
                             b1.Property<decimal>("Monto")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
-                                .HasColumnName("PrecioUnitario");
+                                .HasColumnName("PrecioPorKilo");
                         });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Total", "GalponERP.Domain.Entities.Venta.Total#Moneda", b1 =>
@@ -456,6 +489,15 @@ namespace GalponERP.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.PesajeLote", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.Lote", null)
+                        .WithMany("Pesajes")
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.Venta", b =>
                 {
                     b.HasOne("GalponERP.Domain.Entities.Cliente", null)
@@ -469,6 +511,11 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasForeignKey("LoteId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>
+                {
+                    b.Navigation("Pesajes");
                 });
 #pragma warning restore 612, 618
         }

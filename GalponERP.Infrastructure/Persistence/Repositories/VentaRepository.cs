@@ -20,12 +20,20 @@ public class VentaRepository : IVentaRepository
 
     public async Task<IEnumerable<Venta>> ObtenerPorLoteAsync(Guid loteId)
     {
-        return await _context.Set<Venta>()
+        return await _context.Ventas
             .Where(v => v.LoteId == loteId)
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Venta>> ObtenerTodasAsync()
+    {
+        return await _context.Ventas
+            .OrderByDescending(v => v.Fecha)
+            .ToListAsync();
+    }
+
     public void Agregar(Venta venta)
+
     {
         _context.Set<Venta>().Add(venta);
     }

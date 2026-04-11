@@ -36,14 +36,16 @@ public class VerificarNivelesAlimentoHandler : IRequestHandler<VerificarNivelesA
         var todosLosMovimientos = await _inventarioRepository.ObtenerTodosAsync();
         var movimientosAlimento = todosLosMovimientos.Where(m => alimentoIds.Contains(m.ProductoId)).ToList();
 
-        // Stock Total de Alimento en la granja
-        var stockTotal = movimientosAlimento.Sum(m => m.Tipo == TipoMovimiento.Entrada ? m.Cantidad : -m.Cantidad);
+        // Stock Total de Alimento en la granja (Incluye ajustes)
+        var stockTotal = movimientosAlimento.Sum(m => 
+            (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada) ? m.Cantidad : -m.Cantidad);
 
         var lotesActivos = await _loteRepository.ObtenerActivosAsync();
         decimal consumoDiarioGlobal = 0;
 
         foreach (var lote in lotesActivos)
         {
+            // El consumo para proyecciones solo debe considerar Salidas normales
             var movimientosLote = movimientosAlimento.Where(m => m.LoteId == lote.Id && m.Tipo == TipoMovimiento.Salida).ToList();
             
             if (!movimientosLote.Any()) continue;

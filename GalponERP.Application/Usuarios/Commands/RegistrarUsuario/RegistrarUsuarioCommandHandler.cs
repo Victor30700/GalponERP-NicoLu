@@ -38,7 +38,7 @@ public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCo
             {
                 { "nombre", request.Nombre },
                 { "apellidos", request.Apellidos },
-                { "rol", request.Rol },
+                { "rol", request.Rol.ToString() },
                 { "direccion", request.Direccion ?? "" },
                 { "profesion", request.Profesion ?? "" },
                 { "fechaNacimiento", request.FechaNacimiento.ToString("yyyy-MM-dd") }

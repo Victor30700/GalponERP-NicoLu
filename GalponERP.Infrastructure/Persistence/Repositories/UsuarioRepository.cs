@@ -28,7 +28,7 @@ public class UsuarioRepository : IUsuarioRepository
         return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<IEnumerable<Usuario>> ObtenerPorRolAsync(string rol)
+    public async Task<IEnumerable<Usuario>> ObtenerPorRolAsync(RolGalpon rol)
     {
         return await _context.Usuarios.Where(u => u.Rol == rol).ToListAsync();
     }

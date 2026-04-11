@@ -4,7 +4,7 @@ using GalponERP.Domain.ValueObjects;
 namespace GalponERP.Domain.Entities;
 
 /// <summary>
-/// Representa una venta de pollos de un lote específico.
+/// Representa una venta de pollos de un lote específico, basada en peso total vendido.
 /// </summary>
 public class Venta : Entity
 {
@@ -12,10 +12,11 @@ public class Venta : Entity
     public Guid ClienteId { get; private set; }
     public DateTime Fecha { get; private set; }
     public int CantidadPollos { get; private set; }
-    public Moneda PrecioUnitario { get; private set; } = null!;
+    public decimal PesoTotalVendido { get; private set; }
+    public Moneda PrecioPorKilo { get; private set; } = null!;
     public Moneda Total { get; private set; } = null!;
 
-    public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, Moneda precioUnitario) 
+    public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -30,15 +31,19 @@ public class Venta : Entity
         if (cantidadPollos <= 0)
             throw new ArgumentException("La cantidad de pollos debe ser mayor a cero.", nameof(cantidadPollos));
 
-        if (precioUnitario == null)
-            throw new ArgumentNullException(nameof(precioUnitario));
+        if (pesoTotalVendido <= 0)
+            throw new ArgumentException("El peso total vendido debe ser mayor a cero.", nameof(pesoTotalVendido));
+
+        if (precioPorKilo == null)
+            throw new ArgumentNullException(nameof(precioPorKilo));
 
         LoteId = loteId;
         ClienteId = clienteId;
         Fecha = fecha;
         CantidadPollos = cantidadPollos;
-        PrecioUnitario = precioUnitario;
-        Total = precioUnitario * cantidadPollos;
+        PesoTotalVendido = pesoTotalVendido;
+        PrecioPorKilo = precioPorKilo;
+        Total = precioPorKilo * pesoTotalVendido;
     }
 
     // Constructor para EF Core

@@ -18,10 +18,14 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
         builder.Property(v => v.CantidadPollos)
             .IsRequired();
 
-        builder.ComplexProperty(v => v.PrecioUnitario, b =>
+        builder.Property(v => v.PesoTotalVendido)
+            .IsRequired()
+            .HasPrecision(18, 2);
+
+        builder.ComplexProperty(v => v.PrecioPorKilo, b =>
         {
             b.Property(p => p.Monto)
-                .HasColumnName("PrecioUnitario")
+                .HasColumnName("PrecioPorKilo")
                 .HasPrecision(18, 2);
         });
 

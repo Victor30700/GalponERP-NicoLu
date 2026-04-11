@@ -13,8 +13,8 @@ public class RegistrarUsuarioCommandValidator : AbstractValidator<RegistrarUsuar
         RuleFor(x => x.Apellidos).MaximumLength(100);
         RuleFor(x => x.Direccion).MaximumLength(200);
         RuleFor(x => x.Profesion).MaximumLength(100);
-        RuleFor(x => x.Rol).NotEmpty().Must(rol => RolesGalpon.All.Contains(rol))
-            .WithMessage($"El rol debe ser uno de los siguientes: {string.Join(", ", RolesGalpon.All)}");
+        RuleFor(x => x.Rol).IsInEnum()
+            .WithMessage("El rol no es un valor válido.");
         RuleFor(x => x.FechaNacimiento).LessThan(DateTime.Now).WithMessage("La fecha de nacimiento debe ser en el pasado.");
     }
 }

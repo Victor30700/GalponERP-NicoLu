@@ -1,3 +1,4 @@
+using GalponERP.Domain.Entities;
 using MediatR;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
 using GalponERP.Application.Interfaces;
@@ -43,7 +44,7 @@ public class AlertaInventarioJob : BackgroundService
                         _logger.LogWarning("¡Alerta de inventario! Quedan {DiasRestantes:N1} días de alimento.", resultado.DiasRestantes);
 
                         // Buscar usuarios con rol Admin
-                        var admins = await usuarioRepository.ObtenerPorRolAsync("Admin");
+                        var admins = await usuarioRepository.ObtenerPorRolAsync(RolGalpon.Admin);
                         
                         foreach (var admin in admins)
                         {

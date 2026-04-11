@@ -1,10 +1,8 @@
 namespace GalponERP.Domain.Entities;
 
-public static class RolesGalpon
+public enum RolGalpon
 {
-    public const string Admin = "Admin";
-    public const string Operario = "Operario";
-    public const string Veterinario = "Veterinario";
-
-    public static readonly IReadOnlyCollection<string> All = new[] { Admin, Operario, Veterinario };
+    Empleado = 0,
+    SubAdmin = 1,
+    Admin = 2
 }

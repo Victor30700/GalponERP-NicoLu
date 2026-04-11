@@ -40,8 +40,7 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .HasMaxLength(100);
 
         builder.Property(u => u.Rol)
-            .IsRequired()
-            .HasMaxLength(50);
+            .IsRequired();
 
         builder.Property(u => u.FechaNacimiento)
             .IsRequired();

@@ -22,4 +22,5 @@ public abstract class Entity
     protected Entity() { }
 
     public void Desactivar() => IsActive = false;
+    public void Eliminar() => IsActive = false;
 }

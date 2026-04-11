@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 
-public record ObtenerStockActualQuery() : IRequest<IEnumerable<StockProductoResponse>>;
+public record ObtenerStockActualQuery(Guid? ProductoId = null) : IRequest<IEnumerable<StockProductoResponse>>;
 
 public record StockProductoResponse(
     Guid ProductoId,
@@ -27,6 +27,13 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
     public async Task<IEnumerable<StockProductoResponse>> Handle(ObtenerStockActualQuery request, CancellationToken cancellationToken)
     {
         var productos = await _productoRepository.ObtenerTodosAsync();
+        
+        if (request.ProductoId.HasValue)
+        {
+            var p = await _productoRepository.ObtenerPorIdAsync(request.ProductoId.Value);
+            productos = p != null ? new List<Producto> { p } : new List<Producto>();
+        }
+
         var movimientos = await _inventarioRepository.ObtenerTodosAsync();
 
         var stockPorProducto = movimientos
@@ -34,7 +41,7 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
             .Select(g => new
             {
                 ProductoId = g.Key,
-                Stock = g.Sum(m => m.Tipo == TipoMovimiento.Entrada ? m.Cantidad : -m.Cantidad)
+                Stock = g.Sum(m => (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada) ? m.Cantidad : -m.Cantidad)
             })
             .ToDictionary(x => x.ProductoId, x => x.Stock);
 

@@ -1,3 +1,4 @@
+using GalponERP.Domain.Entities;
 using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.ActualizarUsuario;
@@ -10,4 +11,4 @@ public record ActualizarUsuarioCommand(
     DateTime FechaNacimiento,
     string Direccion,
     string Profesion,
-    string Rol) : IRequest;
+    RolGalpon Rol) : IRequest;
