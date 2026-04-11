@@ -29,6 +29,7 @@ public class GalponDbContext : DbContext
     public DbSet<GastoOperativo> GastosOperativos { get; set; }
     public DbSet<CalendarioSanitario> CalendarioSanitario { get; set; }
     public DbSet<PesajeLote> PesajesLote { get; set; }
+    public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

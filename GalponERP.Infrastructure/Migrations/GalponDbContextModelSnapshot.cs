@@ -23,6 +23,55 @@ namespace GalponERP.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.AuditoriaLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("DetallesJSON")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Entidad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("EntidadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditoriaLogs", (string)null);
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.CalendarioSanitario", b =>
                 {
                     b.Property<Guid>("Id")
@@ -274,6 +323,9 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("GalponId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -324,6 +376,8 @@ namespace GalponERP.Infrastructure.Migrations
                         });
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GalponId");
 
                     b.ToTable("Lotes", (string)null);
                 });
@@ -715,6 +769,15 @@ namespace GalponERP.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("LoteId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.Galpon", null)
+                        .WithMany()
+                        .HasForeignKey("GalponId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.MortalidadDiaria", b =>

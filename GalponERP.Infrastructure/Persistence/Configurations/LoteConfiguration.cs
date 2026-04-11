@@ -12,6 +12,11 @@ public class LoteConfiguration : IEntityTypeConfiguration<Lote>
 
         builder.HasKey(l => l.Id);
 
+        builder.HasOne<Galpon>()
+            .WithMany()
+            .HasForeignKey(l => l.GalponId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(l => l.FechaIngreso)
             .IsRequired();
 

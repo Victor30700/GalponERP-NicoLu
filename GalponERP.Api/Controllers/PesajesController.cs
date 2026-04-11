@@ -1,4 +1,6 @@
 using GalponERP.Application.Pesajes.Commands.RegistrarPesaje;
+using GalponERP.Application.Pesajes.Commands.ActualizarPesaje;
+using GalponERP.Application.Pesajes.Commands.EliminarPesaje;
 using GalponERP.Application.Pesajes.Queries.ObtenerPesajesPorLote;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Application.Interfaces;
@@ -55,5 +57,44 @@ public class PesajesController : ControllerBase
     {
         var result = await _mediator.Send(new ObtenerPesajesPorLoteQuery(loteId));
         return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarPesajeCommand command)
+    {
+        if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
+
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
+        try
+        {
+            command.UsuarioId = usuarioId;
+            await _mediator.Send(command);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> Eliminar(Guid id)
+    {
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
+        try
+        {
+            await _mediator.Send(new EliminarPesajeCommand(id) { UsuarioId = usuarioId });
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

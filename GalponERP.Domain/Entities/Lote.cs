@@ -17,6 +17,7 @@ public enum EstadoLote
 /// </summary>
 public class Lote : Entity
 {
+    public Guid GalponId { get; private set; }
     public DateTime FechaIngreso { get; private set; }
     public int CantidadInicial { get; private set; }
     public int CantidadActual { get; private set; }
@@ -35,12 +36,16 @@ public class Lote : Entity
     private readonly List<PesajeLote> _pesajes = new();
     public IReadOnlyCollection<PesajeLote> Pesajes => _pesajes.AsReadOnly();
 
-    public Lote(Guid id, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitarioPollito) 
+    public Lote(Guid id, Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitarioPollito) 
         : base(id)
     {
+        if (galponId == Guid.Empty)
+            throw new LoteDomainException("El ID del galpón es obligatorio.");
+
         if (cantidadInicial <= 0)
             throw new LoteDomainException("La cantidad inicial del lote debe ser mayor a cero.");
 
+        GalponId = galponId;
         FechaIngreso = fechaIngreso;
         CantidadInicial = cantidadInicial;
         CantidadActual = cantidadInicial;
@@ -71,6 +76,41 @@ public class Lote : Entity
 
         MortalidadAcumulada += cantidad;
         CantidadActual -= cantidad;
+    }
+
+    /// <summary>
+    /// Corrige un registro de mortalidad previo.
+    /// </summary>
+    public void CorregirMortalidad(int cantidadAnterior, int cantidadNueva)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden corregir bajas en lotes activos.");
+
+        if (cantidadNueva <= 0)
+            throw new LoteDomainException("La nueva cantidad de bajas debe ser mayor a cero.");
+
+        // Revertir el impacto anterior
+        MortalidadAcumulada -= cantidadAnterior;
+        CantidadActual += cantidadAnterior;
+
+        // Aplicar el nuevo impacto
+        if (cantidadNueva > CantidadActual)
+            throw new LoteDomainException($"No se pueden registrar {cantidadNueva} bajas. Solo quedan {CantidadActual} pollos vivos.");
+
+        MortalidadAcumulada += cantidadNueva;
+        CantidadActual -= cantidadNueva;
+    }
+
+    /// <summary>
+    /// Elimina un registro de mortalidad (Soft Delete a nivel de registro, pero revierte contadores).
+    /// </summary>
+    public void EliminarMortalidad(int cantidad)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden eliminar bajas en lotes activos.");
+
+        MortalidadAcumulada -= cantidad;
+        CantidadActual += cantidad;
     }
 
     /// <summary>
@@ -107,6 +147,18 @@ public class Lote : Entity
         Estado = EstadoLote.Cerrado;
     }
 
+    public void Reabrir()
+    {
+        if (Estado != EstadoLote.Cerrado)
+            throw new LoteDomainException("Solo se pueden reabrir lotes que estén cerrados.");
+
+        FCRFinal = null;
+        CostoTotalFinal = null;
+        UtilidadNetaFinal = null;
+        PorcentajeMortalidadFinal = null;
+        Estado = EstadoLote.Activo;
+    }
+
     public void AnularVenta(int cantidad)
     {
         if (Estado == EstadoLote.Cerrado)
@@ -120,5 +172,29 @@ public class Lote : Entity
 
         PollosVendidos -= cantidad;
         CantidadActual += cantidad;
+    }
+
+    public void ActualizarDatosIniciales(Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitario)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden actualizar datos iniciales en lotes activos.");
+
+        if (galponId == Guid.Empty)
+            throw new LoteDomainException("El ID del galpón es obligatorio.");
+
+        if (cantidadInicial <= 0)
+            throw new LoteDomainException("La cantidad inicial debe ser mayor a cero.");
+
+        // Recalcular CantidadActual basada en la nueva cantidad inicial y el rastro histórico
+        int nuevaCantidadActual = cantidadInicial - MortalidadAcumulada - PollosVendidos;
+        
+        if (nuevaCantidadActual < 0)
+            throw new LoteDomainException("La nueva cantidad inicial es insuficiente para cubrir la mortalidad y ventas ya registradas.");
+
+        GalponId = galponId;
+        FechaIngreso = fechaIngreso;
+        CantidadInicial = cantidadInicial;
+        CantidadActual = nuevaCantidadActual;
+        CostoUnitarioPollito = costoUnitario;
     }
 }

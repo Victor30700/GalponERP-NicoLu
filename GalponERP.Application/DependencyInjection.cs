@@ -13,6 +13,7 @@ public static class DependencyInjection
         {
             config.RegisterServicesFromAssembly(assembly);
             config.AddOpenBehavior(typeof(GalponERP.Application.Behaviors.ValidationBehavior<,>));
+            config.AddOpenBehavior(typeof(GalponERP.Application.Behaviors.AuditoriaBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(assembly);

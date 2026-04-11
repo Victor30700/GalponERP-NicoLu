@@ -6,6 +6,9 @@ public class CrearLoteCommandValidator : AbstractValidator<CrearLoteCommand>
 {
     public CrearLoteCommandValidator()
     {
+        RuleFor(x => x.GalponId)
+            .NotEmpty().WithMessage("El ID del galpón es obligatorio.");
+
         RuleFor(x => x.FechaIngreso)
             .NotEmpty().WithMessage("La fecha de ingreso es obligatoria.")
             .LessThanOrEqualTo(x => DateTime.UtcNow.AddMinutes(5)).WithMessage("La fecha de ingreso no puede ser futura.");

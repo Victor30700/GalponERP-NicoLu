@@ -41,4 +41,10 @@ public class LoteRepository : ILoteRepository
     {
         _context.Set<Lote>().Update(lote);
     }
+
+    public void Eliminar(Lote lote)
+    {
+        lote.Eliminar();
+        _context.Set<Lote>().Update(lote);
+    }
 }

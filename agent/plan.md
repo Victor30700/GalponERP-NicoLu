@@ -1,15 +1,25 @@
-# PLAN DE DESARROLLO - FASE 1.8: CONSOLIDACIÓN TRANSACCIONAL Y AUDITORÍA
+# PLAN DE DESARROLLO - FASE 1.9: CORRECCIONES E INTELIGENCIA OPERATIVA
 
-## SPRINT 27: Gestión de Gastos y Trazabilidad de Ventas
-*Objetivo: Completar el ciclo de vida de los gastos y auditar ventas por lote.*
-- [x] 1. **Gastos:** Implementar `ActualizarGastoOperativoCommand` y `EliminarGastoOperativoCommand` (Soft Delete).
-- [x] 2. **Gastos API:** Exponer `PUT /api/gastos/{id}` y `DELETE /api/gastos/{id}`. Asegurar extracción de `UsuarioId` del JWT.
-- [x] 3. **Ventas:** Crear query `ObtenerVentasPorLoteQuery` y exponer endpoint `GET /api/ventas/lote/{loteId}`.
-- [x] 4. **Auditoría:** Revisar `AnularVentaCommandHandler` para garantizar que la devolución de pollos al lote sea atómica usando `IUnitOfWork`.
+## SPRINT 29: Gestión de Correcciones (Flexibilidad Auditable)
+*Objetivo: Permitir la edición y eliminación de registros diarios para corregir errores humanos.*
+- [x] 1. **Mortalidad:** Implementar `ActualizarMortalidadCommand` y `EliminarMortalidadCommand` (Soft Delete).
+- [x] 2. **Pesajes:** Implementar `ActualizarPesajeCommand` y `EliminarPesajeCommand` (Soft Delete).
+- [x] 3. **Lotes:** Implementar `ActualizarLoteCommand` (Permitir editar FechaInicio, CantidadInicial y CostoInicial solo si el lote está Abierto).
+- [x] 4. **API:** Exponer los endpoints `PUT` y `DELETE` en `MortalidadController`, `PesajesController` y `LotesController`. Asegurar protección por Roles (Admin/SubAdmin).
 
-## SPRINT 28: Kardex Avanzado y Blindaje de Catálogos
-*Objetivo: Reportes administrativos y estandarización de seguridad.*
-- [x] 1. **Inventario:** Crear `ObtenerReporteMovimientosQuery` con filtros por `FechaInicio`, `FechaFin` y `CategoriaProductoId`.
-- [x] 2. **Inventario API:** Exponer `GET /api/inventario/movimientos/reporte` para análisis de consumo de alimento vs medicinas.
-- [x] 3. **Seguridad:** Auditar todos los controladores de Catálogos (`Categorias`, `UnidadesMedida`, `Productos`, `Clientes`) para restringir `POST`, `PUT` y `DELETE` estrictamente a roles `Admin` y `SubAdmin`.
-- [x] 4. **Documentación:** Actualizar `docs/endpoints.md` con los nuevos reportes y métodos de gastos.
+## SPRINT 30: Business Intelligence y Finanzas Consolidadas
+*Objetivo: Reportes gerenciales que trascienden a un solo lote.*
+- [x] 1. **Finanzas:** Crear `ObtenerFlujoCajaEmpresarialQuery` que consolide Ventas y Gastos de TODOS los lotes en un rango de fechas.
+- [x] 2. **Producción:** Crear `ObtenerReporteMortalidadTransversalQuery` para analizar causas de muerte en toda la granja.
+- [x] 3. **Benchmarking:** Crear `ObtenerComparativaEficienciaGalponesQuery` para medir cuál galpón es más rentable históricamente.
+- [x] 4. **API:** Crear `FinanzasController` y añadir reportes avanzados al `DashboardController`.
+
+## SPRINT 31: Gestión de Estado y Auditoría Log (Governance)
+*Objetivo: Control total sobre el cierre de ciclos y rastro de actividad.*
+- [x] 1. **Lotes:** Implementar `ReabrirLoteCommand` (Solo Admin). Debe limpiar los campos de Snapshot (`FCRFinal`, `UtilidadFinal`, etc.) y poner el lote en estado `Abierto`.
+- [x] 2. **Auditoría:** Crear entidad `AuditoriaLog` (UsuarioId, Accion, Entidad, Fecha, DetallesJSON).
+- [x] 3. **Middleware/Behavior:** Implementar un `AuditoriaBehavior` en MediatR que registre automáticamente en la tabla de Logs cualquier comando de tipo `PUT` o `DELETE`.
+- [x] 4. **API:** Exponer `GET /api/auditoria/logs` (Solo Admin).
+- [x] 5. **Documentación:** Actualizar `endpoints.md` con el contrato final de la Fase 1.9.
+
+**FASE 1.9 COMPLETADA.** 🚀

@@ -12,4 +12,5 @@ public interface ILoteRepository
     Task<IEnumerable<Lote>> ObtenerTodosAsync();
     void Agregar(Lote lote);
     void Actualizar(Lote lote);
+    void Eliminar(Lote lote);
 }

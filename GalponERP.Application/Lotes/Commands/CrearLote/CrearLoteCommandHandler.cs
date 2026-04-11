@@ -27,6 +27,7 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
         var loteId = Guid.NewGuid();
         var lote = new Lote(
             loteId,
+            request.GalponId,
             request.FechaIngreso,
             request.CantidadInicial,
             new Moneda(request.CostoUnitarioPollito)

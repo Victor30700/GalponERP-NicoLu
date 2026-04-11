@@ -1,6 +1,7 @@
 using GalponERP.Application.Dashboard.Queries;
 using GalponERP.Application.Dashboard.Queries.ObtenerProyeccionSacrificio;
 using GalponERP.Application.Dashboard.Queries.ObtenerComparativaLotes;
+using GalponERP.Application.Galpones.Queries.ObtenerComparativaEficiencia;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +39,13 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> ObtenerComparativaLotes()
     {
         var comparativa = await _mediator.Send(new ObtenerComparativaLotesQuery());
+        return Ok(comparativa);
+    }
+
+    [HttpGet("comparativa-galpones")]
+    public async Task<IActionResult> ObtenerComparativaGalpones()
+    {
+        var comparativa = await _mediator.Send(new ObtenerComparativaEficienciaGalponesQuery());
         return Ok(comparativa);
     }
 }

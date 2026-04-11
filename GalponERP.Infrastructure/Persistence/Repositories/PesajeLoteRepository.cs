@@ -15,13 +15,14 @@ public class PesajeLoteRepository : IPesajeLoteRepository
 
     public async Task<PesajeLote?> ObtenerPorIdAsync(Guid id)
     {
-        return await _context.PesajesLote.FindAsync(id);
+        return await _context.PesajesLote
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }
 
     public async Task<IEnumerable<PesajeLote>> ObtenerPorLoteIdAsync(Guid loteId)
     {
         return await _context.PesajesLote
-            .Where(p => p.LoteId == loteId)
+            .Where(p => p.LoteId == loteId && p.IsActive)
             .OrderBy(p => p.Fecha)
             .ToListAsync();
     }

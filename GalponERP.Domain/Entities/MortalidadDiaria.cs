@@ -36,6 +36,19 @@ public class MortalidadDiaria : Entity
         UsuarioId = usuarioId;
     }
 
+    public void Actualizar(DateTime fecha, int cantidadBajas, string causa)
+    {
+        if (cantidadBajas <= 0)
+            throw new LoteDomainException("La cantidad de bajas diarias debe ser mayor a cero.");
+
+        if (string.IsNullOrWhiteSpace(causa))
+            throw new LoteDomainException("La causa de la baja es obligatoria.");
+
+        Fecha = fecha;
+        CantidadBajas = cantidadBajas;
+        Causa = causa;
+    }
+
     // Constructor para EF Core
     private MortalidadDiaria() : base() { }
 }

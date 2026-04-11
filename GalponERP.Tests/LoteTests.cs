@@ -11,12 +11,13 @@ public class LoteTests
     {
         // Arrange
         var id = Guid.NewGuid();
+        var galponId = Guid.NewGuid();
         var fecha = DateTime.UtcNow;
         var cantidad = 1000;
         var costoPollito = new Moneda(1.50m);
 
         // Act
-        var lote = new Lote(id, fecha, cantidad, costoPollito);
+        var lote = new Lote(id, galponId, fecha, cantidad, costoPollito);
 
         // Assert
         Assert.Equal(id, lote.Id);
@@ -35,14 +36,14 @@ public class LoteTests
         var costoPollito = new Moneda(1.50m);
 
         // Act & Assert
-        Assert.Throws<LoteDomainException>(() => new Lote(id, fecha, 0, costoPollito));
+        Assert.Throws<LoteDomainException>(() => new Lote(id, Guid.NewGuid(), fecha, 0, costoPollito));
     }
 
     [Fact]
     public void RegistrarBajas_DebeActualizarCantidadActual()
     {
         // Arrange
-        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
+        var lote = new Lote(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
 
         // Act
         lote.RegistrarBajas(100);
@@ -56,7 +57,7 @@ public class LoteTests
     public void RegistrarBajas_DebeLanzarExcepcion_SiCantidadExcedeActual()
     {
         // Arrange
-        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
+        var lote = new Lote(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
 
         // Act & Assert
         Assert.Throws<LoteDomainException>(() => lote.RegistrarBajas(101));
@@ -66,7 +67,7 @@ public class LoteTests
     public void RegistrarVenta_DebeActualizarCantidadActual()
     {
         // Arrange
-        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
+        var lote = new Lote(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
 
         // Act
         lote.RegistrarVenta(500);
@@ -80,7 +81,7 @@ public class LoteTests
     public void RegistrarVenta_DebeLanzarExcepcion_SiLoteEstaCerrado()
     {
         // Arrange
-        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
+        var lote = new Lote(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
         lote.CerrarLote(1.60m, new Moneda(1000), new Moneda(500), 5.0m);
 
         // Act & Assert
@@ -91,7 +92,7 @@ public class LoteTests
     public void RegistrarVenta_NoDebePermitirVenta_QueExcedaDisponibilidad()
     {
         // Arrange
-        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
+        var lote = new Lote(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
         lote.RegistrarBajas(10); // Quedan 90
 
         // Act & Assert
@@ -102,7 +103,7 @@ public class LoteTests
     public void AnularVenta_DebeRestaurarCantidadActual()
     {
         // Arrange
-        var lote = new Lote(Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
+        var lote = new Lote(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
         lote.RegistrarVenta(50); // Quedan 50
 
         // Act
