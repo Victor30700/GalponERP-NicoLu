@@ -96,3 +96,12 @@ Se implementaron controladores específicos (`CategoriasController`, `UnidadesMe
 - **Lectura:** Disponible para `Admin, SubAdmin`.
 - **Escritura/Anulación:** Restringida estrictamente a `Admin, SubAdmin`.
 - **Soft Delete:** Todas las acciones de eliminación en catálogos utilizan el patrón `IsActive = false` heredado de la clase base `Entity`.
+
+## Decisión 27.1: Ciclo de Vida de Gastos Operativos
+Se completó la trazabilidad de gastos operativos permitiendo la edición y anulación segura.
+1. **Edición (Update):** Se implementó `ActualizarGastoOperativoCommand` permitiendo modificar descripción, monto, fecha, tipo de gasto y lote asociado.
+2. **Anulación (Soft Delete):** Se implementó `EliminarGastoOperativoCommand` que marca el gasto como `IsActive = false`. Ambas operaciones capturan el `UsuarioId` del JWT para auditoría obligatoria.
+3. **Seguridad:** Endpoints `PUT` y `DELETE` protegidos bajo los roles `Admin` y `SubAdmin`.
+
+## Decisión 27.2: Trazabilidad de Ventas por Lote
+Se implementó el endpoint `GET /api/ventas/lote/{loteId}` para facilitar la conciliación financiera y el análisis de rentabilidad específico de cada lote desde el frontend, permitiendo listar todas las transacciones de venta (activas) asociadas a una unidad de producción.

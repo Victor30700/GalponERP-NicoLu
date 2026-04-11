@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentValidation;
 using MediatR;
 using GalponERP.Application.Exceptions;
@@ -14,6 +15,8 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         _validators = validators;
     }
 
+    [DebuggerHidden]
+    [DebuggerNonUserCode]
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         if (!_validators.Any())
@@ -33,7 +36,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         if (failures.Any())
         {
-            throw new GalponERP.Application.Exceptions.ValidationException(failures);
+            return await Task.FromException<TResponse>(new GalponERP.Application.Exceptions.ValidationException(failures));
         }
 
         return await next();

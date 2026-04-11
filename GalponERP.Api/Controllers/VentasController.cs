@@ -2,6 +2,7 @@ using GalponERP.Application.Ventas.Commands.RegistrarVentaParcial;
 using GalponERP.Application.Ventas.Commands.AnularVenta;
 using GalponERP.Application.Ventas.Queries.ObtenerVentas;
 using GalponERP.Application.Ventas.Queries.ObtenerVentaPorId;
+using GalponERP.Application.Ventas.Queries.ObtenerVentasPorLote;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Application.Interfaces;
 using MediatR;
@@ -54,6 +55,13 @@ public class VentasController : ControllerBase
         var venta = await _mediator.Send(new ObtenerVentaPorIdQuery(id));
         if (venta == null) return NotFound();
         return Ok(venta);
+    }
+
+    [HttpGet("lote/{loteId}")]
+    public async Task<IActionResult> ObtenerPorLote(Guid loteId)
+    {
+        var ventas = await _mediator.Send(new ObtenerVentasPorLoteQuery(loteId));
+        return Ok(ventas);
     }
 
     [HttpPost("parcial")]

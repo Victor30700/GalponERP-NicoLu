@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin")]
+[Authorize(Roles = "Admin,SubAdmin,Empleado")]
 [ApiController]
 [Route("api/[controller]")]
 public class ClientesController : ControllerBase
@@ -27,6 +27,7 @@ public class ClientesController : ControllerBase
         return Ok(clientes);
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearClienteCommand command)
     {
@@ -34,6 +35,7 @@ public class ClientesController : ControllerBase
         return CreatedAtAction(nameof(Listar), new { id }, new { ClienteId = id });
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarClienteCommand command)
     {
@@ -46,6 +48,7 @@ public class ClientesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

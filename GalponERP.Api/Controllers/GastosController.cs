@@ -1,4 +1,6 @@
 using GalponERP.Application.Gastos.Commands.RegistrarGastoOperativo;
+using GalponERP.Application.Gastos.Commands.ActualizarGastoOperativo;
+using GalponERP.Application.Gastos.Commands.EliminarGastoOperativo;
 using GalponERP.Application.Gastos.Queries.ObtenerGastos;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Application.Interfaces;
@@ -52,15 +54,38 @@ public class GastosController : ControllerBase
         var usuarioId = await GetUsuarioIdActual();
         if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
 
-        try
+        command.UsuarioId = usuarioId;
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> ActualizarGasto(Guid id, [FromBody] ActualizarGastoOperativoCommand command)
+    {
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
+        if (id != command.Id)
         {
-            command.UsuarioId = usuarioId;
-            var result = await _mediator.Send(command);
-            return Ok(result);
+            return BadRequest(new { message = "El ID de la ruta no coincide con el ID del comando." });
         }
-        catch (Exception ex)
+
+        command.UsuarioId = usuarioId;
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> EliminarGasto(Guid id)
+    {
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
+        var command = new EliminarGastoOperativoCommand(id)
         {
-            return BadRequest(new { message = ex.Message });
-        }
+            UsuarioId = usuarioId
+        };
+        await _mediator.Send(command);
+        return NoContent();
     }
 }

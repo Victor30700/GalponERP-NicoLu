@@ -1,6 +1,7 @@
 using GalponERP.Application.Inventario.Commands.RegistrarMovimiento;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
+using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
@@ -63,6 +64,13 @@ public class InventarioController : ControllerBase
     {
         var movimientos = await _mediator.Send(new ObtenerMovimientosQuery());
         return Ok(movimientos);
+    }
+
+    [HttpGet("movimientos/reporte")]
+    public async Task<IActionResult> ObtenerReporteMovimientos([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin, [FromQuery] Guid? categoriaProductoId = null)
+    {
+        var reporte = await _mediator.Send(new ObtenerReporteMovimientosQuery(fechaInicio, fechaFin, categoriaProductoId));
+        return Ok(reporte);
     }
 
     [HttpPost("movimiento")]

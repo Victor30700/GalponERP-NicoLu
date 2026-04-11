@@ -1,15 +1,18 @@
+using System.Diagnostics;
 using FluentValidation.Results;
 
 namespace GalponERP.Application.Exceptions;
 
 public class ValidationException : Exception
 {
+    [DebuggerStepThrough]
     public ValidationException()
         : base("Se han producido uno o más errores de validación.")
     {
         Errors = new Dictionary<string, string[]>();
     }
 
+    [DebuggerStepThrough]
     public ValidationException(IEnumerable<ValidationFailure> failures)
         : this()
     {
