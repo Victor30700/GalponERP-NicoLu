@@ -23,6 +23,11 @@ public class UsuarioRepository : IUsuarioRepository
         return await _context.Usuarios.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
     }
 
+    public async Task<Usuario?> ObtenerPorEmailAsync(string email)
+    {
+        return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+    }
+
     public async Task<IEnumerable<Usuario>> ObtenerPorRolAsync(string rol)
     {
         return await _context.Usuarios.Where(u => u.Rol == rol).ToListAsync();
@@ -36,5 +41,10 @@ public class UsuarioRepository : IUsuarioRepository
     public void Agregar(Usuario usuario)
     {
         _context.Usuarios.Add(usuario);
+    }
+
+    public void Actualizar(Usuario usuario)
+    {
+        _context.Usuarios.Update(usuario);
     }
 }

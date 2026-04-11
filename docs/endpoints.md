@@ -223,8 +223,12 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```json
 {
   "firebaseUid": "FIREBASE_UID_STRING",
-  "nombre": "Nombre del Usuario",
-  "rol": "Admin|Operario"
+  "nombre": "Juan",
+  "apellidos": "Pérez",
+  "fechaNacimiento": "1990-05-15T00:00:00Z",
+  "direccion": "Av. Principal 123",
+  "profesion": "Ingeniero Agrónomo",
+  "rol": "Admin|Operario|Veterinario"
 }
 ```
 - **Salida (JSON):**

@@ -21,12 +21,19 @@ public class ActualizarUsuarioCommandHandler : IRequestHandler<ActualizarUsuario
 
         if (usuario == null)
         {
-            throw new Exception($"Usuario con ID {request.Id} no encontrado.");
+            throw new Exception("Usuario no encontrado.");
         }
 
-        usuario.ActualizarNombre(request.Nombre);
-        usuario.ActualizarRol(request.Rol);
+        usuario.ActualizarPerfil(
+            request.Email,
+            request.Nombre,
+            request.Apellidos,
+            request.FechaNacimiento,
+            request.Direccion,
+            request.Profesion,
+            request.Rol);
 
+        _usuarioRepository.Actualizar(usuario);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

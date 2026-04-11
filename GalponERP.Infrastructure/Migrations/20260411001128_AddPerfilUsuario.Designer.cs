@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using GalponERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GalponERP.Infrastructure.Migrations
 {
     [DbContext(typeof(GalponDbContext))]
-    partial class GalponDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411001128_AddPerfilUsuario")]
+    partial class AddPerfilUsuario
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,11 +321,6 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
                     b.Property<DateTime>("FechaNacimiento")
                         .HasColumnType("timestamp with time zone");
 
@@ -350,9 +348,6 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
 
                     b.HasIndex("FirebaseUid")
                         .IsUnique();

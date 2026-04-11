@@ -19,6 +19,7 @@ public class ObtenerUsuariosQueryHandler : IRequestHandler<ObtenerUsuariosQuery,
         return usuarios.Select(u => new UsuarioResponse(
             u.Id,
             u.FirebaseUid,
+            u.Email,
             u.Nombre,
             u.Rol,
             u.IsActive));

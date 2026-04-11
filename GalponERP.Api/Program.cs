@@ -106,7 +106,16 @@ using (var scope = app.Services.CreateScope())
         
         if (existingAdmin == null)
         {
-            var admin = new GalponERP.Domain.Entities.Usuario(Guid.NewGuid(), adminUid, "Admin Maestro", "Admin");
+            var admin = new GalponERP.Domain.Entities.Usuario(
+                Guid.NewGuid(), 
+                adminUid, 
+                "admin@galponerp.com",
+                "Admin Maestro", 
+                "Principal", 
+                new DateTime(1980, 1, 1), 
+                "Dirección del Galpón", 
+                "Gerente", 
+                GalponERP.Domain.Entities.RolesGalpon.Admin);
             context.Usuarios.Add(admin);
             context.SaveChanges();
         }
