@@ -1,5 +1,7 @@
 using GalponERP.Application.Lotes.Commands.CerrarLote;
 using GalponERP.Application.Lotes.Commands.CrearLote;
+using GalponERP.Application.Lotes.Queries.ListarLotes;
+using GalponERP.Application.Lotes.Queries.ObtenerDetalleLote;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +18,21 @@ public class LotesController : ControllerBase
     public LotesController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Listar([FromQuery] bool soloActivos = true)
+    {
+        var lotes = await _mediator.Send(new ListarLotesQuery(soloActivos));
+        return Ok(lotes);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(Guid id)
+    {
+        var detalle = await _mediator.Send(new ObtenerDetalleLoteQuery(id));
+        if (detalle == null) return NotFound();
+        return Ok(detalle);
     }
 
     [HttpPost]

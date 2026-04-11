@@ -6,4 +6,6 @@ public interface IMortalidadRepository
 {
     void Agregar(MortalidadDiaria mortalidad);
     Task<IEnumerable<MortalidadDiaria>> ObtenerPorLoteAsync(Guid loteId);
+    Task<IEnumerable<MortalidadDiaria>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin);
+    Task<IEnumerable<MortalidadDiaria>> ObtenerTodasAsync();
 }

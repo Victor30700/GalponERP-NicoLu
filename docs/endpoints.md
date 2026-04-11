@@ -27,6 +27,51 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 
 ## 1. LOTES
 
+### Listar Lotes
+- **URL:** `/api/Lotes`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Query Params:** `soloActivos` (bool, default: true)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "fechaIngreso": "2026-04-10T00:00:00Z",
+    "cantidadInicial": 5000,
+    "cantidadActual": 4995,
+    "mortalidadAcumulada": 5,
+    "pollosVendidos": 0,
+    "costoUnitarioPollito": 1.50,
+    "estado": "Activo"
+  }
+]
+```
+
+### Obtener Detalle de Lote
+- **URL:** `/api/Lotes/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "fechaIngreso": "2026-04-10T00:00:00Z",
+  "cantidadInicial": 5000,
+  "cantidadActual": 4900,
+  "mortalidadTotal": 10,
+  "pollosVendidos": 90,
+  "costoUnitarioPollito": 1.50,
+  "estado": "Activo",
+  "totalVentas": 495.00,
+  "totalGastos": 120.50,
+  "utilidadEstimada": -7125.50,
+  "ventas": [],
+  "historialMortalidad": [],
+  "gastos": []
+}
+```
+
 ### Crear Lote
 - **URL:** `/api/Lotes`
 - **Método:** `POST`
@@ -145,6 +190,46 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - **Salida:** `204 No Content`
 
 ## 3. INVENTARIO
+
+### Registrar Movimiento de Inventario
+- **URL:** `/api/Inventario/movimiento`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "cantidad": 50.5,
+  "tipo": 0,
+  "fecha": "2026-04-10T10:00:00Z"
+}
+```
+*(Nota: Tipo 0=Entrada, 1=Salida)*
+
+- **Salida (JSON):**
+```json
+{
+  "movimientoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
+### Obtener Stock Actual
+- **URL:** `/api/Inventario/stock`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+[
+  {
+    "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombreProducto": "Balanceado Inicio",
+    "tipoProducto": "Alimento",
+    "stockActual": 1250.75,
+    "unidadMedida": "Kg"
+  }
+]
+```
 
 ### Verificar Niveles de Alimento
 - **URL:** `/api/Inventario/niveles-alimento`
@@ -328,7 +413,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida:** `204 No Content`
 
-## 8. CATÁLOGOS
+## 8. CATÁLOGOS (DEPRECADO - Usar Secciones 9 y 10)
 
 ### Obtener Clientes
 - **URL:** `/api/Catalogos/clientes`
@@ -363,4 +448,138 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
     "unidadMedida": "Kg"
   }
 ]
+```
+
+## 9. CLIENTES
+
+### Crear Cliente
+- **URL:** `/api/Clientes`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "nombre": "Distribuidora El Pollo Loco",
+  "ruc": "1712345678001",
+  "direccion": "Av. Amazonas y Colón",
+  "telefono": "022345678"
+}
+```
+- **Salida (JSON):**
+```json
+{
+  "clienteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
+### Listar Clientes
+- **URL:** `/api/Clientes`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Distribuidora El Pollo Loco",
+    "ruc": "1712345678001",
+    "direccion": "Av. Amazonas y Colón",
+    "telefono": "022345678",
+    "isActive": true
+  }
+]
+```
+
+### Actualizar Cliente
+- **URL:** `/api/Clientes/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombre": "Distribuidora El Pollo Loco S.A.",
+  "ruc": "1712345678001",
+  "direccion": "Nuevas Oficinas",
+  "telefono": "022345678"
+}
+```
+- **Salida:** `204 No Content`
+
+### Eliminar Cliente (Soft Delete)
+- **URL:** `/api/Clientes/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer)
+- **Salida:** `204 No Content`
+
+## 10. PRODUCTOS
+
+### Crear Producto
+- **URL:** `/api/Productos`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "nombre": "Balanceado Crecimiento",
+  "tipo": 0,
+  "unidadMedida": 3
+}
+```
+*(Nota: TipoProducto 0=Alimento, 1=Medicamento, 2=Insumo, 3=Otro | UnidadMedida 0=Kg, 1=Unidad, 2=Litro, 3=Saco)*
+
+- **Salida (JSON):**
+```json
+{
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
+### Listar Productos
+- **URL:** `/api/Productos`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Balanceado Crecimiento",
+    "tipo": 0,
+    "unidadMedida": 3,
+    "isActive": true
+  }
+]
+```
+
+### Actualizar Producto
+- **URL:** `/api/Productos/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer)
+- **Entrada (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombre": "Balanceado Crecimiento Premium",
+  "tipo": 0,
+  "unidadMedida": 3
+}
+```
+- **Salida:** `204 No Content`
+
+## 11. DASHBOARD
+
+### Obtener Resumen Dashboard
+- **URL:** `/api/Dashboard/resumen`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer)
+- **Salida (JSON):**
+```json
+{
+  "totalPollosVivos": 14500,
+  "mortalidadMesActual": 125,
+  "stockAlimentoActual": 2500.75,
+  "requiereAlertaAlimento": false,
+  "diasAlimentoRestantes": 12.5
+}
 ```

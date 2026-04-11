@@ -1,6 +1,5 @@
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
-using GalponERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GalponERP.Infrastructure.Persistence.Repositories;
@@ -25,5 +24,17 @@ public class MortalidadRepository : IMortalidadRepository
             .Where(m => m.LoteId == loteId)
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<MortalidadDiaria>> ObtenerPorRangoFechasAsync(DateTime inicio, DateTime fin)
+    {
+        return await _context.Mortalidades
+            .Where(m => m.Fecha >= inicio && m.Fecha <= fin)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<MortalidadDiaria>> ObtenerTodasAsync()
+    {
+        return await _context.Mortalidades.ToListAsync();
     }
 }

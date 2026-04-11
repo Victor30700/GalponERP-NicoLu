@@ -29,4 +29,14 @@ public class ProductoRepository : IProductoRepository
     {
         return await _context.Set<Producto>().ToListAsync();
     }
+
+    public void Agregar(Producto producto)
+    {
+        _context.Set<Producto>().Add(producto);
+    }
+
+    public void Actualizar(Producto producto)
+    {
+        _context.Set<Producto>().Update(producto);
+    }
 }

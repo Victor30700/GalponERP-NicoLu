@@ -9,6 +9,7 @@ public interface ILoteRepository
 {
     Task<Lote?> ObtenerPorIdAsync(Guid id);
     Task<IEnumerable<Lote>> ObtenerActivosAsync();
+    Task<IEnumerable<Lote>> ObtenerTodosAsync();
     void Agregar(Lote lote);
     void Actualizar(Lote lote);
 }

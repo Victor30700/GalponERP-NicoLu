@@ -15,23 +15,28 @@ public class LoteRepository : ILoteRepository
 
     public async Task<Lote?> ObtenerPorIdAsync(Guid id)
     {
-        return await _context.Lotes.FirstOrDefaultAsync(l => l.Id == id);
+        return await _context.Set<Lote>().FindAsync(id);
     }
 
     public async Task<IEnumerable<Lote>> ObtenerActivosAsync()
     {
-        return await _context.Lotes
+        return await _context.Set<Lote>()
             .Where(l => l.Estado == EstadoLote.Activo)
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Lote>> ObtenerTodosAsync()
+    {
+        return await _context.Set<Lote>().ToListAsync();
+    }
+
     public void Agregar(Lote lote)
     {
-        _context.Lotes.Add(lote);
+        _context.Set<Lote>().Add(lote);
     }
 
     public void Actualizar(Lote lote)
     {
-        _context.Lotes.Update(lote);
+        _context.Set<Lote>().Update(lote);
     }
 }
