@@ -1,3 +1,4 @@
+using FluentValidation;
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
@@ -8,8 +9,30 @@ namespace GalponERP.Application.Productos.Commands.ActualizarProducto;
 public record ActualizarProductoCommand(
     Guid Id,
     string Nombre,
-    TipoProducto Tipo,
-    UnidadMedida UnidadMedida) : IRequest;
+    Guid CategoriaProductoId,
+    Guid UnidadMedidaId,
+    decimal EquivalenciaEnKg) : IRequest;
+
+public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarProductoCommand>
+{
+    public ActualizarProductoCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty().WithMessage("El ID es obligatorio.");
+        
+        RuleFor(x => x.Nombre)
+            .NotEmpty().WithMessage("El nombre es obligatorio.")
+            .MaximumLength(200).WithMessage("El nombre no puede exceder los 200 caracteres.");
+            
+        RuleFor(x => x.CategoriaProductoId)
+            .NotEmpty().WithMessage("La categoría es obligatoria.");
+            
+        RuleFor(x => x.UnidadMedidaId)
+            .NotEmpty().WithMessage("La unidad de medida es obligatoria.");
+            
+        RuleFor(x => x.EquivalenciaEnKg)
+            .GreaterThan(0).WithMessage("La equivalencia en Kg debe ser mayor a cero.");
+    }
+}
 
 public class ActualizarProductoCommandHandler : IRequestHandler<ActualizarProductoCommand>
 {
@@ -31,7 +54,11 @@ public class ActualizarProductoCommandHandler : IRequestHandler<ActualizarProduc
             throw new Exception("Producto no encontrado.");
         }
 
-        producto.Actualizar(request.Nombre, request.Tipo, request.UnidadMedida);
+        producto.Actualizar(
+            request.Nombre, 
+            request.CategoriaProductoId, 
+            request.UnidadMedidaId, 
+            request.EquivalenciaEnKg);
 
         _productoRepository.Actualizar(producto);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

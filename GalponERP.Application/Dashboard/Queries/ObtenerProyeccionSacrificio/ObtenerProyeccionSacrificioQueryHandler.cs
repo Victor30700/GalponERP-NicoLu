@@ -39,11 +39,14 @@ public class ObtenerProyeccionSacrificioQueryHandler : IRequestHandler<ObtenerPr
 
         var movimientos = await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId);
         var productos = await _productoRepository.ObtenerTodosAsync();
-        var alimentoIds = productos.Where(p => p.Tipo == TipoProducto.Alimento).Select(p => p.Id);
         
+        var productosAlimento = productos
+            .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
+            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+
         var alimentoConsumidoKg = movimientos
-            .Where(m => alimentoIds.Contains(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
-            .Sum(m => m.Cantidad);
+            .Where(m => productosAlimento.ContainsKey(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
+            .Sum(m => m.Cantidad * productosAlimento[m.ProductoId]);
 
         decimal fcrActual = 0;
         decimal biomasaGanadaKg = ((ultimoPesaje.PesoPromedioGramos - 40) / 1000) * lote.CantidadActual;

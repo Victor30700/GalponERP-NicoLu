@@ -84,10 +84,13 @@ public class ObtenerDetalleLoteQueryHandler : IRequestHandler<ObtenerDetalleLote
         // Incremento de Peso Total = (Peso Actual Kg - Peso Inicial Kg) * Pollos Vivos
         // Peso inicial estimado: 40g (0.04 Kg)
         
-        var productosAlimentoIds = productos.Where(p => p.Tipo == TipoProducto.Alimento).Select(p => p.Id).ToList();
+        var productosAlimento = productos
+            .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
+            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+
         var alimentoConsumidoKg = movimientos
-            .Where(m => productosAlimentoIds.Contains(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
-            .Sum(m => m.Cantidad);
+            .Where(m => productosAlimento.ContainsKey(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
+            .Sum(m => m.Cantidad * productosAlimento[m.ProductoId]);
 
         decimal fcr = 0;
         if (pesoPromedioActual > 40 && alimentoConsumidoKg > 0)

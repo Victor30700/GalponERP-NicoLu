@@ -20,6 +20,8 @@ public class GalponDbContext : DbContext
     public DbSet<Lote> Lotes { get; set; }
     public DbSet<MortalidadDiaria> Mortalidades { get; set; }
     public DbSet<Producto> Productos { get; set; }
+    public DbSet<CategoriaProducto> CategoriasProductos { get; set; }
+    public DbSet<UnidadMedida> UnidadesMedida { get; set; }
     public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Venta> Ventas { get; set; }

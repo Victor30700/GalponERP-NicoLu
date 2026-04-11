@@ -31,6 +31,8 @@ public static class DependencyInjection
         services.AddScoped<IGalponRepository, GalponRepository>();
         services.AddScoped<IMortalidadRepository, MortalidadRepository>();
         services.AddScoped<IPesajeLoteRepository, PesajeLoteRepository>();
+        services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
+        services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddScoped<IAuthenticationService, FirebaseAuthService>();

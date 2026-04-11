@@ -30,18 +30,25 @@ public class VerificarNivelesAlimentoHandler : IRequestHandler<VerificarNivelesA
 
     public async Task<AlertaInventarioDto> Handle(VerificarNivelesAlimentoQuery request, CancellationToken cancellationToken)
     {
-        var alimentos = await _productoRepository.ObtenerPorTipoAsync(TipoProducto.Alimento);
-        var alimentoIds = alimentos.Select(p => p.Id).ToHashSet();
+        var todosLosProductos = await _productoRepository.ObtenerTodosAsync();
+        var productosAlimento = todosLosProductos
+            .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
+            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+
+        var alimentoIds = productosAlimento.Keys.ToHashSet();
 
         var todosLosMovimientos = await _inventarioRepository.ObtenerTodosAsync();
         var movimientosAlimento = todosLosMovimientos.Where(m => alimentoIds.Contains(m.ProductoId)).ToList();
 
-        // Stock Total de Alimento en la granja (Incluye ajustes)
-        var stockTotal = movimientosAlimento.Sum(m => 
-            (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada) ? m.Cantidad : -m.Cantidad);
+        // Stock Total de Alimento en la granja en Kg (Incluye ajustes)
+        var stockTotalKg = movimientosAlimento.Sum(m => 
+        {
+            decimal factor = (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada) ? 1 : -1;
+            return m.Cantidad * productosAlimento[m.ProductoId] * factor;
+        });
 
         var lotesActivos = await _loteRepository.ObtenerActivosAsync();
-        decimal consumoDiarioGlobal = 0;
+        decimal consumoDiarioGlobalKg = 0;
 
         foreach (var lote in lotesActivos)
         {
@@ -53,18 +60,18 @@ public class VerificarNivelesAlimentoHandler : IRequestHandler<VerificarNivelesA
             var diasDeVida = (DateTime.UtcNow - lote.FechaIngreso).TotalDays;
             if (diasDeVida < 1) diasDeVida = 1;
 
-            var totalConsumidoLote = movimientosLote.Sum(m => m.Cantidad);
-            var consumoPromedioLote = totalConsumidoLote / (decimal)diasDeVida;
+            var totalConsumidoLoteKg = movimientosLote.Sum(m => m.Cantidad * productosAlimento[m.ProductoId]);
+            var consumoPromedioLoteKg = totalConsumidoLoteKg / (decimal)diasDeVida;
 
-            consumoDiarioGlobal += consumoPromedioLote;
+            consumoDiarioGlobalKg += consumoPromedioLoteKg;
         }
 
-        decimal diasRestantes = consumoDiarioGlobal > 0 ? stockTotal / consumoDiarioGlobal : 999;
+        decimal diasRestantes = consumoDiarioGlobalKg > 0 ? stockTotalKg / consumoDiarioGlobalKg : 999;
         bool requiereAlerta = diasRestantes < 3;
 
         return new AlertaInventarioDto(
-            stockTotal,
-            consumoDiarioGlobal,
+            stockTotalKg,
+            consumoDiarioGlobalKg,
             diasRestantes,
             requiereAlerta);
     }

@@ -33,7 +33,7 @@ public class ObtenerComparativaLotesQueryHandler : IRequestHandler<ObtenerCompar
     {
         var lotes = await _loteRepository.ObtenerTodosAsync();
         var productos = await _productoRepository.ObtenerTodosAsync();
-        var alimentoIds = productos.Where(p => p.Tipo == TipoProducto.Alimento).Select(p => p.Id).ToList();
+        var alimentoIds = productos.Where(p => p.Categoria?.Nombre == "Alimento").Select(p => p.Id).ToList();
 
         var comparativa = new List<LoteComparativoResponse>();
 

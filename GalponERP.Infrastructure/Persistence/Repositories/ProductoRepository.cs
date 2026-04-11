@@ -15,19 +15,27 @@ public class ProductoRepository : IProductoRepository
 
     public async Task<Producto?> ObtenerPorIdAsync(Guid id)
     {
-        return await _context.Set<Producto>().FindAsync(id);
+        return await _context.Set<Producto>()
+            .Include(p => p.Categoria)
+            .Include(p => p.Unidad)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<IEnumerable<Producto>> ObtenerPorTipoAsync(TipoProducto tipo)
+    public async Task<IEnumerable<Producto>> ObtenerPorCategoriaAsync(Guid categoriaId)
     {
         return await _context.Set<Producto>()
-            .Where(p => p.Tipo == tipo)
+            .Include(p => p.Categoria)
+            .Include(p => p.Unidad)
+            .Where(p => p.CategoriaProductoId == categoriaId)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Producto>> ObtenerTodosAsync()
     {
-        return await _context.Set<Producto>().ToListAsync();
+        return await _context.Set<Producto>()
+            .Include(p => p.Categoria)
+            .Include(p => p.Unidad)
+            .ToListAsync();
     }
 
     public void Agregar(Producto producto)

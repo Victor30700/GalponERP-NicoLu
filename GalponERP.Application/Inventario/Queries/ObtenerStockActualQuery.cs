@@ -48,8 +48,8 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
         return productos.Select(p => new StockProductoResponse(
             p.Id,
             p.Nombre,
-            p.Tipo.ToString(),
+            p.Categoria?.Nombre ?? "Sin Categoria",
             stockPorProducto.ContainsKey(p.Id) ? stockPorProducto[p.Id] : 0,
-            p.UnidadMedida.ToString()));
+            p.Unidad?.Nombre ?? "Sin Unidad"));
     }
 }

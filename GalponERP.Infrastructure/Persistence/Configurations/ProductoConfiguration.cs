@@ -16,13 +16,18 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
             .IsRequired()
             .HasMaxLength(150);
 
-        builder.Property(p => p.Tipo)
-            .HasConversion<string>()
-            .HasMaxLength(30);
+        builder.Property(p => p.EquivalenciaEnKg)
+            .HasPrecision(18, 4);
 
-        builder.Property(p => p.UnidadMedida)
-            .HasConversion<string>()
-            .HasMaxLength(20);
+        builder.HasOne(p => p.Categoria)
+            .WithMany()
+            .HasForeignKey(p => p.CategoriaProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(p => p.Unidad)
+            .WithMany()
+            .HasForeignKey(p => p.UnidadMedidaId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(p => p.IsActive);
     }

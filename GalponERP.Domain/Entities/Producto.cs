@@ -2,51 +2,60 @@ using GalponERP.Domain.Primitives;
 
 namespace GalponERP.Domain.Entities;
 
-public enum TipoProducto
-{
-    Alimento,
-    Medicamento,
-    Insumo,
-    Otro
-}
-
-public enum UnidadMedida
-{
-    Kg,
-    Unidad,
-    Litro,
-    Saco
-}
-
 /// <summary>
 /// Entidad que representa los productos (alimento, vacunas, etc.) en inventario.
 /// </summary>
 public class Producto : Entity
 {
     public string Nombre { get; private set; } = null!;
-    public TipoProducto Tipo { get; private set; }
-    public UnidadMedida UnidadMedida { get; private set; }
+    public Guid CategoriaProductoId { get; private set; }
+    public CategoriaProducto Categoria { get; private set; } = null!;
+    public Guid UnidadMedidaId { get; private set; }
+    public UnidadMedida Unidad { get; private set; } = null!;
+    
+    /// <summary>
+    /// Multiplicador para convertir la unidad de medida a Kilogramos.
+    /// Crucial para cálculos de FCR (Food Conversion Ratio).
+    /// </summary>
+    public decimal EquivalenciaEnKg { get; private set; }
 
-    public Producto(Guid id, string nombre, TipoProducto tipo, UnidadMedida unidadMedida) : base(id)
+    public Producto(
+        Guid id, 
+        string nombre, 
+        Guid categoriaProductoId, 
+        Guid unidadMedidaId, 
+        decimal equivalenciaEnKg) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto es obligatorio.");
+        
+        if (equivalenciaEnKg <= 0)
+            throw new ArgumentException("La equivalencia en Kg debe ser mayor a cero.");
 
         Nombre = nombre;
-        Tipo = tipo;
-        UnidadMedida = unidadMedida;
+        CategoriaProductoId = categoriaProductoId;
+        UnidadMedidaId = unidadMedidaId;
+        EquivalenciaEnKg = equivalenciaEnKg;
     }
 
     // Constructor para EF Core
     private Producto() : base() { }
 
-    public void Actualizar(string nombre, TipoProducto tipo, UnidadMedida unidadMedida)
+    public void Actualizar(
+        string nombre, 
+        Guid categoriaProductoId, 
+        Guid unidadMedidaId, 
+        decimal equivalenciaEnKg)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto no puede estar vacío.");
         
+        if (equivalenciaEnKg <= 0)
+            throw new ArgumentException("La equivalencia en Kg debe ser mayor a cero.");
+        
         Nombre = nombre;
-        Tipo = tipo;
-        UnidadMedida = unidadMedida;
+        CategoriaProductoId = categoriaProductoId;
+        UnidadMedidaId = unidadMedidaId;
+        EquivalenciaEnKg = equivalenciaEnKg;
     }
 }

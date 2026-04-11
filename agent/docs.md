@@ -66,3 +66,33 @@ Se implementó un sistema de "congelación" de datos al cerrar un lote para aseg
 ## Decisión 24.1: Optimización de Base de Datos y Background Jobs
 1. **Indexación Estratégica:** Se configuraron índices explícitos en las columnas de alta frecuencia de consulta: `Fecha` en `Ventas` y `MovimientosInventario`. Las llaves foráneas (`LoteId`, `ProductoId`, `ClienteId`) ya cuentan con índices implícitos creados por EF Core. Esto optimiza los reportes transversales y el cálculo de FCR en tiempo real.
 2. **Automatización de Alertas Sanitarias:** Se implementó `AlertaSanitariaJob` como un `BackgroundService`. Este servicio escanea diariamente todos los lotes activos, calcula su edad actual (días desde ingreso) y compara contra el `CalendarioSanitario`. Cualquier actividad pendiente (Vacunas/Tratamientos) que deba aplicarse hasta la fecha actual es reportada mediante el Logger del sistema para acción inmediata.
+
+## Decisón 25.1: Dominio Dinámico y Ancla Matemática (SaaS)
+Se ha migrado la estructura de productos de Enums estáticos a un modelo de catálogos dinámicos para soportar la escalabilidad multi-tenant y la flexibilidad de tipos de insumos.
+
+1. **Entidades de Catálogo:** Se crearon las entidades `CategoriaProducto` (Nombre, Descripcion) y `UnidadMedida` (Nombre, Abreviatura). Esto permite que cada usuario defina sus propios tipos de productos (Iniciador, Crecimiento, Vacuna Newcastle, etc.) y unidades (Saco 40kg, Frasco 50 dosis, Litro) sin cambios de código.
+2. **Equivalencia en Kg (El Ancla):** Se introdujo la propiedad `EquivalenciaEnKg` en la entidad `Producto`. Esta es la decisión técnica más crítica: todos los cálculos de FCR e inventario ahora dependen de este multiplicador decimal.
+   - *Ejemplo:* Si un producto es "Alimento Iniciador" y su unidad es "Saco 40kg", su `EquivalenciaEnKg` es `40.0`. Los movimientos de inventario se registran en "Sacos", pero el motor de FCR los procesa en "Kg" automáticamente.
+3. **Refactorización de Producto:** Se eliminaron los enums `TipoProducto` y `UnidadMedida`. La entidad `Producto` ahora utiliza llaves foráneas (`CategoriaProductoId`, `UnidadMedidaId`) con navegación obligatoria y carga mediante `.Include()`.
+
+## Decisión 26.1: Estrategia de Migración de Datos SaaS (Zero Data Loss)
+Para evitar la pérdida de información de productos existentes durante el cambio de esquema de base de datos, se implementó una migración de EF Core personalizada:
+
+1. **Procedimiento Up():**
+   - Se crean las nuevas tablas `CategoriasProductos` y `UnidadesMedida`.
+   - Se añaden las columnas de FK a `Productos` como nulables inicialmente.
+   - Se realiza un **Seeding de Identidad**: Inserción de categorías y unidades por defecto mediante SQL directo para garantizar IDs consistentes.
+   - **Mapeo Transaccional:** Se ejecutaron sentencias `UPDATE` para migrar los antiguos valores de texto (Enums) a los nuevos IDs de catálogo y asignar equivalencias por defecto (ej. Saco -> 40kg).
+   - Se eliminan las columnas obsoletas y se aplica la restricción `NOT NULL`.
+
+## Decisión 26.2: Refactorización del Motor de Cálculo (FCR y Stock)
+Se actualizaron todos los casos de uso que consumen inventario para alinearse al nuevo modelo:
+1. **Identificación de Alimento:** En `CerrarLote` y `ObtenerDetalleLote`, los productos se filtran ahora comparando `p.Categoria.Nombre == "Alimento"`.
+2. **Cálculo de Consumo:** La fórmula de alimento consumido cambió de `Sum(Cantidad)` a `Sum(Cantidad * Producto.EquivalenciaEnKg)`, garantizando que el FCR sea siempre una relación Kg/Kg independientemente de la unidad de despacho.
+3. **Normalización de Unidades:** El reporte de stock ahora muestra tanto el nombre de la categoría como la unidad de medida dinámica, mejorando la legibilidad para el usuario final.
+
+## Decisión 26.3: Exposición de Catálogos y Seguridad
+Se implementaron controladores específicos (`CategoriasController`, `UnidadesMedidaController`) protegidos bajo RBAC:
+- **Lectura:** Disponible para `Admin, SubAdmin`.
+- **Escritura/Anulación:** Restringida estrictamente a `Admin, SubAdmin`.
+- **Soft Delete:** Todas las acciones de eliminación en catálogos utilizan el patrón `IsActive = false` heredado de la clase base `Entity`.

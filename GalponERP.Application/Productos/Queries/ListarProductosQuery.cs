@@ -9,8 +9,11 @@ public record ListarProductosQuery() : IRequest<IEnumerable<ProductoResponse>>;
 public record ProductoResponse(
     Guid Id,
     string Nombre,
-    TipoProducto Tipo,
-    UnidadMedida UnidadMedida,
+    Guid CategoriaProductoId,
+    string CategoriaNombre,
+    Guid UnidadMedidaId,
+    string UnidadMedidaNombre,
+    decimal EquivalenciaEnKg,
     bool IsActive);
 
 public class ListarProductosQueryHandler : IRequestHandler<ListarProductosQuery, IEnumerable<ProductoResponse>>
@@ -29,8 +32,11 @@ public class ListarProductosQueryHandler : IRequestHandler<ListarProductosQuery,
         return productos.Select(p => new ProductoResponse(
             p.Id,
             p.Nombre,
-            p.Tipo,
-            p.UnidadMedida,
+            p.CategoriaProductoId,
+            p.Categoria?.Nombre ?? "Sin Categoría",
+            p.UnidadMedidaId,
+            p.Unidad?.Nombre ?? "Sin Unidad",
+            p.EquivalenciaEnKg,
             p.IsActive));
     }
 }

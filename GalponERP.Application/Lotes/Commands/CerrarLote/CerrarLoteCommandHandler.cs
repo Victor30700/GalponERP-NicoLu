@@ -58,11 +58,15 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         // 4. Calcular Costo de Alimento y Total de Alimento en Kg
         var movimientos = await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId);
         var productos = await _productoRepository.ObtenerTodosAsync();
-        var idsAlimento = productos.Where(p => p.Tipo == TipoProducto.Alimento).Select(p => p.Id).ToHashSet();
+        
+        // Identificar productos que son alimento (por nombre de categoría)
+        var productosAlimento = productos
+            .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
+            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
 
         decimal totalAlimentoConsumidoKg = movimientos
-            .Where(m => (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida) && idsAlimento.Contains(m.ProductoId))
-            .Sum(m => m.Cantidad);
+            .Where(m => (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida) && productosAlimento.ContainsKey(m.ProductoId))
+            .Sum(m => m.Cantidad * productosAlimento[m.ProductoId]);
 
         // (Usando zero por ahora hasta que se implemente costeo de inventario)
         var costoAlimento = Moneda.Zero;

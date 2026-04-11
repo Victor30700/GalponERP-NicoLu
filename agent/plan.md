@@ -1,29 +1,17 @@
-# PLAN DE DESARROLLO - FASE 1.7: PULIDO EMPRESARIAL Y AUDITORÍA CONTABLE
+# PLAN DE DESARROLLO - FASE 1.8: REFACCIÓN SAAS Y CATÁLOGOS DINÁMICOS
 
-## SPRINT 21: Deuda Técnica y Clean Code
-*Objetivo: Dejar el compilador en 0 warnings y asegurar la autenticación.*
-- [x] 1. Solucionar todos los warnings de "posibles nulos" (Nullables) en comandos y entidades (ej. `RegistrarUsuarioCommandHandler`).
-- [x] 2. Refactorizar `FirebaseAuthService` y `Program.cs` para reemplazar el método obsoleto `GoogleCredential.FromFile` por el estándar actual recomendado por Google Admin SDK (`GoogleCredential.GetApplicationDefault()` o carga vía JSON dinámico).
+## SPRINT 25: Dominio Dinámico y Ancla Matemática
+*Objetivo: Reemplazar Enums rígidos por entidades escalables sin romper la matemática del negocio.*
+- [x] 1. Dominio: Crear entidades `CategoriaProducto` (Nombre, Descripcion) y `UnidadMedida` (Nombre, Abreviatura).
+- [x] 2. Dominio: Refactorizar `Producto`. Eliminar Enums `Tipo` y `UnidadMedida`. Añadir Foreign Keys `CategoriaProductoId` y `UnidadMedidaId` y sus propiedades de navegación.
+- [x] 3. Dominio (CRÍTICO): Añadir propiedad `EquivalenciaEnKg` (decimal) a `Producto`. Esta será el multiplicador oficial para cualquier cálculo de FCR.
+- [x] 4. Application: Implementar CRUD Completo (Commands/Queries) para `CategoriaProducto` y `UnidadMedida`.
+- [x] 5. Application: Actualizar comandos de `Producto` (`Crear`, `Actualizar`) para requerir los nuevos IDs y la `EquivalenciaEnKg`.
 
-## SPRINT 22: Auditoría de Seguridad (Accountability)
-*Objetivo: Rastrear exactamente qué empleado realizó cada transacción financiera o de inventario.*
-- [x] 1. Dominio: Agregar la propiedad `UsuarioId` (Guid) a las entidades `MovimientoInventario`, `Venta` y `GastoOperativo`.
-- [x] 2. Application: Actualizar los comandos (`RegistrarMovimientoInventarioCommand`, `RegistrarVentaParcialCommand`, `RegistrarGastoOperativoCommand`, `RegistrarPesajeCommand`, `RegistrarMortalidadCommand`) para recibir y guardar el `UsuarioId`.
-- [x] 3. API: Modificar los Controladores para extraer el `UsuarioId` desde el JWT (`HttpContext.User`) e inyectarlo en los comandos antes de enviarlos a MediatR.
-- [x] 4. Infraestructura: Crear la migración `AddAuditoriaUsuarios` y aplicarla.
-- [x] 5. Documentación: Actualizar `endpoints.md` para reflejar que el Frontend NO necesita enviar el `UsuarioId`.
-
-## Pendientes
-## SPRINT 23: Integridad Contable y Anulaciones
-*Objetivo: Congelar datos al cerrar lotes y permitir reversión segura de errores humanos.*
-- [x] 1. Dominio: Agregar `EstadoPago` (Enum: `Pagado = 1`, `Pendiente = 2`, `Parcial = 3`) a la entidad `Venta`.
-- [x] 2. Dominio: Agregar campos de Snapshot Contable (`FCRFinal`, `CostoTotalFinal`, `UtilidadNetaFinal`, `PorcentajeMortalidadFinal`) a la entidad `Lote`.
-- [x] 3. Application: Modificar `CerrarLoteCommandHandler` para calcular y guardar permanentemente estos Snapshots en la BD.
-- [x] 4. Application: Crear el caso de uso `AnularVentaCommand` (Marca la venta como `IsActive = false` y devuelve la `CantidadPollos` al lote utilizando `IUnitOfWork`).
-- [x] 5. API: Exponer el endpoint `POST /api/ventas/{id}/anular` protegido por roles administrativos.
-- [x] 6. Infraestructura: Crear y aplicar migración `AddIntegridadContableYPagos`.
-
-## SPRINT 24: Rendimiento y Proactividad (Escalabilidad)
-*Objetivo: Escalar la base de datos y automatizar operaciones operativas.*
-- [x] 1. Infraestructura: Configurar Índices (`.HasIndex()`) en `IEntityTypeConfiguration` para las columnas más consultadas: `LoteId`, `ProductoId` y `Fecha` en las tablas de Inventario y Ventas. Crear migración `AddPerformanceIndexes`.
-- [x] 2. API/BackgroundJobs: Crear un `IHostedService` o job en segundo plano (`AlertaSanitariaJob`) que se ejecute diariamente para revisar el `CalendarioSanitario` e imprimir en el Logger las vacunas pendientes del día.
+## SPRINT 26: Migración de Datos y Reparación del Motor
+*Objetivo: Migración sin pérdida de datos y actualización de cálculos en memoria.*
+- [x] 1. Infraestructura: Crear la migración en EF Core. **REGLA CRÍTICA:** Modificar el método `Up()` manualmente para insertar las categorías por defecto (Alimento, Medicamento, Insumo) y unidades (Kg, Unidad, Litro, Saco) y actualizar los productos existentes apuntando a estos nuevos IDs ANTES de borrar las columnas de los Enums antiguos.
+- [x] 2. Application: Refactorizar `ObtenerDetalleLoteQueryHandler` (o la calculadora de FCR). El Alimento Consumido ahora se calcula multiplicando `Cantidad` * `Producto.EquivalenciaEnKg`.
+- [x] 3. API: Exponer `CategoriasController` y `UnidadesMedidaController` protegiéndolos con roles de Admin/SubAdmin.
+- [x] 4. API: Actualizar los endpoints de `ProductosController`.
+- [x] 5. Documentación: Actualizar exhaustivamente `endpoints.md` con las nuevas rutas y estructuras JSON.

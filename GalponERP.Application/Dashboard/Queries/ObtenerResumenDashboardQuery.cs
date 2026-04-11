@@ -45,7 +45,8 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
         int totalMortalidadMes = mortalidadMes.Sum(m => m.CantidadBajas);
 
         // 3. Alertas de Alimento (Reutilizando lógica de VerificarNivelesAlimento)
-        var alimentos = await _productoRepository.ObtenerPorTipoAsync(TipoProducto.Alimento);
+        var productos = await _productoRepository.ObtenerTodosAsync();
+        var alimentos = productos.Where(p => p.Categoria?.Nombre == "Alimento");
         var alimentoIds = alimentos.Select(p => p.Id).ToHashSet();
         var todosLosMovimientos = await _inventarioRepository.ObtenerTodosAsync();
         var movimientosAlimento = todosLosMovimientos.Where(m => alimentoIds.Contains(m.ProductoId)).ToList();

@@ -19,7 +19,10 @@ public class ObtenerProductosQueryHandler : IRequestHandler<ObtenerProductosQuer
         return productos.Select(p => new ProductoResponse(
             p.Id,
             p.Nombre,
-            p.Tipo.ToString(),
-            p.UnidadMedida.ToString()));
+            p.CategoriaProductoId,
+            p.Categoria?.Nombre ?? "Sin Categoria",
+            p.UnidadMedidaId,
+            p.Unidad?.Nombre ?? "Sin Unidad",
+            p.EquivalenciaEnKg));
     }
 }

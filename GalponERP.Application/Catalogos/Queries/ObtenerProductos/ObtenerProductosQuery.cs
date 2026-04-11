@@ -7,5 +7,8 @@ public record ObtenerProductosQuery() : IRequest<IEnumerable<ProductoResponse>>;
 public record ProductoResponse(
     Guid Id,
     string Nombre,
-    string Tipo,
-    string UnidadMedida);
+    Guid CategoriaId,
+    string CategoriaNombre,
+    Guid UnidadId,
+    string UnidadMedidaNombre,
+    decimal EquivalenciaEnKg);

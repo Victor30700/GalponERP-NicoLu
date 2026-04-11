@@ -68,9 +68,12 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "totalVentas": 495.00,
   "totalGastos": 120.50,
   "utilidadEstimada": -7125.50,
+  "pesoPromedioActualGramos": 1250.50,
+  "fcrActual": 1.62,
   "ventas": [],
   "historialMortalidad": [],
-  "gastos": []
+  "gastos": [],
+  "pesajes": []
 }
 ```
 
@@ -316,8 +319,10 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
     "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "nombreProducto": "Balanceado Inicio",
     "tipoProducto": "Alimento",
+    "categoriaNombre": "Alimento",
     "stockActual": 1250.75,
-    "unidadMedida": "Kg"
+    "unidadMedida": "Kilogramos",
+    "unidadMedidaNombre": "Kilogramos"
   }
 ]
 ```
@@ -332,8 +337,10 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "nombreProducto": "Balanceado Inicio",
   "tipoProducto": "Alimento",
+  "categoriaNombre": "Alimento",
   "stockActual": 1250.75,
-  "unidadMedida": "Kg"
+  "unidadMedida": "Kilogramos",
+  "unidadMedidaNombre": "Kilogramos"
 }
 ```
 
@@ -685,8 +692,9 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```json
 {
   "nombre": "Balanceado Inicio",
-  "tipo": "Alimento",
-  "unidadMedida": "Kg"
+  "categoriaProductoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "unidadMedidaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "equivalenciaEnKg": 1.0
 }
 ```
 - **Salida (JSON):**
@@ -706,8 +714,11 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "nombre": "Balanceado Inicio",
-    "tipo": "Alimento",
-    "unidadMedida": "Kg",
+    "categoriaProductoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "categoriaNombre": "Alimento",
+    "unidadMedidaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "unidadMedidaNombre": "Kilogramo",
+    "equivalenciaEnKg": 1.0,
     "isActive": true
   }
 ]
@@ -722,8 +733,9 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "nombre": "Nombre Actualizado",
-  "tipo": "Alimento",
-  "unidadMedida": "Libras"
+  "categoriaProductoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "unidadMedidaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "equivalenciaEnKg": 40.0
 }
 ```
 - **Salida:** `204 No Content`
@@ -787,3 +799,161 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
   }
 ]
 ```
+
+## 12. CATEGORÍAS (ADMIN)
+
+### Listar Categorías
+- **URL:** `/api/Categorias`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Alimento",
+    "descripcion": "Balanceados y forraje"
+  }
+]
+```
+
+### Crear Categoría
+- **URL:** `/api/Categorias`
+- **Método:** `POST`
+- **Entrada (JSON):**
+```json
+{
+  "nombre": "Nueva Categoría",
+  "descripcion": "Descripción opcional"
+}
+```
+- **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID)
+
+## 13. UNIDADES DE MEDIDA (ADMIN)
+
+### Listar Unidades
+- **URL:** `/api/UnidadesMedida`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Kilogramo",
+    "abreviatura": "Kg"
+  }
+]
+```
+
+### Crear Unidad
+- **URL:** `/api/UnidadesMedida`
+- **Método:** `POST`
+- **Entrada (JSON):**
+```json
+{
+  "nombre": "Litro",
+  "abreviatura": "L"
+}
+```
+- **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID)
+
+
+# BITÁCORA ARQUITECTÓNICA - GALPON ERP
+
+## Decisión 14.1: Implementación de RBAC (Role-Based Access Control) con Enums
+Se ha refactorizado el sistema de roles de un esquema basado en strings constantes a un `enum RolGalpon` numérico para mayor control y tipado fuerte.
+
+**Jerarquía de Roles:**
+*   `Empleado = 0`: Acceso operativo (Lotes, Mortalidad, Galpones, Inventario, Calendario).
+*   `SubAdmin = 1`: Acceso de gestión (Ventas, Gastos, Productos, Clientes, Dashboard, Planificación).
+*   `Admin = 2`: Acceso total (Gestión de Usuarios, Configuración del Sistema).
+
+**Mecánica de Inyección:**
+El `Rol` se almacena como un entero en la base de datos PostgreSQL mediante EF Core. Al validar el JWT de Firebase, se intercepta el evento `OnTokenValidated`, se busca al usuario por su `FirebaseUid` en la BD local y se inyecta un `ClaimTypes.Role` con el nombre del enum (Admin, SubAdmin, Empleado).
+
+## Decisión 14.2: Migración RefactorRolesEnum
+Se generó una migración no destructiva para convertir la columna `Rol` de `character varying(50)` a `integer`. Se recomienda que antes de aplicar la migración en producción, se limpien o mapeen los valores de texto existentes a sus equivalentes numéricos (Admin -> 2, etc.).
+
+## Decisión 14.3: Blindaje de Controladores
+Se aplicó el atributo `[Authorize(Roles = "Admin,SubAdmin,Empleado")]` según la criticidad del endpoint, asegurando que el principio de menor privilegio se cumpla.
+
+## Decisión 15.1: Módulo de Pesajes y Cálculo de FCR
+Se implementó la entidad `PesajeLote` para registrar el peso promedio de muestras de pollos. El Índice de Conversión Alimenticia (FCR) se calcula dinámicamente en la consulta de detalle del lote utilizando la fórmula:
+`FCR = Alimento Consumido (Kg) / Incremento de Biomasa (Kg)`.
+
+**Consideraciones Técnicas:**
+- El peso inicial del pollito se estima en 40g para el cálculo del incremento.
+- Se filtran los movimientos de inventario de tipo "Salida" para productos de tipo "Alimento" vinculados al lote.
+- Se requiere al menos un registro de pesaje para obtener el FCR actual.
+
+## Decisión 16.1: Venta basada en Peso
+Se refactorizó la entidad `Venta` para alejarse de un modelo de "precio unitario por pollo" hacia uno de "peso total vendido y precio por kilo", alineándose con la realidad comercial de la industria avícola.
+
+## Decisión 17.1: Identidad y Gestión de Catálogos
+Se implementó el endpoint `/api/usuarios/me` para permitir al frontend obtener los datos del usuario logueado y su rol (RBAC) de forma atómica. Se completó la trazabilidad de catálogos permitiendo `Update` y `Soft Delete` en Clientes y Productos.
+
+## Decisión 18.1: Trazabilidad de Inventario (Kardex) y Ajustes
+Se habilitó la consulta histórica de movimientos para auditoría. Para los ajustes manuales (mermas/robos), se extendió la entidad `MovimientoInventario` con un campo `Justificacion` obligatorio para mantener la integridad de la bitácora de almacén.
+
+## Decisión 19.1: Desacoplamiento de Históricos
+Se crearon endpoints específicos para listar Ventas y Mortalidad fuera del contexto de un solo lote, permitiendo análisis transversales de la operación.
+
+## Decisión 21.1: Limpieza de warnings y GoogleCredential
+Se refactorizó la carga de credenciales de Firebase en `FirebaseAuthService` y `Program.cs` para utilizar `GoogleCredential.GetApplicationDefault()`. Para compatibilidad en desarrollo local con archivos JSON, se inyecta la ruta del archivo en la variable de entorno `GOOGLE_APPLICATION_CREDENTIALS` dinámicamente. Se eliminaron todos los warnings de compilación (posibles nulos y métodos obsoletos).
+
+## Decisión 22.1: Accountability y Auditoría de Transacciones
+Se implementó un sistema de auditoría obligatorio para todas las transacciones financieras (Ventas, Gastos) y operativas (Movimientos de Inventario, Pesajes, Mortalidad). 
+1. **Identidad Segura:** El `UsuarioId` local (Guid) se extrae del JWT a través del `FirebaseUid` buscando en `IUsuarioRepository` en cada controlador.
+2. **Inmutabilidad:** El `UsuarioId` se inyecta en los comandos de MediatR y se guarda permanentemente en la base de datos para saber exactamente quién registró cada acción.
+3. **Migración Segura:** Se corrigió un error de casting automático en PostgreSQL para la columna `Rol` mediante una cláusula `USING (CASE ...)` en la migración `RefactorRolesEnum`, asegurando la integridad de los datos existentes.
+
+## Decisión 22.2: Actualización de Contratos API
+Se actualizó `endpoints.md` para notificar al Frontend que la auditoría es transparente; el cliente no debe (ni puede) enviar el `UsuarioId` en los payloads JSON, delegando la responsabilidad de identidad totalmente al Backend.
+
+## Decisión 23.1: Flexibilidad Financiera en Objeto Moneda
+Se eliminó la restricción de montos no negativos en el Value Object `Moneda`. Esto es necesario para representar correctamente conceptos de **Pérdida Neta** o **Utilidad Negativa** al cerrar un lote donde los costos superan los ingresos, evitando excepciones de negocio fatales durante el cierre contable.
+
+## Decisión 23.2: Corrección de Filtros en Listado de Lotes
+Se corrigió un error en `LoteRepository` donde el parámetro `soloActivos` no funcionaba correctamente debido a los filtros globales de EF Core. Se implementó `.IgnoreQueryFilters()` en la consulta de "todos los lotes" para asegurar que el sistema pueda distinguir correctamente entre lotes activos, cerrados y eliminados.
+
+## Decisión 23.3: Integridad Contable y Snapshots de Cierre
+Se implementó un sistema de "congelación" de datos al cerrar un lote para asegurar la inmutabilidad de los reportes históricos.
+1. **Snapshots en Lote:** Se agregaron los campos `FCRFinal`, `CostoTotalFinal`, `UtilidadNetaFinal` y `PorcentajeMortalidadFinal` a la entidad `Lote`. Estos valores se calculan y guardan permanentemente en la base de datos al ejecutar el comando `CerrarLote`.
+2. **Estado de Pago en Ventas:** Se introdujo el enum `EstadoPago` (`Pagado`, `Pendiente`, `Parcial`) en la entidad `Venta` para permitir el seguimiento de cuentas por cobrar. Por defecto, todas las ventas se registran como `Pagado`.
+3. **Mecánica de Anulación Segura:** Se creó el caso de uso `AnularVentaCommand`. Esta operación realiza un **Soft Delete** de la venta (`IsActive = false`) y **devuelve automáticamente la cantidad de pollos vendidos al inventario del lote**, garantizando la consistencia del conteo biológico. Esta acción está restringida únicamente al rol `Admin` y solo es permitida si el lote asociado no ha sido cerrado.
+4. **Cálculo de FCR de Cierre:** El FCR final se calcula sumando todos los movimientos de salida de productos tipo `Alimento` vinculados al lote y dividiéndolos por el peso total vendido.
+
+## Decisión 24.1: Optimización de Base de Datos y Background Jobs
+1. **Indexación Estratégica:** Se configuraron índices explícitos en las columnas de alta frecuencia de consulta: `Fecha` en `Ventas` y `MovimientosInventario`. Las llaves foráneas (`LoteId`, `ProductoId`, `ClienteId`) ya cuentan con índices implícitos creados por EF Core. Esto optimiza los reportes transversales y el cálculo de FCR en tiempo real.
+2. **Automatización de Alertas Sanitarias:** Se implementó `AlertaSanitariaJob` como un `BackgroundService`. Este servicio escanea diariamente todos los lotes activos, calcula su edad actual (días desde ingreso) y compara contra el `CalendarioSanitario`. Cualquier actividad pendiente (Vacunas/Tratamientos) que deba aplicarse hasta la fecha actual es reportada mediante el Logger del sistema para acción inmediata.
+
+## Decisón 25.1: Dominio Dinámico y Ancla Matemática (SaaS)
+Se ha migrado la estructura de productos de Enums estáticos a un modelo de catálogos dinámicos para soportar la escalabilidad multi-tenant y la flexibilidad de tipos de insumos.
+
+1. **Entidades de Catálogo:** Se crearon las entidades `CategoriaProducto` (Nombre, Descripcion) y `UnidadMedida` (Nombre, Abreviatura). Esto permite que cada usuario defina sus propios tipos de productos (Iniciador, Crecimiento, Vacuna Newcastle, etc.) y unidades (Saco 40kg, Frasco 50 dosis, Litro) sin cambios de código.
+2. **Equivalencia en Kg (El Ancla):** Se introdujo la propiedad `EquivalenciaEnKg` en la entidad `Producto`. Esta es la decisión técnica más crítica: todos los cálculos de FCR e inventario ahora dependen de este multiplicador decimal.
+   - *Ejemplo:* Si un producto es "Alimento Iniciador" y su unidad es "Saco 40kg", su `EquivalenciaEnKg` es `40.0`. Los movimientos de inventario se registran en "Sacos", pero el motor de FCR los procesa en "Kg" automáticamente.
+3. **Refactorización de Producto:** Se eliminaron los enums `TipoProducto` y `UnidadMedida`. La entidad `Producto` ahora utiliza llaves foráneas (`CategoriaProductoId`, `UnidadMedidaId`) con navegación obligatoria y carga mediante `.Include()`.
+
+## Decisión 26.1: Estrategia de Migración de Datos SaaS (Zero Data Loss)
+Para evitar la pérdida de información de productos existentes durante el cambio de esquema de base de datos, se implementó una migración de EF Core personalizada:
+
+1. **Procedimiento Up():**
+   - Se crean las nuevas tablas `CategoriasProductos` y `UnidadesMedida`.
+   - Se añaden las columnas de FK a `Productos` como nulables inicialmente.
+   - Se realiza un **Seeding de Identidad**: Inserción de categorías y unidades por defecto mediante SQL directo para garantizar IDs consistentes.
+   - **Mapeo Transaccional:** Se ejecutaron sentencias `UPDATE` para migrar los antiguos valores de texto (Enums) a los nuevos IDs de catálogo y asignar equivalencias por defecto (ej. Saco -> 40kg).
+   - Se eliminan las columnas obsoletas y se aplica la restricción `NOT NULL`.
+
+## Decisión 26.2: Refactorización del Motor de Cálculo (FCR y Stock)
+Se actualizaron todos los casos de uso que consumen inventario para alinearse al nuevo modelo:
+1. **Identificación de Alimento:** En `CerrarLote` y `ObtenerDetalleLote`, los productos se filtran ahora comparando `p.Categoria.Nombre == "Alimento"`.
+2. **Cálculo de Consumo:** La fórmula de alimento consumido cambió de `Sum(Cantidad)` a `Sum(Cantidad * Producto.EquivalenciaEnKg)`, garantizando que el FCR sea siempre una relación Kg/Kg independientemente de la unidad de despacho.
+3. **Normalización de Unidades:** El reporte de stock ahora muestra tanto el nombre de la categoría como la unidad de medida dinámica, mejorando la legibilidad para el usuario final.
+
+## Decisión 26.3: Exposición de Catálogos y Seguridad
+Se implementaron controladores específicos (`CategoriasController`, `UnidadesMedidaController`) protegidos bajo RBAC:
+- **Lectura:** Disponible para `Admin, SubAdmin`.
+- **Escritura/Anulación:** Restringida estrictamente a `Admin, SubAdmin`.
+- **Soft Delete:** Todas las acciones de eliminación en catálogos utilizan el patrón `IsActive = false` heredado de la clase base `Entity`.
