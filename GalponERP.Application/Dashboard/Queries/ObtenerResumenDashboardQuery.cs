@@ -9,7 +9,9 @@ public record ResumenDashboardResponse(
     int MortalidadMesActual,
     decimal StockAlimentoActual,
     bool RequiereAlertaAlimento,
-    decimal DiasAlimentoRestantes);
+    decimal DiasAlimentoRestantes,
+    decimal SaldoPorCobrarTotal,
+    int TareasSanitariasHoy);
 
 public record ObtenerResumenDashboardQuery() : IRequest<ResumenDashboardResponse>;
 
@@ -19,17 +21,23 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
     private readonly IMortalidadRepository _mortalidadRepository;
     private readonly IInventarioRepository _inventarioRepository;
     private readonly IProductoRepository _productoRepository;
+    private readonly IVentaRepository _ventaRepository;
+    private readonly ICalendarioSanitarioRepository _calendarioRepository;
 
     public ObtenerResumenDashboardQueryHandler(
         ILoteRepository loteRepository, 
         IMortalidadRepository mortalidadRepository,
         IInventarioRepository inventarioRepository,
-        IProductoRepository productoRepository)
+        IProductoRepository productoRepository,
+        IVentaRepository ventaRepository,
+        ICalendarioSanitarioRepository calendarioRepository)
     {
         _loteRepository = loteRepository;
         _mortalidadRepository = mortalidadRepository;
         _inventarioRepository = inventarioRepository;
         _productoRepository = productoRepository;
+        _ventaRepository = ventaRepository;
+        _calendarioRepository = calendarioRepository;
     }
 
     public async Task<ResumenDashboardResponse> Handle(ObtenerResumenDashboardQuery request, CancellationToken cancellationToken)
@@ -44,19 +52,19 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
         var mortalidadMes = await _mortalidadRepository.ObtenerPorRangoFechasAsync(inicioMes, finMes);
         int totalMortalidadMes = mortalidadMes.Sum(m => m.CantidadBajas);
 
-        // 3. Alertas de Alimento (Reutilizando lógica de VerificarNivelesAlimento)
+        // 3. Alertas de Alimento
         var productos = await _productoRepository.ObtenerTodosAsync();
         var alimentos = productos.Where(p => p.Categoria?.Nombre == "Alimento");
         var alimentoIds = alimentos.Select(p => p.Id).ToHashSet();
         var todosLosMovimientos = await _inventarioRepository.ObtenerTodosAsync();
         var movimientosAlimento = todosLosMovimientos.Where(m => alimentoIds.Contains(m.ProductoId)).ToList();
         
-        var stockTotalAlimento = movimientosAlimento.Sum(m => m.Tipo == TipoMovimiento.Entrada ? m.Cantidad : -m.Cantidad);
+        var stockTotalAlimento = movimientosAlimento.Sum(m => (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada) ? m.Cantidad : -m.Cantidad);
         
         decimal consumoDiarioGlobal = 0;
         foreach (var lote in lotesActivos)
         {
-            var movimientosLote = movimientosAlimento.Where(m => m.LoteId == lote.Id && m.Tipo == TipoMovimiento.Salida).ToList();
+            var movimientosLote = movimientosAlimento.Where(m => m.LoteId == lote.Id && (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida)).ToList();
             if (!movimientosLote.Any()) continue;
 
             var diasDeVida = (DateTime.UtcNow - lote.FechaIngreso).TotalDays;
@@ -70,11 +78,29 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
         decimal diasRestantes = consumoDiarioGlobal > 0 ? stockTotalAlimento / consumoDiarioGlobal : 999;
         bool requiereAlerta = diasRestantes < 3;
 
+        // 4. Saldo Total por Cobrar
+        var ventas = await _ventaRepository.ObtenerTodasAsync();
+        decimal saldoTotal = ventas
+            .Where(v => v.EstadoPago != EstadoPago.Pagado)
+            .Sum(v => v.SaldoPendiente.Monto);
+
+        // 5. Tareas Sanitarias Hoy
+        int tareasHoy = 0;
+        foreach (var lote in lotesActivos)
+        {
+            var calendario = await _calendarioRepository.ObtenerPorLoteIdAsync(lote.Id);
+            var diaActualLote = (int)(DateTime.UtcNow.Date - lote.FechaIngreso.Date).TotalDays + 1;
+            
+            tareasHoy += calendario.Count(c => c.DiaDeAplicacion == diaActualLote && c.Estado == EstadoCalendario.Pendiente);
+        }
+
         return new ResumenDashboardResponse(
             totalVivos,
             totalMortalidadMes,
             stockTotalAlimento,
             requiereAlerta,
-            diasRestantes);
+            diasRestantes,
+            saldoTotal,
+            tareasHoy);
     }
 }

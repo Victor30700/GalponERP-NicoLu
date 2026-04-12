@@ -263,6 +263,26 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Salida:** `204 No Content`
 
+### Obtener Movimientos por Producto (Kárdex)
+- **URL:** `/api/inventario/productos/{id}/movimientos`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "...",
+    "productoId": "...",
+    "nombreProducto": "...",
+    "loteId": "...",
+    "cantidad": 10.0,
+    "tipo": "Salida",
+    "fecha": "...",
+    "justificacion": "..."
+  }
+]
+```
+
 ### Registrar Gasto Operativo
 - **URL:** `/api/Gastos`
 - **Método:** `POST`
@@ -375,6 +395,73 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - **Método:** `PUT`
 - **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):** Mismo formato que Crear, incluyendo el `id` en el body.
+
+## 2.3 CALENDARIO SANITARIO
+
+### Obtener Calendario por Lote
+- **URL:** `/api/calendario/{loteId}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "...",
+    "diaDeAplicacion": 7,
+    "descripcionTratamiento": "Newcastle",
+    "productoIdRecomendado": "...",
+    "estado": "Pendiente"
+  }
+]
+```
+
+### Marcar Vacuna como Aplicada
+- **URL:** `/api/calendario/{id}/aplicar`
+- **Método:** `PATCH`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Entrada (JSON):**
+```json
+{
+  "cantidadConsumida": 10.5
+}
+```
+- **Salida:** `204 No Content`
+- **Nota:** Descuenta automáticamente el inventario del producto recomendado. Valida stock suficiente.
+
+## 2.4 INVENTARIO
+
+### Obtener Stock Actual
+- **URL:** `/api/inventario/stock`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Query Params:** `productoId` (Guid, opcional)
+- **Salida (JSON):**
+```json
+[
+  {
+    "productoId": "...",
+    "productoNombre": "Alimento Iniciador",
+    "stockActual": 150.5,
+    "unidadMedida": "Bulto 50kg"
+  }
+]
+```
+
+### Registrar Consumo Diario de Alimento
+- **URL:** `/api/inventario/consumo-diario`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Entrada (JSON):**
+```json
+{
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "cantidad": 5.0,
+  "justificacion": "Alimentación mañana"
+}
+```
+- **Salida (JSON):** `{ "movimientoId": "..." }`
+- **Nota:** Registra una SALIDA de inventario vinculada a un lote. Valida stock suficiente.
 
 ## 3. FINANZAS E INTELIGENCIA
 
@@ -505,3 +592,22 @@ Se implementó una arquitectura de Auditoría Pasiva mediante un `AuditoriaBehav
 
 ## Decisión 31.3: Refuerzo de Soft Delete
 Se estandarizó que toda acción de "Eliminar" en registros operativos (Mortalidad, Pesajes, Gastos, Ventas) es un **Soft Delete** (`IsActive = false`). En el caso de Mortalidad y Ventas, esta acción también dispara la reversión de los contadores biológicos en el Lote asociado.
+
+## Decisión 36.1: Ejecución Sanitaria Integrada con Inventario
+Se refactorizó la aplicación de vacunas para garantizar la trazabilidad total:
+1. **Consumo de Insumos:** Marcar una vacuna como aplicada ahora genera automáticamente un movimiento de SALIDA en el inventario.
+2. **Validación de Stock:** El sistema impide la aplicación de tratamientos si no existe stock suficiente del producto recomendado, lanzando una `InventarioDomainException`.
+3. **Seguridad JWT:** El `UsuarioId` responsable del consumo se extrae automáticamente del token, cumpliendo con los estándares de auditoría SaaS.
+4. **Endpoint PATCH:** Se migró a `PATCH` para reflejar la actualización parcial del estado del calendario.
+
+## Decisión 37.1: Flujo de Alimentación de Alto Rendimiento
+Se implementó un comando especializado para el registro de alimentación diaria:
+1. **Transaccionalidad Atómica:** En un solo paso se registra el consumo, se valida el stock y se vincula el costo al lote correspondiente.
+2. **Cálculo de Biomasa:** El sistema utiliza la `EquivalenciaEnKg` del producto para normalizar el consumo, permitiendo que el Frontend reporte KPIs de eficiencia (FCR) sin cálculos manuales propensos a errores.
+3. **Ergonomía Operativa:** El endpoint simplificado permite al galponero registrar el alimento consumido con un solo clic desde la interfaz móvil.
+
+## Decisión 38.1: Visibilidad Operativa 360° (Kárdex y Dashboard)
+Se completó la capa de lectura para habilitar una gestión basada en datos:
+1. **Kárdex Detallado:** El nuevo endpoint de movimientos por producto permite auditar cada gramo de insumo, incluyendo justificaciones de ajustes y consumos operativos.
+2. **Dashboard de Resumen Ejecutivo:** Se consolidaron indicadores críticos (Pollos Vivos, Cuentas por Cobrar, Tareas Pendientes) en una sola consulta optimizada.
+3. **Automatización de Tareas:** El sistema ahora calcula automáticamente qué tareas sanitarias deben realizarse "Hoy" basándose en la fecha de ingreso de cada lote activo, eliminando la necesidad de seguimiento manual por parte del granjero.

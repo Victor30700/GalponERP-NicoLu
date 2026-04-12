@@ -1,4 +1,5 @@
 using GalponERP.Application.Inventario.Commands.RegistrarMovimiento;
+using GalponERP.Application.Inventario.Commands.RegistrarConsumoAlimento;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
@@ -66,6 +67,13 @@ public class InventarioController : ControllerBase
         return Ok(movimientos);
     }
 
+    [HttpGet("productos/{id}/movimientos")]
+    public async Task<IActionResult> ObtenerMovimientosPorProducto(Guid id)
+    {
+        var movimientos = await _mediator.Send(new ObtenerMovimientosQuery(id));
+        return Ok(movimientos);
+    }
+
     [HttpGet("movimientos/reporte")]
     public async Task<IActionResult> ObtenerReporteMovimientos([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin, [FromQuery] Guid? categoriaProductoId = null)
     {
@@ -106,6 +114,20 @@ public class InventarioController : ControllerBase
 
         var id = await _mediator.Send(finalCommand);
         return Ok(new { AjusteId = id });
+    }
+
+    [HttpPost("consumo-diario")]
+    public async Task<IActionResult> RegistrarConsumoDiario([FromBody] RegistrarConsumoAlimentoCommand command)
+    {
+        try
+        {
+            var id = await _mediator.Send(command);
+            return Ok(new { MovimientoId = id });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("niveles-alimento")]

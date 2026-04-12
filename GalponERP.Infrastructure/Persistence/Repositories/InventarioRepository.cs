@@ -36,6 +36,19 @@ public class InventarioRepository : IInventarioRepository
             .ToListAsync();
     }
 
+    public async Task<decimal> ObtenerStockPorProductoIdAsync(Guid productoId)
+    {
+        var entradas = await _context.MovimientosInventario
+            .Where(m => m.ProductoId == productoId && (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada))
+            .SumAsync(m => m.Cantidad);
+
+        var salidas = await _context.MovimientosInventario
+            .Where(m => m.ProductoId == productoId && (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida))
+            .SumAsync(m => m.Cantidad);
+
+        return entradas - salidas;
+    }
+
     public void RegistrarMovimiento(MovimientoInventario movimiento)
     {
         _context.MovimientosInventario.Add(movimiento);

@@ -3,7 +3,7 @@ using MediatR;
 
 namespace GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 
-public record ObtenerMovimientosQuery() : IRequest<IEnumerable<MovimientoResponse>>;
+public record ObtenerMovimientosQuery(Guid? ProductoId = null) : IRequest<IEnumerable<MovimientoResponse>>;
 
 public record MovimientoResponse(
     Guid Id,
@@ -12,4 +12,5 @@ public record MovimientoResponse(
     Guid? LoteId,
     decimal Cantidad,
     string Tipo,
-    DateTime Fecha);
+    DateTime Fecha,
+    string? Justificacion);

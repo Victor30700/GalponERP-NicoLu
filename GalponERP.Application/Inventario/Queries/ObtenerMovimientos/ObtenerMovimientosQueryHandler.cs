@@ -17,6 +17,12 @@ public class ObtenerMovimientosQueryHandler : IRequestHandler<ObtenerMovimientos
     public async Task<IEnumerable<MovimientoResponse>> Handle(ObtenerMovimientosQuery request, CancellationToken cancellationToken)
     {
         var movimientos = await _inventarioRepository.ObtenerTodosAsync();
+
+        if (request.ProductoId.HasValue)
+        {
+            movimientos = movimientos.Where(m => m.ProductoId == request.ProductoId.Value);
+        }
+
         var productos = await _productoRepository.ObtenerTodosAsync();
         var productosDict = productos.ToDictionary(p => p.Id, p => p.Nombre);
 
@@ -29,6 +35,7 @@ public class ObtenerMovimientosQueryHandler : IRequestHandler<ObtenerMovimientos
                 m.LoteId,
                 m.Cantidad,
                 m.Tipo.ToString(),
-                m.Fecha));
+                m.Fecha,
+                m.Justificacion));
     }
 }

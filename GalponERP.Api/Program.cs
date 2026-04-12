@@ -1,7 +1,9 @@
 using GalponERP.Api.Middleware;
 using GalponERP.Api.BackgroundJobs;
 using GalponERP.Application;
+using GalponERP.Application.Interfaces;
 using GalponERP.Infrastructure;
+using GalponERP.Infrastructure.Authentication;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -44,12 +46,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var firebaseUid = context.Principal?.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
                 if (string.IsNullOrEmpty(firebaseUid)) return;
 
-                using var scope = context.HttpContext.RequestServices.CreateScope();
-                var usuarioRepository = scope.ServiceProvider.GetRequiredService<GalponERP.Domain.Interfaces.Repositories.IUsuarioRepository>();
+                // Obtener el ICurrentUserContext de la solicitud actual
+                var currentUserContext = context.HttpContext.RequestServices.GetRequiredService<ICurrentUserContext>() as CurrentUserContext;
+                var usuarioRepository = context.HttpContext.RequestServices.GetRequiredService<GalponERP.Domain.Interfaces.Repositories.IUsuarioRepository>();
+                
                 var usuario = await usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
 
                 if (usuario != null)
                 {
+                    currentUserContext?.SetUser(usuario.Id, firebaseUid);
+                    
                     var claims = new List<System.Security.Claims.Claim>
                     {
                         new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, usuario.Rol.ToString())

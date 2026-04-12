@@ -1,4 +1,6 @@
 using GalponERP.Application.Interfaces;
+using GalponERP.Domain.Entities;
+using GalponERP.Domain.Exceptions;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
 
@@ -7,14 +9,20 @@ namespace GalponERP.Application.Calendario.Commands.MarcarVacunaAplicada;
 public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAplicadaCommand>
 {
     private readonly ICalendarioSanitarioRepository _calendarioRepository;
+    private readonly IInventarioRepository _inventarioRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserContext _currentUserContext;
 
     public MarcarVacunaAplicadaCommandHandler(
         ICalendarioSanitarioRepository calendarioRepository,
-        IUnitOfWork unitOfWork)
+        IInventarioRepository inventarioRepository,
+        IUnitOfWork unitOfWork,
+        ICurrentUserContext currentUserContext)
     {
         _calendarioRepository = calendarioRepository;
+        _inventarioRepository = inventarioRepository;
         _unitOfWork = unitOfWork;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task Handle(MarcarVacunaAplicadaCommand request, CancellationToken cancellationToken)
@@ -26,9 +34,47 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
             throw new Exception("Actividad del calendario no encontrada.");
         }
 
+        if (actividad.Estado == EstadoCalendario.Aplicado)
+        {
+            throw new Exception("Esta actividad ya ha sido marcada como aplicada.");
+        }
+
+        if (!actividad.ProductoIdRecomendado.HasValue)
+        {
+            throw new Exception("La actividad no tiene un producto recomendado asignado.");
+        }
+
+        var usuarioId = _currentUserContext.UsuarioId;
+        if (!usuarioId.HasValue || usuarioId == Guid.Empty)
+        {
+            throw new UnauthorizedAccessException("Usuario no identificado para realizar la operación.");
+        }
+
+        // 1. Validar Stock
+        var stockActual = await _inventarioRepository.ObtenerStockPorProductoIdAsync(actividad.ProductoIdRecomendado.Value);
+        if (stockActual < request.CantidadConsumida)
+        {
+            throw new InventarioDomainException($"Stock insuficiente para el producto. Disponible: {stockActual}, Requerido: {request.CantidadConsumida}");
+        }
+
+        // 2. Cambiar estado en CalendarioSanitario
         actividad.MarcarComoAplicado();
 
+        // 3. Generar MovimientoInventario de tipo SALIDA
+        var movimiento = new MovimientoInventario(
+            Guid.NewGuid(),
+            actividad.ProductoIdRecomendado.Value,
+            actividad.LoteId,
+            request.CantidadConsumida,
+            TipoMovimiento.Salida,
+            DateTime.UtcNow,
+            usuarioId.Value,
+            $"Aplicación de vacuna: {actividad.DescripcionTratamiento}"
+        );
+
         _calendarioRepository.Actualizar(actividad);
+        _inventarioRepository.RegistrarMovimiento(movimiento);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

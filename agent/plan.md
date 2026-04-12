@@ -1,27 +1,20 @@
-# PLAN DE DESARROLLO - FASE 2.0: ERP COMERCIAL SAAS
+# PLAN DE DESARROLLO - FASE 2.1: TRAZABILIDAD OPERATIVA E INVENTARIO
 
-## SPRINT 32: Finanzas Reales (Cuentas por Cobrar y Pagos)
-*Objetivo: Permitir ventas a crédito y amortizaciones parciales para tener un Flujo de Caja verídico.*
-- [x] 1. **Dominio:** Crear entidad `PagoVenta` (Id, VentaId, Monto, FechaPago, MetodoPago, UsuarioIdRegistro).
-- [x] 2. **Dominio:** Actualizar la entidad `Venta`. Añadir la colección de `Pagos` y un método `RegistrarPago(monto)` que actualice dinámicamente el `EstadoPago` (Pendiente, Parcial, Pagado) y calcule el `SaldoPendiente`.
-- [x] 3. **Application:** Crear `RegistrarPagoVentaCommand` y `ObtenerCuentasPorCobrarQuery`.
-- [x] 4. **API:** Exponer `POST /api/ventas/{id}/pagos` y `GET /api/finanzas/cuentas-por-cobrar` en los controladores respectivos. Extraer `UsuarioId` del JWT para la auditoría del pago.
-- [x] 5. **Infraestructura:** Crear y aplicar migración `AddPagosCuentasPorCobrar`.
+## SPRINT 36: Ejecución Sanitaria Integrada
+*Objetivo: Permitir la aplicación de vacunas descontando automáticamente el inventario de la bodega.*
+- [x] 1. **Application:** Refactorizar `MarcarVacunaAplicadaCommand` para que reciba `CantidadConsumida` (decimal) y extraiga el `UsuarioId` (del JWT).
+- [x] 2. **Application:** En su Handler, usar `IUnitOfWork` para: 1) Cambiar el estado en `CalendarioSanitario` a Aplicado. 2) Generar un `MovimientoInventario` de tipo SALIDA por la dosis consumida.
+- [x] 3. **Domain/Application:** Validar que exista stock suficiente antes de aplicar la vacuna. Si no hay, lanzar excepción de negocio.
+- [x] 4. **API:** Exponer o actualizar `PATCH /api/calendario/{id}/aplicar`.
 
-## SPRINT 33: Sanidad SaaS (Plantillas Dinámicas)
-*Objetivo: Eliminar la lógica hardcodeada de vacunas y permitir que cada granja configure sus programas.*
-- [x] 1. **Dominio:** Crear `PlantillaSanitaria` (Nombre, Descripcion) y `ActividadPlantilla` (PlantillaId, TipoActividad, DiaDeAplicacion, ProductoIdRecomendado).
-- [x] 2. **Application:** CRUD para Plantillas Sanitarias.
-- [x] 3. **Application:** Refactorizar `CrearLoteCommandHandler` para que reciba un `PlantillaSanitariaId` opcional y construya el `CalendarioSanitario` dinámicamente basado en esa plantilla.
+## SPRINT 37: Flujo Optimizado de Alimentación Diaria
+*Objetivo: Un endpoint dedicado para registrar el consumo diario de alimento que afecte el stock y los costos del lote en una sola transacción.*
+- [x] 1. **Application:** Crear `RegistrarConsumoAlimentoCommand` (LoteId, ProductoId, Cantidad, Justificacion, UsuarioId).
+- [x] 2. **Application:** El Handler debe usar `IUnitOfWork` para registrar la SALIDA de inventario. El sistema internamente debe calcular los Kg reales (usando `Producto.EquivalenciaEnKg`) para los KPIs biológicos del Lote.
+- [x] 3. **API:** Exponer `POST /api/inventario/consumo-diario`.
 
-## SPRINT 34: Operaciones de Ciclo de Vida Avanzado
-*Objetivo: Reflejar eventualidades del mundo real en los galpones.*
-- [x] 1. **Application:** Implementar `CancelarLoteCommand` (Estado = Cancelado, requiere justificación, inactiva el calendario).
-- [x] 2. **Application:** Implementar `TrasladarLoteCommand` (Cambia el `GalponId` del lote y deja registro en Auditoría).
-- [x] 3. **API:** Exponer `POST /api/lotes/{id}/cancelar` and `POST /api/lotes/{id}/trasladar`.
-
-
-## SPRINT 35: UX, Auditoría y Documentación
-*Objetivo: Preparar la API para la integración final y auditoría administrativa.*
-- [x] 1. **API:** Añadir filtros (Fecha, Usuario, Entidad) a `ObtenerAuditoriaLogsQuery`.
-- [x] 2. **API:** Configurar comentarios XML en Swagger (`GalponERP.Api.csproj` y `Program.cs`) para que el frontend vea la descripción de cada campo.
+## SPRINT 38: Visibilidad de Kárdex y Dashboard Global
+*Objetivo: Proveer las consultas (Lectura) finales que el Frontend necesita para renderizar la interfaz operativa.*
+- [x] 1. **API:** Exponer `GET /api/inventario/producto/{id}/movimientos` para el Kárdex histórico detallado de un solo insumo.
+- [x] 2. **API:** Exponer `GET /api/inventario/stock`. Esta consulta debe calcular el saldo neto (Entradas - Salidas) de cada producto y mostrar su `UnidadMedida` para el galponero.
+- [x] 3. **API:** Completar `GET /api/dashboard/resumen`. Usar `.AsNoTracking()` para agrupar rápidamente: Aves Vivas Totales, Saldo Total por Cobrar (Ventas) y Tareas Sanitarias para el día actual.

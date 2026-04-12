@@ -10,5 +10,6 @@ public interface IInventarioRepository
     Task<IEnumerable<MovimientoInventario>> ObtenerPorLoteIdAsync(Guid loteId);
     Task<IEnumerable<MovimientoInventario>> ObtenerPorProductoIdAsync(Guid productoId);
     Task<IEnumerable<MovimientoInventario>> ObtenerTodosAsync();
+    Task<decimal> ObtenerStockPorProductoIdAsync(Guid productoId);
     void RegistrarMovimiento(MovimientoInventario movimiento);
 }

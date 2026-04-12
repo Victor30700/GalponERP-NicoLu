@@ -648,3 +648,103 @@ Se completó la trazabilidad de gastos operativos permitiendo la edición y anul
 
 ## Decisión 27.2: Trazabilidad de Ventas por Lote
 Se implementó el endpoint `GET /api/ventas/lote/{loteId}` para facilitar la conciliación financiera y el análisis de rentabilidad específico de cada lote desde el frontend, permitiendo listar todas las transacciones de venta (activas) asociadas a una unidad de producción.
+
+
+# Bitácora de Arquitectura - Pollos NicoLu Fase 2.0
+
+## Sprint 32: Finanzas Reales (Cuentas por Cobrar y Pagos)
+
+### Decisiones de Diseño
+- **Mapeo de Pagos**: Se implementó `PagoVenta` como una entidad relacionada con `Venta`. Aunque el dominio ya tenía la lógica, faltaba la persistencia en base de datos.
+- **Relación Venta-Pagos**: Se configuró una relación 1:N en EF Core usando acceso por campo (`_pagos`) para respetar el encapsulamiento de DDD. El `SaldoPendiente` se calcula dinámicamente en el dominio basado en la suma de los montos de los pagos.
+- **Estado de Pago**: Se cambió el valor por defecto de `EstadoPago` a `Pendiente` (2) en la configuración de base de datos para alinearse con el constructor de la entidad `Venta`.
+- **Cuentas por Cobrar**: Se expuso el endpoint `GET /api/finanzas/cuentas-por-cobrar` que utiliza el `ObtenerCuentasPorCobrarQuery` ya implementado, permitiendo al frontend visualizar el saldo pendiente de cada venta no pagada totalmente.
+
+### Cambios Técnicos
+- Creado `PagoVentaConfiguration.cs`.
+- Actualizado `VentaConfiguration.cs` con la relación y valor por defecto.
+- Actualizado `GalponDbContext.cs` con el `DbSet<PagoVenta>`.
+- Refactorizado `VentaRepository.cs` para incluir la colección de `Pagos` en todas las consultas (Eager Loading), necesario para que el dominio pueda calcular el saldo pendiente.
+- Registrada la migración `AddPagosCuentasPorCobrar`.
+- Expuesto endpoint en `FinanzasController.cs`.
+
+## Sprint 33: Sanidad SaaS (Plantillas Dinámicas)
+
+### Decisiones de Diseño
+- **Plantillas de Sanidad**: Se crearon las entidades `PlantillaSanitaria` y `ActividadPlantilla` para permitir que los usuarios definan sus propios planes de vacunación y tratamiento, eliminando la lógica hardcodeada.
+- **Relación con Productos**: Se añadió `ProductoIdRecomendado` tanto en las plantillas como en el `CalendarioSanitario` final, permitiendo sugerir qué insumo de inventario debe usarse para cada tarea.
+- **Inmutabilidad del Calendario**: Al crear un lote, las actividades de la plantilla se "clonan" hacia la tabla `CalendarioSanitario` del lote. Esto garantiza que si la plantilla original cambia después, los lotes ya creados mantengan su plan original (trazabilidad).
+- **Fallback**: Si no se provee una plantilla al crear un lote, se mantiene un calendario base de 2 vacunas por retrocompatibilidad.
+
+### Cambios Técnicos
+- Creadas entidades `PlantillaSanitaria`, `ActividadPlantilla` y enum `TipoActividad`.
+- Actualizada entidad `CalendarioSanitario` con `ProductoIdRecomendado`.
+- Implementado CRUD completo para Plantillas en la capa de Aplicación.
+- Refactorizado `CrearLoteCommandHandler` para inyectar `IPlantillaSanitariaRepository` y generar el calendario dinámicamente.
+- Creado `PlantillasController` y aplicada la migración `AddPlantillasSanitarias`.
+
+## Sprint 34: Operaciones de Ciclo de Vida Avanzado
+
+### Decisiones de Diseño
+- **Cancelación de Lote**: Se añadió soporte para cancelar lotes, lo cual requiere una justificación obligatoria. Esta acción cambia el estado del lote a `Cancelado` e inactiva automáticamente todos los recordatorios pendientes en su calendario sanitario (mediante soft delete de los items).
+- **Traslado de Lote**: Se habilitó la capacidad de mover un lote de un galpón a otro. Esta acción es puramente logística y actualiza el `GalponId` del lote, manteniendo todo su historial operativo intacto.
+- **Trazabilidad de Auditoría**: Gracias al `AuditoriaBehavior` existente, las acciones de cancelación y traslado quedan automáticamente registradas en los logs del sistema, capturando quién realizó el cambio y los datos enviados.
+
+### Cambios Técnicos
+- Actualizada entidad `Lote` con propiedad `JustificacionCancelacion` y métodos `Cancelar()` y `Trasladar()`.
+- Implementados `CancelarLoteCommandHandler` y `TrasladarLoteCommandHandler`.
+- Añadidos endpoints correspondientes en `LotesController`.
+- Aplicada migración `AddJustificacionCancelacion`.
+
+## Sprint 35: UX, Auditoría y Documentación
+
+### Decisiones de Diseño
+- **Filtrado de Auditoría**: Se extendió la capacidad de consulta de logs para permitir filtros por rango de fechas, usuario específico y tipo de entidad. Esto facilita la labor del administrador al rastrear cambios en el sistema.
+- **Documentación Swagger**: Se habilitó la generación de archivos XML de documentación tanto en la capa de API como en Application. Swagger fue configurado para consumir ambos archivos, permitiendo que las descripciones de los DTOs y comandos sean visibles desde la interfaz de Swagger UI, mejorando la experiencia de integración para el frontend.
+
+### Cambios Técnicos
+- Actualizado `IAuditoriaRepository` y su implementación con `ObtenerFiltradosAsync`.
+- Modificado `ObtenerAuditoriaLogsQuery` y su handler para soportar parámetros opcionales.
+- Actualizado `AuditoriaController` para exponer los nuevos filtros vía Query String.
+- Modificados archivos `.csproj` de API y Application para activar `GenerateDocumentationFile`.
+- Configurado `Program.cs` para incluir los comentarios XML en Swagger.
+
+# BITÁCORA DE ARQUITECTURA - FASE 2.1
+
+## Sprint 36: Ejecución Sanitaria Integrada
+
+### Decisiones de Diseño
+1. **Automatización de Inventario en Casos de Uso Operativos:** 
+   Anteriormente, la aplicación de vacunas era un simple cambio de estado. Para cumplir con la **Regla de Oro de Trazabilidad**, se integró el descuento de stock directamente en el Handler de `MarcarVacunaAplicada`. Esto asegura que no haya discrepancias entre lo "informado" en el calendario y lo "existente" en la bodega.
+
+2. **Validación Preventiva de Negocio:**
+   Se implementó la verificación de stock *antes* de cualquier cambio de estado. Si no hay suficiente vacuna, la operación falla atómicamente, obligando al usuario a regularizar el inventario primero. Esto protege la integridad del FCR y los costos del lote.
+
+3. **Seguridad Transparente (Contexto de Usuario):**
+   Se mejoró `Program.cs` para inyectar automáticamente el `UsuarioId` desde el JWT hacia el `ICurrentUserContext`. Esto elimina la necesidad de que el programador "recuerde" extraer el ID en cada controlador, reduciendo errores de auditoría y mejorando la ergonomía del código.
+
+4. **Semántica de API (PATCH vs PUT):**
+   Se eligió `PATCH` para el endpoint de aplicación porque representa una actualización parcial del recurso `CalendarioSanitario` (cambio de estado y registro de consumo) en lugar de un reemplazo total.
+
+### Cambios Técnicos
+- **Domain:** Se añadió `ObtenerStockPorProductoIdAsync` a `IInventarioRepository` para facilitar la validación de stock en capas superiores.
+- **Application:** Refactorización de `MarcarVacunaAplicadaCommand` y su Handler.
+- **Infrastructure:** Implementación eficiente del cálculo de stock mediante agregación directa en base de datos (`SumAsync`).
+- **API:** Actualización de `CalendarioSanitarioController` con nueva ruta `api/calendario` y método `PATCH`.
+
+## Sprint 37: Flujo Optimizado de Alimentación Diaria
+
+### Decisiones de Diseño
+1. **Normalización de Consumo (Kilogramos Reales):**
+   Aunque el alimento puede ingresarse en unidades variadas (bultos, sacos, etc.), la lógica de biomasa requiere kilogramos. El Handler de consumo ahora utiliza la `EquivalenciaEnKg` definida en el Producto para asegurar que todos los KPIs biológicos (como el FCR) se calculen sobre una base común de peso, eliminando errores de conversión en el Frontend.
+
+2. **Endpoint de Propósito Específico:**
+   En lugar de usar el registro general de movimientos de inventario, se creó un endpoint dedicado `/api/inventario/consumo-diario`. Esto permite aplicar validaciones específicas de alimentación y simplifica la interfaz para el operario de campo.
+
+3. **Garantía de Stock:**
+   Se mantiene la política de "Cero Negativos". No se permite registrar un consumo si el stock actual en bodega es insuficiente, asegurando que el Kárdex refleje la realidad física de la granja.
+
+### Cambios Técnicos
+- **Application:** Creación de `RegistrarConsumoAlimentoCommand` y su Handler.
+- **API:** Nuevo endpoint `POST` en `InventarioController`.
+- **Domain:** Uso de `InventarioDomainException` para fallos de stock en alimentación.
