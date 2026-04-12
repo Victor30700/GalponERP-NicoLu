@@ -18,6 +18,7 @@ public enum EstadoLote
 public class Lote : Entity
 {
     public Guid GalponId { get; private set; }
+    public Galpon Galpon { get; private set; } = null!;
     public DateTime FechaIngreso { get; private set; }
     public int CantidadInicial { get; private set; }
     public int CantidadActual { get; private set; }

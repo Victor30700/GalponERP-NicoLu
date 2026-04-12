@@ -8,6 +8,8 @@ public record ObtenerDetalleLoteQuery(Guid LoteId) : IRequest<LoteDetalleRespons
 
 public record LoteDetalleResponse(
     Guid Id,
+    Guid GalponId,
+    string NombreGalpon,
     DateTime FechaIngreso,
     int CantidadInicial,
     int CantidadActual,
@@ -105,6 +107,8 @@ public class ObtenerDetalleLoteQueryHandler : IRequestHandler<ObtenerDetalleLote
 
         return new LoteDetalleResponse(
             lote.Id,
+            lote.GalponId,
+            lote.Galpon?.Nombre ?? "N/A",
             lote.FechaIngreso,
             lote.CantidadInicial,
             lote.CantidadActual,

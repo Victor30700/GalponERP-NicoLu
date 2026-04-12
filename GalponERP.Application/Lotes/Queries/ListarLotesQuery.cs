@@ -8,6 +8,8 @@ public record ListarLotesQuery(bool SoloActivos = true) : IRequest<IEnumerable<L
 
 public record LoteResponse(
     Guid Id,
+    Guid GalponId,
+    string NombreGalpon,
     DateTime FechaIngreso,
     int CantidadInicial,
     int CantidadActual,
@@ -33,6 +35,8 @@ public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumer
 
         return lotes.Select(l => new LoteResponse(
             l.Id,
+            l.GalponId,
+            l.Galpon?.Nombre ?? "N/A",
             l.FechaIngreso,
             l.CantidadInicial,
             l.CantidadActual,

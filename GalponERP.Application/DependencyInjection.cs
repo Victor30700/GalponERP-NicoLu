@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using GalponERP.Application.Agentes;
 
 namespace GalponERP.Application;
 
@@ -21,6 +22,9 @@ public static class DependencyInjection
 
         services.AddScoped<GalponERP.Domain.Services.CalculadoraCostosLote>();
         services.AddScoped<GalponERP.Domain.Services.SimuladorProyeccionLote>();
+
+        // Registro de Agente Orquestador
+        services.AddScoped<IAgenteOrquestadorService, AgenteOrquestadorService>();
 
         return services;
     }
