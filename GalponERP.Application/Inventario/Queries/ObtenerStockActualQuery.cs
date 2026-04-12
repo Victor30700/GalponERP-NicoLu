@@ -11,6 +11,7 @@ public record StockProductoResponse(
     string NombreProducto,
     string TipoProducto,
     decimal StockActual,
+    decimal StockActualKg,
     string UnidadMedida);
 
 public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActualQuery, IEnumerable<StockProductoResponse>>
@@ -26,7 +27,7 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
 
     public async Task<IEnumerable<StockProductoResponse>> Handle(ObtenerStockActualQuery request, CancellationToken cancellationToken)
     {
-        var productos = await _productoRepository.ObtenerTodosAsync();
+        var productos = (await _productoRepository.ObtenerTodosAsync()).ToList();
         
         if (request.ProductoId.HasValue)
         {
@@ -41,15 +42,25 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
             .Select(g => new
             {
                 ProductoId = g.Key,
-                Stock = g.Sum(m => (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada) ? m.Cantidad : -m.Cantidad)
+                // Auditoría Sprint 47: La fórmula debe coincidir exactamente con el Kárdex y Dashboard
+                // Entradas: Entrada, AjusteEntrada, Compra
+                // Salidas: Salida, AjusteSalida (y cualquier otro no contemplado en entradas)
+                Stock = g.Sum(m => (m.Tipo == TipoMovimiento.Entrada || 
+                                   m.Tipo == TipoMovimiento.Compra || 
+                                   m.Tipo == TipoMovimiento.AjusteEntrada) 
+                                  ? m.Cantidad : -m.Cantidad)
             })
             .ToDictionary(x => x.ProductoId, x => x.Stock);
 
-        return productos.Select(p => new StockProductoResponse(
-            p.Id,
-            p.Nombre,
-            p.Categoria?.Nombre ?? "Sin Categoria",
-            stockPorProducto.ContainsKey(p.Id) ? stockPorProducto[p.Id] : 0,
-            p.Unidad?.Nombre ?? "Sin Unidad"));
+        return productos.Select(p => {
+            decimal stockActual = stockPorProducto.ContainsKey(p.Id) ? stockPorProducto[p.Id] : 0;
+            return new StockProductoResponse(
+                p.Id,
+                p.Nombre,
+                p.Categoria?.Nombre ?? "Sin Categoria",
+                stockActual,
+                Math.Round(stockActual * p.EquivalenciaEnKg, 2),
+                p.Unidad?.Nombre ?? "Sin Unidad");
+        });
     }
 }

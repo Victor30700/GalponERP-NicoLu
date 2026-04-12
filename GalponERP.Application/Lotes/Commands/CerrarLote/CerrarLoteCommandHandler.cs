@@ -45,8 +45,17 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         if (lote.Estado == EstadoLote.Cerrado)
             throw new LoteDomainException("El lote ya se encuentra en estado 'Cerrado'. No es necesario cerrarlo nuevamente.");
 
-        // 1. Sumar ingresos de todas las Ventas asociadas al Lote
-        var ventas = await _ventaRepository.ObtenerPorLoteAsync(request.LoteId);
+        // 1. Obtener todas las Ventas asociadas al Lote
+        var ventas = (await _ventaRepository.ObtenerPorLoteAsync(request.LoteId)).ToList();
+
+        // VALIDACIÓN SPRINT 48: No se puede cerrar el lote si existen cuentas por cobrar pendientes
+        var ventasPendientes = ventas.Where(v => v.SaldoPendiente.Monto > 0).ToList();
+        if (ventasPendientes.Any())
+        {
+            throw new LoteDomainException($"No se puede cerrar el lote porque existen {ventasPendientes.Count} ventas con saldo pendiente por cobrar.");
+        }
+
+        // 2. Sumar ingresos
         var totalIngresos = ventas.Aggregate(Moneda.Zero, (acc, next) => acc + next.Total);
 
         // 2. Obtener gastos operativos asociados

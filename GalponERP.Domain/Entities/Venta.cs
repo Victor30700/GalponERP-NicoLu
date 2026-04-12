@@ -21,7 +21,7 @@ public class Venta : Entity
     private readonly List<PagoVenta> _pagos = new();
     public IReadOnlyCollection<PagoVenta> Pagos => _pagos.AsReadOnly();
 
-    public Moneda SaldoPendiente => Total - new Moneda(_pagos.Sum(p => p.Monto.Monto));
+    public Moneda SaldoPendiente => Total - new Moneda(_pagos.Where(p => p.IsActive).Sum(p => p.Monto.Monto));
 
     public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo, Guid usuarioId, EstadoPago estadoPago = EstadoPago.Pendiente) 
         : base(id)
@@ -65,6 +65,21 @@ public class Venta : Entity
 
         var pago = new PagoVenta(id, Id, monto, fechaPago, metodoPago, usuarioId);
         _pagos.Add(pago);
+
+        ActualizarEstadoPagoSegunSaldos();
+    }
+
+    public void AnularPago(Guid pagoId, Guid usuarioId)
+    {
+        var pago = _pagos.FirstOrDefault(p => p.Id == pagoId);
+        if (pago == null)
+            throw new InvalidOperationException("El pago no existe en esta venta.");
+
+        if (!pago.IsActive)
+            return;
+
+        pago.Desactivar();
+        pago.SetAuditoriaModificacion(DateTime.UtcNow, usuarioId);
 
         ActualizarEstadoPagoSegunSaldos();
     }

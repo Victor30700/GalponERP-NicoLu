@@ -1,6 +1,7 @@
 using GalponERP.Application.Finanzas.Queries.ObtenerFlujoCajaEmpresarial;
 using GalponERP.Application.Finanzas.Queries.ObtenerCuentasPorCobrar;
 using GalponERP.Application.Finanzas.Queries.ObtenerGastosPorCategoria;
+using GalponERP.Application.Finanzas.Queries.ObtenerGastosGlobales;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,13 @@ public class FinanzasController : ControllerBase
         }
 
         var result = await _mediator.Send(new ObtenerGastosPorCategoriaQuery(inicio, fin));
+        return Ok(result);
+    }
+
+    [HttpGet("gastos")]
+    public async Task<IActionResult> ObtenerGastosGlobales([FromQuery] DateTime? inicio, [FromQuery] DateTime? fin, [FromQuery] string? categoria)
+    {
+        var result = await _mediator.Send(new ObtenerGastosGlobalesQuery(inicio, fin, categoria));
         return Ok(result);
     }
 

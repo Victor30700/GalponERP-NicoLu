@@ -1,15 +1,14 @@
-# PLAN DE DESARROLLO - FASE 2.4: CIERRE FINANCIERO Y KARDEX AVANZADO
+# PLAN DE DESARROLLO - FASE 2.5: SELLO DE AUDITORÍA Y CONSISTENCIA FINAL
 
-## SPRINT 45: Polímero de Ventas y CRM Básico
-*Objetivo: Permitir la edición segura de ventas, exponer recibos individuales y el historial del cliente.*
-- [x] 1. **Ventas (Queries):** Verificar que `ObtenerVentaPorIdQuery` esté correctamente expuesto en `GET /api/ventas/{id}`.
-- [x] 2. **Ventas (Commands):** Implementar `ActualizarVentaCommand`. Permitir editar Peso y Precio. Si cambian, recalcular internamente el `Total` y `SaldoPendiente` usando `IUnitOfWork`.
-- [x] 3. **Clientes (CRM):** Crear `ObtenerHistorialClienteQuery` (devuelve la lista de ventas asociadas a un `ClienteId` ordenadas por fecha) y exponer en `GET /api/clientes/{id}/historial`.
-- [x] 4. **API:** Exponer `PUT /api/ventas/{id}` (protegido para Admin/SubAdmin).
+## SPRINT 47: Gestión Completa de Pagos y Consistencia de Stock
+*Objetivo: Permitir la auditoría de abonos, la anulación segura de los mismos y garantizar que el Kárdex y el Stock coincidan matemáticamente.*
+- [x] 1. **Finanzas (Queries):** Crear `ObtenerPagosPorVentaQuery` y exponer en `GET /api/ventas/{id}/pagos`.
+- [x] 2. **Finanzas (Commands):** Implementar `AnularPagoVentaCommand`. Esta acción (Soft Delete del pago) DEBE usar `IUnitOfWork` para recalcular y actualizar la entidad `Venta` asociada (devolviendo el monto al `SaldoPendiente` y ajustando el `EstadoPago`). Exponer en `DELETE /api/ventas/{ventaId}/pagos/{pagoId}` (Solo Admin).
+- [x] 3. **Inventario (Refactor):** Auditar y refactorizar `ObtenerStockActualQueryHandler` para asegurar que utiliza la misma fórmula exacta de sumas y restas con `EquivalenciaEnKg` que el Kárdex del Sprint 46.
 
-## SPRINT 46: Auditoría de Inventario (Kárdex Real) y Cierres
-*Objetivo: Proveer la hoja de vida matemática de los insumos y reportes financieros por categoría.*
-- [x] 1. **Inventario (Kárdex):** Crear `ObtenerKardexProductoQuery`. A diferencia de los movimientos simples, este QueryHandler debe ordenar los movimientos cronológicamente y calcular un `SaldoAcumulado` fila por fila para devolver la trazabilidad exacta.
-- [x] 2. **Finanzas:** Crear `ObtenerGastosPorCategoriaQuery`. Debe agrupar y sumar los gastos en un rango de fechas por tipo (Luz, Agua, Sueldos, etc.) para los gráficos del Dashboard. Exponer en `GET /api/finanzas/gastos-por-categoria`.
-- [x] 3. **Lotes (Seguridad):** Asegurar que `ReabrirLoteCommand` esté expuesto en `PUT /api/lotes/{id}/reabrir` y restringido ESTRICTAMENTE a rol `Admin`.
-- [x] 4. **Documentación:** Actualizar exhaustivamente `docs/endpoints.md` con los JSON de Kárdex, Historial de Cliente y Edición de Ventas.
+## SPRINT 48: Blindaje Contable y Reportes Administrativos
+*Objetivo: Evitar cierres de lotes con deudas pendientes y proveer reportes globales de gastos y ajustes.*
+- [x] 1. **Lotes (Cierre Estricto):** Modificar `CerrarLoteCommandHandler`. Añadir validación: Si alguna venta del lote tiene `SaldoPendiente > 0`, lanzar `LoteDomainException` ("No se puede cerrar el lote porque existen cuentas por cobrar pendientes").
+- [x] 2. **Inventario (Auditoría):** Crear `ObtenerReporteAjustesInventarioQuery` para listar específicamente los movimientos manuales filtrados por `Justificacion`. Exponer en `GET /api/inventario/ajustes`.
+- [x] 3. **Finanzas:** Crear un endpoint global de gastos `GET /api/finanzas/gastos` con filtros opcionales (FechaInicio, FechaFin, Categoria).
+- [x] 4. **Documentación:** Actualización final y exhaustiva de `docs/endpoints.md`.

@@ -2,6 +2,8 @@ using GalponERP.Application.Ventas.Commands.RegistrarVentaParcial;
 using GalponERP.Application.Ventas.Commands.AnularVenta;
 using GalponERP.Application.Ventas.Commands.RegistrarPago;
 using GalponERP.Application.Ventas.Commands.ActualizarVenta;
+using GalponERP.Application.Ventas.Commands.AnularPago;
+using GalponERP.Application.Ventas.Queries.ObtenerPagosPorVenta;
 using GalponERP.Application.Ventas.Queries.ObtenerVentas;
 using GalponERP.Application.Ventas.Queries.ObtenerVentaPorId;
 using GalponERP.Application.Ventas.Queries.ObtenerVentasPorLote;
@@ -46,6 +48,13 @@ public class VentasController : ControllerBase
     {
         var ventas = await _mediator.Send(new ObtenerVentasPorLoteQuery(loteId));
         return Ok(ventas);
+    }
+
+    [HttpGet("{id}/pagos")]
+    public async Task<IActionResult> ObtenerPagos(Guid id)
+    {
+        var pagos = await _mediator.Send(new ObtenerPagosPorVentaQuery(id));
+        return Ok(pagos);
     }
 
     [HttpPost("parcial")]
@@ -95,5 +104,16 @@ public class VentasController : ControllerBase
 
         var pagoId = await _mediator.Send(command);
         return Ok(new { PagoId = pagoId });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}/pagos/{pagoId}")]
+    public async Task<IActionResult> AnularPago(Guid id, Guid pagoId)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        await _mediator.Send(new AnularPagoVentaCommand(id, pagoId, _currentUserContext.UsuarioId.Value));
+        return NoContent();
     }
 }

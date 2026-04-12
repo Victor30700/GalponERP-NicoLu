@@ -4,6 +4,7 @@ using GalponERP.Application.Inventario.Commands.RegistrarIngresoMercaderia;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
+using GalponERP.Application.Inventario.Queries.ObtenerReporteAjustes;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
 using GalponERP.Application.Inventario.Queries.ObtenerKardexProducto;
 using GalponERP.Domain.Entities;
@@ -69,6 +70,13 @@ public class InventarioController : ControllerBase
     public async Task<IActionResult> ObtenerReporteMovimientos([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin, [FromQuery] Guid? categoriaProductoId = null)
     {
         var reporte = await _mediator.Send(new ObtenerReporteMovimientosQuery(fechaInicio, fechaFin, categoriaProductoId));
+        return Ok(reporte);
+    }
+
+    [HttpGet("ajustes")]
+    public async Task<IActionResult> ObtenerReporteAjustes()
+    {
+        var reporte = await _mediator.Send(new ObtenerReporteAjustesInventarioQuery());
         return Ok(reporte);
     }
 
