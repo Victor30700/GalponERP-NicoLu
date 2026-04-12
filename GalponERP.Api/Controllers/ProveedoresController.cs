@@ -3,6 +3,7 @@ using GalponERP.Application.Proveedores.Commands.CrearProveedor;
 using GalponERP.Application.Proveedores.Commands.EliminarProveedor;
 using GalponERP.Application.Proveedores.Queries.ListarProveedores;
 using GalponERP.Application.Proveedores.Queries.ObtenerProveedorPorId;
+using GalponERP.Application.Proveedores.Queries.ObtenerHistorialProveedor;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,13 @@ public class ProveedoresController : ControllerBase
             return NotFound();
         }
         return Ok(proveedor);
+    }
+
+    [HttpGet("{id}/historial")]
+    public async Task<IActionResult> ObtenerHistorial(Guid id)
+    {
+        var historial = await _mediator.Send(new ObtenerHistorialProveedorQuery(id));
+        return Ok(historial);
     }
 
     [Authorize(Roles = "Admin,SubAdmin")]

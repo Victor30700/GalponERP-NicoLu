@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
         services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
         services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
+        services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
         
         services.AddScoped<IGalponDbContext>(sp => sp.GetRequiredService<GalponDbContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();

@@ -81,6 +81,17 @@ public class CompraInventario : Entity
         ActualizarEstadoPago();
     }
 
+    public void AnularPago(Guid pagoId)
+    {
+        var pago = _pagos.FirstOrDefault(p => p.Id == pagoId && p.IsActive);
+        if (pago == null)
+            throw new InventarioDomainException("El pago no existe o ya fue anulado.");
+
+        pago.Eliminar(); // Soft delete
+        TotalPagado = new Moneda(TotalPagado.Monto - pago.Monto.Monto);
+        ActualizarEstadoPago();
+    }
+
     // Constructor para EF Core
     private CompraInventario() : base() { }
 }

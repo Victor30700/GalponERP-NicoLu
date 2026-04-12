@@ -38,6 +38,30 @@ public class CompraInventarioRepository : ICompraInventarioRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<(CompraInventario Compra, string ProveedorNombre)>> ObtenerTodasConProveedorAsync()
+    {
+        var result = await (from compra in _context.ComprasInventario.Include(c => c.Pagos).AsNoTracking()
+                     join proveedor in _context.Proveedores.AsNoTracking() on compra.ProveedorId equals proveedor.Id
+                     where compra.IsActive
+                     orderby compra.Fecha descending
+                     select new { Compra = compra, ProveedorNombre = proveedor.RazonSocial })
+                     .ToListAsync();
+
+        return result.Select(x => (x.Compra, x.ProveedorNombre));
+    }
+
+    public async Task<IEnumerable<(CompraInventario Compra, string ProveedorNombre)>> ObtenerHistorialProveedorAsync(Guid proveedorId)
+    {
+        var result = await (from compra in _context.ComprasInventario.Include(c => c.Pagos).AsNoTracking()
+                     join proveedor in _context.Proveedores.AsNoTracking() on compra.ProveedorId equals proveedor.Id
+                     where compra.ProveedorId == proveedorId && compra.IsActive
+                     orderby compra.Fecha descending
+                     select new { Compra = compra, ProveedorNombre = proveedor.RazonSocial })
+                     .ToListAsync();
+
+        return result.Select(x => (x.Compra, x.ProveedorNombre));
+    }
+
     public void Agregar(CompraInventario compra)
     {
         _context.Set<CompraInventario>().Add(compra);

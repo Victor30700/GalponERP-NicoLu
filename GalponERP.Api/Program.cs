@@ -134,12 +134,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Seeding Automático del Admin
+// Seeding Automático del Admin y Catálogos
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
+        // Seeder Automático para Catálogos Base (Categorías y Unidades)
+        await GalponERP.Infrastructure.Persistence.GalponDbSeeder.SeedAsync(services);
+
         var context = services.GetRequiredService<GalponERP.Infrastructure.Persistence.GalponDbContext>();
         var adminUid = "utq0GMrQZESnNsyQWUEFOV5fKf23";
         var existingAdmin = context.Usuarios.FirstOrDefault(u => u.FirebaseUid == adminUid);
@@ -163,7 +166,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Un error ocurrió durante el seeding del Administrador.");
+        logger.LogError(ex, "Un error ocurrió durante el seeding de la base de datos.");
     }
 }
 

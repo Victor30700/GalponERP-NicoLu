@@ -811,3 +811,15 @@ El proyecto compila correctamente. Se han aplicado las migraciones `AddProveedor
    - Valora estos ajustes automáticamente usando el PPP actual del producto para mantener la integridad contable.
 2. **Infraestructura de Reportes PDF:** Se integró la librería `QuestPDF` para la generación de documentos profesionales. Se optó por una arquitectura de "Servicio de Infraestructura" (`PdfService`) inyectado mediante una interfaz en Application, permitiendo generar la "Ficha de Liquidación de Lote" de forma programática.
 3. **Optimización de Descargas:** El endpoint `/api/lotes/{id}/reporte-cierre-pdf` devuelve un flujo de bytes con el MIME type `application/pdf`, permitiendo al navegador o aplicación móvil previsualizar o descargar el documento directamente.
+
+# BITÁCORA DE ARQUITECTURA - FASE 3.1
+
+## SPRINT 58: Configuración Global (Tenant Settings)
+
+### Decisiones Tomadas
+1. **Entidad Singleton de Configuración:** Se implementó `ConfiguracionSistema` para centralizar los datos de identidad de la granja (Nombre, NIT, Moneda). 
+   - **Arquitectura:** Aunque en la base de datos es una tabla regular, el `ConfiguracionRepository` y el Handler aseguran que se comporte como un Singleton operativo, devolviendo siempre el primer registro encontrado.
+2. **Inyección en Capa de Reportabilidad:** Se refactorizó `PdfService` para aceptar opcionalmente la configuración global.
+   - **Dinamicidad:** Las cabeceras de los PDFs (Ficha de Liquidación) ahora muestran datos reales de la empresa en lugar de texto estático (Hardcoded).
+   - **Resiliencia:** El sistema provee valores por defecto ("Pollos NicoLu") si aún no se ha realizado la primera configuración, evitando errores en tiempo de ejecución.
+3. **Seguridad Administrativa:** El endpoint `POST /api/configuracion` está restringido exclusivamente al rol `Admin`, asegurando que solo el propietario o administrador pueda alterar la identidad legal del sistema.

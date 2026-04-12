@@ -34,6 +34,7 @@ public class GalponDbContext : DbContext, IGalponDbContext
     public DbSet<PlantillaSanitaria> PlantillasSanitarias { get; set; }
     public DbSet<CalendarioSanitario> CalendarioSanitario { get; set; }
     public DbSet<PesajeLote> PesajesLote { get; set; }
+    public DbSet<ConfiguracionSistema> Configuracion { get; set; }
     public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
 
     public async Task<T?> ObtenerEntidadPorIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity
@@ -67,6 +68,51 @@ public class GalponDbContext : DbContext, IGalponDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GalponDbContext).Assembly);
+
+        // Global Query Filter for Soft Delete (IsActive)
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(Entity).IsAssignableFrom(entityType.ClrType))
+            {
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(ConvertFilterExpression<Entity>(e => e.IsActive, entityType.ClrType));
+            }
+        }
+
         base.OnModelCreating(modelBuilder);
     }
+
+    private static System.Linq.Expressions.LambdaExpression ConvertFilterExpression<TInterface>(
+        System.Linq.Expressions.Expression<Func<TInterface, bool>> filterExpression,
+        Type entityType)
+    {
+        var newParam = System.Linq.Expressions.Expression.Parameter(entityType);
+        var newBody = ReplacingExpressionVisitor.Replace(filterExpression.Parameters.Single(), newParam, filterExpression.Body);
+        return System.Linq.Expressions.Expression.Lambda(newBody, newParam);
+    }
 }
+
+// Required internal class for replacing the expression parameter type
+internal class ReplacingExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
+{
+    private readonly System.Linq.Expressions.Expression _oldValue;
+    private readonly System.Linq.Expressions.Expression _newValue;
+
+    public ReplacingExpressionVisitor(System.Linq.Expressions.Expression oldValue, System.Linq.Expressions.Expression newValue)
+    {
+        _oldValue = oldValue;
+        _newValue = newValue;
+    }
+
+    public override System.Linq.Expressions.Expression? Visit(System.Linq.Expressions.Expression? node)
+    {
+        if (node == _oldValue)
+            return _newValue;
+        return base.Visit(node);
+    }
+
+    public static System.Linq.Expressions.Expression Replace(System.Linq.Expressions.Expression oldValue, System.Linq.Expressions.Expression newValue, System.Linq.Expressions.Expression expression)
+    {
+        return new ReplacingExpressionVisitor(oldValue, newValue).Visit(expression)!;
+    }
+}
+

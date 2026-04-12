@@ -12,6 +12,8 @@ using GalponERP.Application.Inventario.Queries.ObtenerKardexProducto;
 using GalponERP.Application.Inventario.Queries.ObtenerValoracionInventario;
 using GalponERP.Application.Inventario.Queries.ObtenerProyeccionStock;
 using GalponERP.Application.Inventario.Queries.ListarPagosCompra;
+using GalponERP.Application.Inventario.Commands.AnularPagoCompra;
+using GalponERP.Application.Inventario.Queries.ObtenerComprasInventario;
 using GalponERP.Domain.Entities;
 using GalponERP.Application.Interfaces;
 using MediatR;
@@ -99,6 +101,13 @@ public class InventarioController : ControllerBase
         return Ok(reporte);
     }
 
+    [HttpGet("compras")]
+    public async Task<IActionResult> ObtenerCompras()
+    {
+        var compras = await _mediator.Send(new ObtenerComprasInventarioQuery());
+        return Ok(compras);
+    }
+
     [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPost("compras")]
     public async Task<IActionResult> RegistrarCompra([FromBody] RegistrarIngresoMercaderiaCommand command)
@@ -122,6 +131,17 @@ public class InventarioController : ControllerBase
         command.UsuarioId = _currentUserContext.UsuarioId.Value;
         var pagoId = await _mediator.Send(command);
         return Ok(new { PagoId = pagoId });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("compras/{compraId}/pagos/{pagoId}")]
+    public async Task<IActionResult> AnularPagoCompra(Guid compraId, Guid pagoId)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue) 
+            return Unauthorized("Usuario no identificado.");
+
+        await _mediator.Send(new AnularPagoCompraCommand(compraId, pagoId, _currentUserContext.UsuarioId.Value));
+        return NoContent();
     }
 
     [HttpGet("compras/{id}/pagos")]
