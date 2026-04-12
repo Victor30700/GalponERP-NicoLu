@@ -3,10 +3,10 @@ using GalponERP.Application.Usuarios.Commands.EliminarUsuario;
 using GalponERP.Application.Usuarios.Commands.RegistrarUsuario;
 using GalponERP.Application.Usuarios.Queries.ObtenerUsuarios;
 using GalponERP.Application.Usuarios.Queries.ObtenerUsuarioActual;
+using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace GalponERP.Api.Controllers;
 
@@ -16,23 +16,24 @@ namespace GalponERP.Api.Controllers;
 public class UsuariosController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public UsuariosController(IMediator mediator)
+    public UsuariosController(IMediator mediator, ICurrentUserContext currentUserContext)
     {
         _mediator = mediator;
+        _currentUserContext = currentUserContext;
     }
 
     [Authorize(Roles = "Admin,SubAdmin,Empleado")]
     [HttpGet("me")]
     public async Task<IActionResult> GetMe()
     {
-        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
-        if (string.IsNullOrEmpty(firebaseUid))
+        if (_currentUserContext.UsuarioId == null)
         {
             return Unauthorized();
         }
 
-        var usuario = await _mediator.Send(new ObtenerUsuarioActualQuery(firebaseUid));
+        var usuario = await _mediator.Send(new ObtenerUsuarioActualQuery(_currentUserContext.UsuarioId.Value));
         if (usuario == null)
         {
             return NotFound("Usuario no registrado en la base de datos local.");

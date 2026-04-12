@@ -15,7 +15,7 @@ public class ObtenerUsuarioActualQueryHandler : IRequestHandler<ObtenerUsuarioAc
 
     public async Task<UsuarioResponse?> Handle(ObtenerUsuarioActualQuery request, CancellationToken cancellationToken)
     {
-        var usuario = await _usuarioRepository.ObtenerPorFirebaseUidAsync(request.FirebaseUid);
+        var usuario = await _usuarioRepository.ObtenerPorIdAsync(request.UsuarioId);
         
         if (usuario == null)
             return null;

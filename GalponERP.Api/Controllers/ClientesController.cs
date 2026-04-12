@@ -2,6 +2,7 @@ using GalponERP.Application.Clientes.Commands.ActualizarCliente;
 using GalponERP.Application.Clientes.Commands.CrearCliente;
 using GalponERP.Application.Clientes.Commands.EliminarCliente;
 using GalponERP.Application.Clientes.Queries.ListarClientes;
+using GalponERP.Application.Clientes.Queries.ObtenerClientePorId;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,12 +28,23 @@ public class ClientesController : ControllerBase
         return Ok(clientes);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(Guid id)
+    {
+        var cliente = await _mediator.Send(new ObtenerClientePorIdQuery(id));
+        if (cliente == null)
+        {
+            return NotFound();
+        }
+        return Ok(cliente);
+    }
+
     [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearClienteCommand command)
     {
         var id = await _mediator.Send(command);
-        return CreatedAtAction(nameof(Listar), new { id }, new { ClienteId = id });
+        return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { ClienteId = id });
     }
 
     [Authorize(Roles = "Admin,SubAdmin")]
@@ -48,7 +60,7 @@ public class ClientesController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

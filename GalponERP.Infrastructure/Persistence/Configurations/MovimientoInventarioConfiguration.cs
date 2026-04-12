@@ -1,4 +1,5 @@
 using GalponERP.Domain.Entities;
+using GalponERP.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +23,19 @@ public class MovimientoInventarioConfiguration : IEntityTypeConfiguration<Movimi
 
         builder.Property(m => m.Fecha)
             .IsRequired();
+
+        // Usamos Conversión de Valor en lugar de ComplexProperty para manejar la nulabilidad de Moneda? correctamente
+        builder.Property(m => m.CostoTotal)
+            .HasConversion(
+                moneda => moneda != null ? moneda.Monto : (decimal?)null,
+                valor => valor.HasValue ? new Moneda(valor.Value) : null
+            )
+            .HasColumnName("CostoTotal")
+            .HasPrecision(18, 2)
+            .IsRequired(false);
+
+        builder.Property(m => m.Proveedor)
+            .HasMaxLength(200);
 
         builder.HasOne<Producto>()
             .WithMany()

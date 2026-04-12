@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin")]
+[Authorize(Roles = "Admin,SubAdmin,Empleado")]
 [ApiController]
 [Route("api/[controller]")]
 public class PlantillasController : ControllerBase
@@ -35,6 +35,7 @@ public class PlantillasController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearPlantillaCommand command)
     {
@@ -42,6 +43,7 @@ public class PlantillasController : ControllerBase
         return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { Id = id });
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarPlantillaCommand command)
     {
@@ -50,6 +52,7 @@ public class PlantillasController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

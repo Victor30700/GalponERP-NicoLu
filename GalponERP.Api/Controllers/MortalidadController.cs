@@ -101,7 +101,7 @@ public class MortalidadController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> EliminarMortalidad(Guid id)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 

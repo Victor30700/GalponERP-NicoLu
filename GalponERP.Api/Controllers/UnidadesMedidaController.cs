@@ -51,7 +51,7 @@ public class UnidadesMedidaController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

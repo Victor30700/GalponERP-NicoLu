@@ -47,11 +47,12 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
                 foreach (var actividad in plantilla.Actividades)
                 {
                     var item = new CalendarioSanitario(
-                        Guid.NewGuid(),
-                        loteId,
-                        actividad.DiaDeAplicacion,
-                        actividad.Descripcion,
-                        actividad.ProductoIdRecomendado
+                        id: Guid.NewGuid(),
+                        loteId: loteId,
+                        diaDeAplicacion: actividad.DiaDeAplicacion,
+                        descripcionTratamiento: actividad.Descripcion,
+                        tipo: actividad.TipoActividad,
+                        productoIdRecomendado: actividad.ProductoIdRecomendado
                     );
                     _calendarioRepository.Agregar(item);
                 }
@@ -62,8 +63,8 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
             // Calendario base si no hay plantilla (Mantener retrocompatibilidad o fallback)
             var vacunas = new List<CalendarioSanitario>
             {
-                new(Guid.NewGuid(), loteId, 7, "Vacuna Newcastle (Cepa LaSota)"),
-                new(Guid.NewGuid(), loteId, 14, "Vacuna Gumboro")
+                new(id: Guid.NewGuid(), loteId: loteId, diaDeAplicacion: 7, descripcionTratamiento: "Vacuna Newcastle (Cepa LaSota)", tipo: TipoActividad.Vacuna),
+                new(id: Guid.NewGuid(), loteId: loteId, diaDeAplicacion: 14, descripcionTratamiento: "Vacuna Gumboro", tipo: TipoActividad.Vacuna)
             };
 
             foreach (var vacuna in vacunas)

@@ -11,7 +11,8 @@ public record ActualizarProductoCommand(
     string Nombre,
     Guid CategoriaProductoId,
     Guid UnidadMedidaId,
-    decimal EquivalenciaEnKg) : IRequest;
+    decimal EquivalenciaEnKg,
+    decimal UmbralMinimo) : IRequest;
 
 public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarProductoCommand>
 {
@@ -31,6 +32,9 @@ public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarPr
             
         RuleFor(x => x.EquivalenciaEnKg)
             .GreaterThan(0).WithMessage("La equivalencia en Kg debe ser mayor a cero.");
+
+        RuleFor(x => x.UmbralMinimo)
+            .GreaterThanOrEqualTo(0).WithMessage("El umbral mínimo no puede ser negativo.");
     }
 }
 
@@ -58,7 +62,8 @@ public class ActualizarProductoCommandHandler : IRequestHandler<ActualizarProduc
             request.Nombre, 
             request.CategoriaProductoId, 
             request.UnidadMedidaId, 
-            request.EquivalenciaEnKg);
+            request.EquivalenciaEnKg,
+            request.UmbralMinimo);
 
         _productoRepository.Actualizar(producto);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

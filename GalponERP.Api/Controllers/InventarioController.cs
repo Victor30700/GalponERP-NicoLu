@@ -1,5 +1,6 @@
 using GalponERP.Application.Inventario.Commands.RegistrarMovimiento;
 using GalponERP.Application.Inventario.Commands.RegistrarConsumoAlimento;
+using GalponERP.Application.Inventario.Commands.RegistrarIngresoMercaderia;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
@@ -63,6 +64,18 @@ public class InventarioController : ControllerBase
         return Ok(reporte);
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
+    [HttpPost("compras")]
+    public async Task<IActionResult> RegistrarCompra([FromBody] RegistrarIngresoMercaderiaCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue) 
+            return Unauthorized("Usuario no identificado.");
+
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
+        var id = await _mediator.Send(command);
+        return Ok(new { MovimientoId = id });
+    }
+
     [HttpPost("movimiento")]
     public async Task<IActionResult> RegistrarMovimiento([FromBody] RegistrarMovimientoInventarioCommand command)
     {
@@ -74,6 +87,7 @@ public class InventarioController : ControllerBase
         return Ok(new { MovimientoId = id });
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPut("ajuste")]
     public async Task<IActionResult> AjustarInventario([FromBody] RegistrarMovimientoInventarioCommand command)
     {
@@ -102,9 +116,6 @@ public class InventarioController : ControllerBase
     {
         try
         {
-            // Nota: RegistrarConsumoAlimentoCommand debería extraer el UsuarioId en su Handler o via ICurrentUserContext
-            // pero para consistencia con los otros controllers lo manejaremos aquí si el comando lo expone.
-            // Si el comando no tiene UsuarioId, el Handler debe usar ICurrentUserContext.
             var id = await _mediator.Send(command);
             return Ok(new { MovimientoId = id });
         }

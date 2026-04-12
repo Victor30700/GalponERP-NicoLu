@@ -162,7 +162,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Eliminar Lote
 - **URL:** `/api/Lotes/{id}`
 - **Método:** `DELETE`
-- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Salida:** `204 No Content`
 - **Nota:** Realiza Soft Delete (`IsActive = false`).
 
@@ -280,7 +280,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Eliminar Mortalidad
 - **URL:** `/api/Mortalidad/{id}`
 - **Método:** `DELETE`
-- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Salida:** `204 No Content`
 - **Nota:** Soft Delete. Revierte los contadores del Lote.
 
@@ -333,7 +333,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Eliminar Pesaje
 - **URL:** `/api/Pesajes/{id}`
 - **Método:** `DELETE`
-- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Salida:** `204 No Content`
 
 ### Obtener Movimientos por Producto (Kárdex)
@@ -391,6 +391,13 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 - **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"`
+
+### Eliminar Gasto
+- **URL:** `/api/Gastos/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+- **Salida:** `204 No Content`
+- **Nota:** Soft Delete.
 
 ## 2.1 VENTAS Y PAGOS
 
@@ -490,7 +497,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ### Eliminar Plantilla
 - **URL:** `/api/Plantillas/{id}`
 - **Método:** `DELETE`
-- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Salida:** `204 No Content`
 - **Nota:** Soft Delete (`IsActive = false`).
 
@@ -504,14 +511,20 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```json
 [
   {
-    "id": "...",
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "diaDeAplicacion": 7,
+    "fechaProgramada": "2026-04-17T00:00:00Z",
     "descripcionTratamiento": "Newcastle",
-    "productoIdRecomendado": "...",
+    "productoIdRecomendado": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "tipo": 1,
+    "esManual": false,
+    "justificacion": null,
     "estado": "Pendiente"
   }
 ]
 ```
+- **Nota:** `estado` puede ser `Pendiente`, `Aplicado` o `Cancelado`. `tipo`: 1=Vacuna, 2=Vitaminas, 3=Desinfectante, 4=Antibiotico, 5=Otros.
 
 ### Marcar Vacuna como Aplicada
 - **URL:** `/api/calendario/{id}/aplicar`
@@ -525,6 +538,39 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida:** `204 No Content`
 - **Nota:** Descuenta automáticamente el inventario del producto recomendado. Valida stock suficiente.
+
+### Agregar Actividad Sanitaria Manual
+- **URL:** `/api/calendario/actividad-manual`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Descripción:** Agregar una actividad sanitaria manual (no programada en la plantilla).
+- **Entrada (JSON):**
+```json
+{
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "tipo": 2,
+  "fechaProgramada": "2026-04-20T00:00:00Z",
+  "descripcion": "Refuerzo vitamínico extra por ola de calor",
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+- **Salida (JSON):** `{ "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6" }`
+
+### Reprogramar Actividad Sanitaria
+- **URL:** `/api/calendario/{id}/reprogramar`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Descripción:** Reprogramar una actividad sanitaria pendiente.
+- **Entrada (JSON):**
+```json
+{
+  "actividadId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nuevaFecha": "2026-04-22T00:00:00Z",
+  "justificacion": "Retraso en entrega de insumos por proveedor"
+}
+```
+- **Salida:** `204 No Content`
+
 
 ## 2.4 INVENTARIO
 
@@ -560,6 +606,23 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida (JSON):** `{ "movimientoId": "..." }`
 - **Nota:** Registra una SALIDA de inventario vinculada a un lote. Valida stock suficiente.
+
+### Registrar Compra de Mercadería (Ingreso)
+- **URL:** `/api/inventario/compras`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Descripción:** Registrar ingreso formal de mercadería con costo y proveedor.
+- **Entrada (JSON):**
+```json
+{
+  "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "cantidad": 100.0,
+  "costoTotalCompra": 1500.50,
+  "proveedor": "Distribuidora Avícola S.A.",
+  "nota": "Compra de alimento iniciador para el mes de Mayo"
+}
+```
+- **Salida (JSON):** `{ "movimientoId": "..." }`
 
 ## 3. FINANZAS E INTELIGENCIA
 
@@ -633,6 +696,32 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ]
 ```
 
+### Obtener Resumen Ejecutivo (Dashboard)
+- **URL:** `/api/Dashboard/resumen`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+{
+  "totalPollosVivos": 12500,
+  "inversionTotalEnCurso": 45600.50,
+  "cuentasPorCobrarTotal": 8900.20,
+  "tareasPendientesHoy": 5,
+  "alertasStockMinimo": [
+    {
+      "productoNombre": "Alimento Iniciador",
+      "stockActual": 10.5,
+      "umbralMinimo": 20.0
+    },
+    {
+      "productoNombre": "Vacuna Newcastle",
+      "stockActual": 2.0,
+      "umbralMinimo": 5.0
+    }
+  ]
+}
+```
+
 ## 4. AUDITORÍA
 
 ### Obtener Logs de Sistema
@@ -654,7 +743,109 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ]
 ```
 
-... (resto de secciones de inventario, usuarios, etc. se mantienen igual) ...
+## 5. PRODUCTOS
+
+### Listar Productos
+- **URL:** `/api/Productos`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):** Listado de productos activos.
+
+### Obtener Producto por ID
+- **URL:** `/api/Productos/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):** Detalle del producto.
+
+### Crear Producto
+- **URL:** `/api/Productos`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON):** Incluye campos base y `umbralMinimo` (decimal) para alertas de stock.
+
+### Actualizar Producto
+- **URL:** `/api/Productos/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON):** Incluye campos base y `umbralMinimo` (decimal).
+
+### Eliminar Producto
+- **URL:** `/api/Productos/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+- **Nota:** Soft Delete.
+
+## 6. CLIENTES
+
+### Listar Clientes
+- **URL:** `/api/Clientes`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+
+### Obtener Cliente por ID
+- **URL:** `/api/Clientes/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+
+### Crear Cliente
+- **URL:** `/api/Clientes`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+
+### Actualizar Cliente
+- **URL:** `/api/Clientes/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+
+### Eliminar Cliente
+- **URL:** `/api/Clientes/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+- **Nota:** Soft Delete.
+
+## 7. USUARIOS
+
+### Obtener Perfil Actual (Me)
+- **URL:** `/api/Usuarios/me`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Nota:** Utiliza `ICurrentUserContext` internamente para extraer la identidad del usuario de forma segura desde el token JWT.
+
+### Listar Usuarios
+- **URL:** `/api/Usuarios`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+
+### Registrar Usuario
+- **URL:** `/api/Usuarios`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+
+### Actualizar Usuario
+- **URL:** `/api/Usuarios/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+
+### Eliminar Usuario
+- **URL:** `/api/Usuarios/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+
+## 8. OTROS CATÁLOGOS
+
+### Categorías de Producto
+- `GET /api/Categorias` (Listar)
+- `GET /api/Categorias/{id}` (Obtener)
+- `POST /api/Categorias` (Crear - Admin/SubAdmin)
+- `PUT /api/Categorias/{id}` (Actualizar - Admin/SubAdmin)
+- `DELETE /api/Categorias/{id}` (Eliminar - **Admin**)
+
+### Unidades de Medida
+- `GET /api/UnidadesMedida` (Listar)
+- `GET /api/UnidadesMedida/{id}` (Obtener)
+- `POST /api/UnidadesMedida` (Crear - Admin/SubAdmin)
+- `PUT /api/UnidadesMedida/{id}` (Actualizar - Admin/SubAdmin)
+- `DELETE /api/UnidadesMedida/{id}` (Eliminar - **Admin**)
 
 ---
 
@@ -751,3 +942,63 @@ Se completó la capa de lectura para habilitar una gestión basada en datos:
 - `MortalidadController`
 - `VentasController`
 
+## SPRINT 43: Dashboard Global y Flujo de Compras
+
+### Decisiones Tomadas
+1. **Inteligencia Financiera (Inversión en Curso):** Se refactorizó el Dashboard para incluir la `InversionTotalEnCurso`. El cálculo ahora consolida el costo inicial de los pollitos, los gastos operativos registrados y el costo estimado de los insumos consumidos (alimento/medicina) basándose en el precio promedio de compra.
+2. **Gestión de Stock Crítico:** Se añadió el campo `UmbralMinimo` a la entidad `Producto`. El Dashboard ahora reporta una lista de `AlertasStockMinimo` para cualquier producto cuya existencia física sea inferior a dicho umbral, permitiendo una reposición proactiva.
+3. **Formalización de Compras:** Se implementó `RegistrarIngresoMercaderiaCommand`. A diferencia del movimiento de inventario genérico, este comando captura el `CostoTotalCompra` y el `Proveedor`, permitiendo alimentar el motor de costos promedio y mejorar la precisión de los reportes financieros.
+
+### Endpoints Agregados/Actualizados
+- `GET /api/Dashboard/resumen` (Actualizado con Inversión y Alertas)
+- `POST /api/inventario/compras` (Nuevo: Registro formal de compras con costo)
+
+# BITÁCORA DE ARQUITECTURA - FASE 2.3
+
+## SPRINT 42: Maestros Completos y Sesión de Usuario
+
+### Decisiones Tomadas
+1. **Completitud CRUD para Maestros:** Se implementaron los queries `ObtenerClientePorIdQuery` y `ObtenerProductoPorIdQuery` para permitir la visualización y edición detallada de Clientes y Productos en el Frontend.
+2. **Estandarización de Seguridad (Soft Delete por Admin):** Se ajustaron los controladores para cumplir con la regla de negocio que otorga exclusivamente al rol `Admin (2)` la capacidad de realizar borrados (Soft Delete). Se actualizaron:
+   - `ClientesController`
+   - `ProductosController`
+   - `CategoriasController`
+   - `LotesController`
+   - `PesajesController`
+   - `MortalidadController`
+   - `UnidadesMedidaController`
+   - `GastosController`
+   - `PlantillasController`
+3. **Refactorización de Sesión de Usuario:** Se migró el endpoint `/api/usuarios/me` para que utilice `ICurrentUserContext` e inyecte el ID del usuario directamente desde el token JWT en memoria, eliminando la consulta previa a `IUsuarioRepository` en el controlador. Esto optimiza el rendimiento y mejora la seguridad al centralizar la obtención de identidad.
+4. **Simplificación de Controladores (DRY):** Se eliminaron métodos redundantes como `GetUsuarioIdActual` en `LotesController` y otros controladores operativos, delegando la responsabilidad de la identidad a la infraestructura de `ICurrentUserContext`.
+
+### Endpoints Agregados/Actualizados
+- `GET /api/clientes/{id}`
+- `DELETE /api/clientes/{id}` (Restringido a Admin)
+- `GET /api/productos/{id}`
+- `DELETE /api/productos/{id}` (Restringido a Admin)
+- `GET /api/usuarios/me` (Optimizado con `ICurrentUserContext`)
+
+## SPRINT 43: Dashboard Global y Flujo de Compras
+
+### Decisiones Tomadas
+1. **Inteligencia Financiera (Inversión en Curso):** Se refactorizó el Dashboard para incluir la `InversionTotalEnCurso`. El cálculo ahora consolida el costo inicial de los pollitos, los gastos operativos registrados y el costo estimado de los insumos consumidos (alimento/medicina) basándose en el precio promedio de compra.
+2. **Gestión de Stock Crítico:** Se añadió el campo `UmbralMinimo` a la entidad `Producto`. El Dashboard ahora reporta una lista de `AlertasStockMinimo` para cualquier producto cuya existencia física sea inferior a dicho umbral, permitiendo una reposición proactiva.
+3. **Formalización de Compras:** Se implementó `RegistrarIngresoMercaderiaCommand`. A diferencia del movimiento de inventario genérico, este comando captura el `CostoTotalCompra` y el `Proveedor`, permitiendo alimentar el motor de costos promedio y mejorar la precisión de los reportes financieros.
+4. **Evolución del Modelo de Datos:** Se actualizaron las entidades `Producto` y `MovimientoInventario` y sus configuraciones en EF Core para soportar los nuevos campos de auditoría financiera y operativa.
+
+### Endpoints Agregados/Actualizados
+- `GET /api/dashboard/resumen` (Ahora incluye Inversión y Alertas de Stock)
+- `POST /api/inventario/compras` (Nuevo endpoint para registro formal de entradas con costo)
+
+## SPRINT 44: Flexibilidad del Calendario Sanitario
+
+### Decisiones Tomadas
+1. **Adaptabilidad del Plan Sanitario:** Se evolucionó el calendario sanitario para permitir desviaciones del plan original. Se implementaron los comandos `AgregarActividadManualCommand` y `ReprogramarActividadCommand`, permitiendo a los granjeros reaccionar ante brotes o cambios climáticos sin romper la lógica del sistema.
+2. **Cálculo Dinámico de Días:** Dado que el sistema utiliza `DiaDeAplicacion` (entero relativo a la fecha de ingreso) para la programación, los nuevos comandos aceptan una `DateTime` y realizan el cálculo automático del día correspondiente basado en el `Lote.FechaIngreso`, simplificando la experiencia del usuario final.
+3. **Auditoría y Trazabilidad:** Se añadieron los campos `Tipo`, `EsManual` y `Justificacion` a la entidad `CalendarioSanitario`. Toda reprogramación o adición manual requiere ahora una justificación obligatoria, la cual queda registrada para auditorías posteriores, cumpliendo con la directiva de "dejar rastro" en operaciones que alteren la planificación.
+4. **Estado de Actividades:** Se añadió el estado `Cancelado` al flujo del calendario, permitiendo descartar actividades programadas que ya no sean necesarias debido a cambios en la estrategia sanitaria del lote.
+
+### Endpoints Agregados/Actualizados
+- `POST /api/calendario/actividad-manual` (Añadir tareas fuera de plantilla)
+- `PUT /api/calendario/{id}/reprogramar` (Mover fecha de tarea pendiente con justificación)

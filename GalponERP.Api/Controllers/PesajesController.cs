@@ -71,7 +71,7 @@ public class PesajesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Eliminar(Guid id)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 

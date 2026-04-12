@@ -2,6 +2,7 @@ using GalponERP.Application.Productos.Commands.ActualizarProducto;
 using GalponERP.Application.Productos.Commands.CrearProducto;
 using GalponERP.Application.Productos.Commands.EliminarProducto;
 using GalponERP.Application.Productos.Queries.ListarProductos;
+using GalponERP.Application.Productos.Queries.ObtenerProductoPorId;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,12 +28,23 @@ public class ProductosController : ControllerBase
         return Ok(productos);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(Guid id)
+    {
+        var producto = await _mediator.Send(new ObtenerProductoPorIdQuery(id));
+        if (producto == null)
+        {
+            return NotFound();
+        }
+        return Ok(producto);
+    }
+
     [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearProductoCommand command)
     {
         var id = await _mediator.Send(command);
-        return CreatedAtAction(nameof(Listar), new { id }, new { ProductoId = id });
+        return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { ProductoId = id });
     }
 
     [Authorize(Roles = "Admin,SubAdmin")]
@@ -48,7 +60,7 @@ public class ProductosController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

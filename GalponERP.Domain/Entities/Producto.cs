@@ -19,12 +19,18 @@ public class Producto : Entity
     /// </summary>
     public decimal EquivalenciaEnKg { get; private set; }
 
+    /// <summary>
+    /// Cantidad mínima en stock antes de generar una alerta.
+    /// </summary>
+    public decimal UmbralMinimo { get; private set; }
+
     public Producto(
         Guid id, 
         string nombre, 
         Guid categoriaProductoId, 
         Guid unidadMedidaId, 
-        decimal equivalenciaEnKg) : base(id)
+        decimal equivalenciaEnKg,
+        decimal umbralMinimo = 0) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto es obligatorio.");
@@ -36,6 +42,7 @@ public class Producto : Entity
         CategoriaProductoId = categoriaProductoId;
         UnidadMedidaId = unidadMedidaId;
         EquivalenciaEnKg = equivalenciaEnKg;
+        UmbralMinimo = umbralMinimo;
     }
 
     // Constructor para EF Core
@@ -45,7 +52,8 @@ public class Producto : Entity
         string nombre, 
         Guid categoriaProductoId, 
         Guid unidadMedidaId, 
-        decimal equivalenciaEnKg)
+        decimal equivalenciaEnKg,
+        decimal umbralMinimo)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto no puede estar vacío.");
@@ -57,5 +65,6 @@ public class Producto : Entity
         CategoriaProductoId = categoriaProductoId;
         UnidadMedidaId = unidadMedidaId;
         EquivalenciaEnKg = equivalenciaEnKg;
+        UmbralMinimo = umbralMinimo;
     }
 }

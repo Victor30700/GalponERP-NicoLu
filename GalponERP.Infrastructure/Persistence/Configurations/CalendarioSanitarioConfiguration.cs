@@ -26,6 +26,18 @@ public class CalendarioSanitarioConfiguration : IEntityTypeConfiguration<Calenda
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(c => c.Tipo)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .HasDefaultValue(TipoActividad.Otros);
+
+        builder.Property(c => c.EsManual)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(c => c.Justificacion)
+            .HasMaxLength(500);
+
         builder.HasOne<Producto>()
             .WithMany()
             .HasForeignKey(c => c.ProductoIdRecomendado)

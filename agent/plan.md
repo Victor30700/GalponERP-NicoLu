@@ -1,20 +1,20 @@
-# PLAN DE DESARROLLO - FASE 2.2: PULIDO FINAL Y RENDIMIENTO (API FRONT-READY)
+# PLAN DE DESARROLLO - FASE 2.3: UX Y FLEXIBILIDAD OPERATIVA (FRONT-READY V2)
 
-## SPRINT 39: Estandarización de Formularios (Lecturas Individuales)
-*Objetivo: Proveer los endpoints `GET by ID` necesarios para que el Frontend pueda rellenar los formularios de edición.*
-- [x] 1. **Galpones:** Crear `ObtenerGalponPorIdQuery` y exponer `GET /api/galpones/{id}`.
-- [x] 2. **Gastos:** Crear `ObtenerGastoOperativoPorIdQuery` y exponer `GET /api/gastos/{id}`.
-- [x] 3. **Operaciones:** Crear `ObtenerMortalidadPorIdQuery` y `ObtenerPesajePorIdQuery`. Exponer los endpoints respectivos (`GET /api/mortalidad/{id}` y `GET /api/pesajes/{id}`).
+## SPRINT 42: Maestros Completos y Sesión de Usuario
+*Objetivo: Llenar los huecos CRUD para formularios Frontend y exponer el perfil de sesión.*
+- [x] 1. **Clientes y Productos:** Crear `ObtenerClientePorIdQuery` y `ObtenerProductoPorIdQuery`.
+- [x] 2. **API Catálogos:** Exponer `GET /api/clientes/{id}`, `DELETE /api/clientes/{id}`, `GET /api/productos/{id}` y `DELETE /api/productos/{id}`. (Asegurar protección por roles).
+- [x] 3. **API Auth/Sesión:** Asegurar que existe y está expuesto el endpoint `GET /api/usuarios/me` (o `ObtenerUsuarioActualQuery`) que devuelva los datos del usuario logueado usando `ICurrentUserContext`.
 
-## SPRINT 40: Estandarización de Ciclo de Vida (Soft Deletes Faltantes)
-*Objetivo: Permitir al Admin depurar la base de datos de errores sin romper la integridad referencial.*
-- [x] 1. **Galpones:** Implementar `EliminarGalponCommand` (Soft Delete).
-- [x] 2. **Galpones API:** Exponer `DELETE /api/galpones/{id}` (Restringido a Admin).
-- [x] 3. **Plantillas:** Implementar `EliminarPlantillaSanitariaCommand` (Soft Delete).
-- [x] 4. **Plantillas API:** Exponer `DELETE /api/plantillas/{id}` (Restringido a Admin/SubAdmin).
+## SPRINT 43: Dashboard Global y Flujo de Compras
+*Objetivo: Pantalla de inicio gerencial y registro formal de entrada de mercadería.*
+- [x] 1. **Dashboard:** Refactorizar `ObtenerResumenDashboardQuery` para que incluya: Total Pollos Vivos (toda la granja), Inversión Total en Curso (gastos de lotes abiertos), y Alertas de Stock Mínimo (productos por debajo del umbral).
+- [x] 2. **Compras (Inventario):** Crear `RegistrarIngresoMercaderiaCommand` (ProductoId, Cantidad, CostoTotalCompra, Proveedor/Nota). Esto debe reemplazar o envolver el registro de movimiento genérico para asignar costos reales.
+- [x] 3. **API:** Actualizar `/api/dashboard/resumen` y exponer `POST /api/inventario/compras`.
 
-## SPRINT 41: Refactorización de Clean Code y Rendimiento (ICurrentUserContext)
-*Objetivo: Eliminar consultas redundantes a la base de datos en los Controladores.*
-- [x] 1. **Refactor de Controladores:** Auditar `GastosController`, `PesajesController`, `InventarioController`, `MortalidadController` y `VentasController`.
-- [x] 2. **Optimización:** Eliminar métodos privados tipo `GetUsuarioIdActual()` que inyecten `IUsuarioRepository`. Reemplazarlos inyectando `ICurrentUserContext` y llamando directamente a `_currentUserContext.UsuarioId`.
-- [x] 3. **Actualización de Documentación:** Revisar exhaustivamente `docs/endpoints.md` asegurando que los nuevos `GET {id}` y `DELETE` estén documentados con sus respuestas JSON.
+## SPRINT 44: Flexibilidad del Calendario Sanitario
+*Objetivo: Permitir a los granjeros adaptar el calendario a la realidad del clima y los brotes.*
+- [x] 1. **Calendario:** Implementar `AgregarActividadManualCommand` (LoteId, TipoActividad, FechaProgramada, ProductoId opcional).
+- [x] 2. **Calendario:** Implementar `ReprogramarActividadCommand` (ActividadId, NuevaFecha, Justificacion).
+- [x] 3. **API:** Exponer `POST /api/calendario/actividad-manual` y `PUT /api/calendario/{id}/reprogramar`.
+- [x] 4. **Documentación:** Actualizar exhaustivamente `docs/endpoints.md` con los nuevos payloads.

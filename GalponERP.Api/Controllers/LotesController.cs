@@ -7,7 +7,6 @@ using GalponERP.Application.Lotes.Commands.CancelarLote;
 using GalponERP.Application.Lotes.Commands.TrasladarLote;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
 using GalponERP.Application.Lotes.Queries.ObtenerDetalleLote;
-using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -21,29 +20,12 @@ namespace GalponERP.Api.Controllers;
 public class LotesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ICurrentUserContext _currentUserContext;
 
-    public LotesController(IMediator mediator, IUsuarioRepository usuarioRepository, ICurrentUserContext currentUserContext)
+    public LotesController(IMediator mediator, ICurrentUserContext currentUserContext)
     {
         _mediator = mediator;
-        _usuarioRepository = usuarioRepository;
         _currentUserContext = currentUserContext;
-    }
-
-    private async Task<Guid> GetUsuarioIdActual()
-    {
-        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
-        if (string.IsNullOrEmpty(firebaseUid)) return Guid.Empty;
-
-        var usuario = await _usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
-        
-        if (usuario != null && _currentUserContext is GalponERP.Infrastructure.Authentication.CurrentUserContext context)
-        {
-            context.SetUser(usuario.Id, firebaseUid);
-        }
-
-        return usuario?.Id ?? Guid.Empty;
     }
 
     [HttpGet]
@@ -74,12 +56,11 @@ public class LotesController : ControllerBase
     {
         if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
 
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue) return Unauthorized("Usuario no identificado.");
 
         try
         {
-            command.UsuarioId = usuarioId;
+            command.UsuarioId = _currentUserContext.UsuarioId.Value;
             await _mediator.Send(command);
             return NoContent();
         }
@@ -90,15 +71,14 @@ public class LotesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Eliminar(Guid id)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue) return Unauthorized("Usuario no identificado.");
 
         try
         {
-            await _mediator.Send(new EliminarLoteCommand(id) { UsuarioId = usuarioId });
+            await _mediator.Send(new EliminarLoteCommand(id) { UsuarioId = _currentUserContext.UsuarioId.Value });
             return NoContent();
         }
         catch (Exception ex)
@@ -108,7 +88,7 @@ public class LotesController : ControllerBase
     }
 
     [HttpPost("{id}/cerrar")]
-    public async Task<IActionResult> Cerrar(Guid id, [FromBody] CerrarLoteCommand command)
+    public async Task<IActionResult> Cerrar(Guid id, [FromBody]  CerrarLoteCommand command)
     {
         if (id != command.LoteId)
         {

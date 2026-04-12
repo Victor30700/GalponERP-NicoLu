@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin")]
+[Authorize(Roles = "Admin,SubAdmin,Empleado")]
 [ApiController]
 [Route("api/[controller]")]
 public class GastosController : ControllerBase
@@ -38,6 +38,7 @@ public class GastosController : ControllerBase
         return result != null ? Ok(result) : NotFound();
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPost]
     public async Task<IActionResult> RegistrarGasto([FromBody] RegistrarGastoOperativoCommand command)
     {
@@ -49,6 +50,7 @@ public class GastosController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin,SubAdmin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> ActualizarGasto(Guid id, [FromBody] ActualizarGastoOperativoCommand command)
     {
@@ -65,6 +67,7 @@ public class GastosController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> EliminarGasto(Guid id)
     {

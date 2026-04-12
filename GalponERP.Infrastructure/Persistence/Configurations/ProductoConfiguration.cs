@@ -19,6 +19,10 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(p => p.EquivalenciaEnKg)
             .HasPrecision(18, 4);
 
+        builder.Property(p => p.UmbralMinimo)
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0);
+
         builder.HasOne(p => p.Categoria)
             .WithMany()
             .HasForeignKey(p => p.CategoriaProductoId)
