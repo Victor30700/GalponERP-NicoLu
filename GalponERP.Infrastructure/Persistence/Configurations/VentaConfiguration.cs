@@ -48,7 +48,15 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
 
         builder.Property(v => v.EstadoPago)
             .IsRequired()
-            .HasDefaultValue(EstadoPago.Pagado);
+            .HasDefaultValue(EstadoPago.Pendiente);
+
+        builder.HasMany(v => v.Pagos)
+            .WithOne()
+            .HasForeignKey(p => p.VentaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Metadata.FindNavigation(nameof(Venta.Pagos))!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasIndex(v => v.LoteId);
         builder.HasIndex(v => v.ClienteId);

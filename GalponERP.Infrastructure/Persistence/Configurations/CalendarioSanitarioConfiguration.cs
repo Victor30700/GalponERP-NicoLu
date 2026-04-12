@@ -26,10 +26,17 @@ public class CalendarioSanitarioConfiguration : IEntityTypeConfiguration<Calenda
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.HasOne<Producto>()
+            .WithMany()
+            .HasForeignKey(c => c.ProductoIdRecomendado)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne<Lote>()
             .WithMany()
             .HasForeignKey(c => c.LoteId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(c => c.LoteId);
 
         builder.HasQueryFilter(c => c.IsActive);
     }

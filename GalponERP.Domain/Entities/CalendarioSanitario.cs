@@ -17,9 +17,10 @@ public class CalendarioSanitario : Entity
     public Guid LoteId { get; private set; }
     public int DiaDeAplicacion { get; private set; }
     public string DescripcionTratamiento { get; private set; } = null!;
+    public Guid? ProductoIdRecomendado { get; private set; }
     public EstadoCalendario Estado { get; private set; }
 
-    public CalendarioSanitario(Guid id, Guid loteId, int diaDeAplicacion, string descripcionTratamiento) 
+    public CalendarioSanitario(Guid id, Guid loteId, int diaDeAplicacion, string descripcionTratamiento, Guid? productoIdRecomendado = null) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -34,6 +35,7 @@ public class CalendarioSanitario : Entity
         LoteId = loteId;
         DiaDeAplicacion = diaDeAplicacion;
         DescripcionTratamiento = descripcionTratamiento;
+        ProductoIdRecomendado = productoIdRecomendado;
         Estado = EstadoCalendario.Pendiente;
     }
 

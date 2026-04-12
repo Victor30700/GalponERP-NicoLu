@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using GalponERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GalponERP.Infrastructure.Migrations
 {
     [DbContext(typeof(GalponDbContext))]
-    partial class GalponDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411235541_AddPagosCuentasPorCobrar")]
+    partial class AddPagosCuentasPorCobrar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,53 +25,6 @@ namespace GalponERP.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("GalponERP.Domain.Entities.ActividadPlantilla", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("DiaDeAplicacion")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("PlantillaId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ProductoIdRecomendado")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("TipoActividad")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid?>("UsuarioCreacionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("UsuarioModificacionId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlantillaId");
-
-                    b.HasIndex("ProductoIdRecomendado");
-
-                    b.ToTable("ActividadesPlantillas", (string)null);
-                });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.AuditoriaLog", b =>
                 {
@@ -150,9 +106,6 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<Guid>("LoteId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProductoIdRecomendado")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("UsuarioCreacionId")
                         .HasColumnType("uuid");
 
@@ -162,8 +115,6 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LoteId");
-
-                    b.HasIndex("ProductoIdRecomendado");
 
                     b.ToTable("CalendarioSanitario", (string)null);
                 });
@@ -380,9 +331,6 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("JustificacionCancelacion")
-                        .HasColumnType("text");
 
                     b.Property<int>("MortalidadAcumulada")
                         .ValueGeneratedOnAdd()
@@ -632,41 +580,6 @@ namespace GalponERP.Infrastructure.Migrations
                     b.ToTable("PesajesLote");
                 });
 
-            modelBuilder.Entity("GalponERP.Domain.Entities.PlantillaSanitaria", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("FechaModificacion")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid?>("UsuarioCreacionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("UsuarioModificacionId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PlantillasSanitarias", (string)null);
-                });
-
             modelBuilder.Entity("GalponERP.Domain.Entities.Producto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -890,20 +803,6 @@ namespace GalponERP.Infrastructure.Migrations
                     b.ToTable("Ventas", (string)null);
                 });
 
-            modelBuilder.Entity("GalponERP.Domain.Entities.ActividadPlantilla", b =>
-                {
-                    b.HasOne("GalponERP.Domain.Entities.PlantillaSanitaria", null)
-                        .WithMany("Actividades")
-                        .HasForeignKey("PlantillaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GalponERP.Domain.Entities.Producto", null)
-                        .WithMany()
-                        .HasForeignKey("ProductoIdRecomendado")
-                        .OnDelete(DeleteBehavior.Restrict);
-                });
-
             modelBuilder.Entity("GalponERP.Domain.Entities.CalendarioSanitario", b =>
                 {
                     b.HasOne("GalponERP.Domain.Entities.Lote", null)
@@ -911,11 +810,6 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasForeignKey("LoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("GalponERP.Domain.Entities.Producto", null)
-                        .WithMany()
-                        .HasForeignKey("ProductoIdRecomendado")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.GastoOperativo", b =>
@@ -1019,11 +913,6 @@ namespace GalponERP.Infrastructure.Migrations
             modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>
                 {
                     b.Navigation("Pesajes");
-                });
-
-            modelBuilder.Entity("GalponERP.Domain.Entities.PlantillaSanitaria", b =>
-                {
-                    b.Navigation("Actividades");
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.Venta", b =>

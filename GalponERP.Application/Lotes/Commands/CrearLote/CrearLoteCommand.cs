@@ -6,4 +6,5 @@ public record CrearLoteCommand(
     Guid GalponId,
     DateTime FechaIngreso,
     int CantidadInicial,
-    decimal CostoUnitarioPollito) : IRequest<Guid>;
+    decimal CostoUnitarioPollito,
+    Guid? PlantillaSanitariaId = null) : IRequest<Guid>;

@@ -3,6 +3,8 @@ using GalponERP.Application.Lotes.Commands.CrearLote;
 using GalponERP.Application.Lotes.Commands.ActualizarLote;
 using GalponERP.Application.Lotes.Commands.EliminarLote;
 using GalponERP.Application.Lotes.Commands.ReabrirLote;
+using GalponERP.Application.Lotes.Commands.CancelarLote;
+using GalponERP.Application.Lotes.Commands.TrasladarLote;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
 using GalponERP.Application.Lotes.Queries.ObtenerDetalleLote;
 using GalponERP.Domain.Interfaces.Repositories;
@@ -124,6 +126,36 @@ public class LotesController : ControllerBase
         try
         {
             await _mediator.Send(new ReabrirLoteCommand(id));
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/cancelar")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> Cancelar(Guid id, [FromBody] string justificacion)
+    {
+        try
+        {
+            await _mediator.Send(new CancelarLoteCommand(id, justificacion));
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/trasladar")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> Trasladar(Guid id, [FromBody] Guid nuevoGalponId)
+    {
+        try
+        {
+            await _mediator.Send(new TrasladarLoteCommand(id, nuevoGalponId));
             return NoContent();
         }
         catch (Exception ex)

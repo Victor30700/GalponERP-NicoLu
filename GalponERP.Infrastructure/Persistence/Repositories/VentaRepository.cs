@@ -15,12 +15,15 @@ public class VentaRepository : IVentaRepository
 
     public async Task<Venta?> ObtenerPorIdAsync(Guid id)
     {
-        return await _context.Set<Venta>().FirstOrDefaultAsync(v => v.Id == id && v.IsActive);
+        return await _context.Ventas
+            .Include(v => v.Pagos)
+            .FirstOrDefaultAsync(v => v.Id == id && v.IsActive);
     }
 
     public async Task<IEnumerable<Venta>> ObtenerPorLoteAsync(Guid loteId)
     {
         return await _context.Ventas
+            .Include(v => v.Pagos)
             .Where(v => v.LoteId == loteId && v.IsActive)
             .ToListAsync();
     }
@@ -31,6 +34,7 @@ public class VentaRepository : IVentaRepository
         var end = fin.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(fin, DateTimeKind.Utc) : fin.ToUniversalTime();
 
         return await _context.Ventas
+            .Include(v => v.Pagos)
             .Where(v => v.Fecha >= start && v.Fecha <= end && v.IsActive)
             .ToListAsync();
     }
@@ -38,6 +42,7 @@ public class VentaRepository : IVentaRepository
     public async Task<IEnumerable<Venta>> ObtenerTodasAsync()
     {
         return await _context.Ventas
+            .Include(v => v.Pagos)
             .Where(v => v.IsActive)
             .OrderByDescending(v => v.Fecha)
             .ToListAsync();

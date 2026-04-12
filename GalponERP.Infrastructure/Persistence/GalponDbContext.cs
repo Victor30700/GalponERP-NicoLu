@@ -25,8 +25,10 @@ public class GalponDbContext : DbContext
     public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Venta> Ventas { get; set; }
+    public DbSet<PagoVenta> PagosVentas { get; set; }
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<GastoOperativo> GastosOperativos { get; set; }
+    public DbSet<PlantillaSanitaria> PlantillasSanitarias { get; set; }
     public DbSet<CalendarioSanitario> CalendarioSanitario { get; set; }
     public DbSet<PesajeLote> PesajesLote { get; set; }
     public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }

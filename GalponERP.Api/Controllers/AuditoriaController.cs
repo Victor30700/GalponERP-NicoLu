@@ -18,9 +18,13 @@ public class AuditoriaController : ControllerBase
     }
 
     [HttpGet("logs")]
-    public async Task<IActionResult> ObtenerLogs()
+    public async Task<IActionResult> ObtenerLogs(
+        [FromQuery] DateTime? desde, 
+        [FromQuery] DateTime? hasta, 
+        [FromQuery] Guid? usuarioId, 
+        [FromQuery] string? entidad)
     {
-        var logs = await _mediator.Send(new ObtenerAuditoriaLogsQuery());
+        var logs = await _mediator.Send(new ObtenerAuditoriaLogsQuery(desde, hasta, usuarioId, entidad));
         return Ok(logs);
     }
 }

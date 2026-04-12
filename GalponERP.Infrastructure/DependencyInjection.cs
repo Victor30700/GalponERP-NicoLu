@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IVentaRepository, VentaRepository>();
         services.AddScoped<IGastoOperativoRepository, GastoOperativoRepository>();
         services.AddScoped<ICalendarioSanitarioRepository, CalendarioSanitarioRepository>();
+        services.AddScoped<IPlantillaSanitariaRepository, PlantillaSanitariaRepository>();
         services.AddScoped<IGalponRepository, GalponRepository>();
         services.AddScoped<IMortalidadRepository, MortalidadRepository>();
         services.AddScoped<IPesajeLoteRepository, PesajeLoteRepository>();

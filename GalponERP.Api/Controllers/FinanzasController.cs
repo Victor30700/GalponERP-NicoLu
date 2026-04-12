@@ -1,4 +1,5 @@
 using GalponERP.Application.Finanzas.Queries.ObtenerFlujoCajaEmpresarial;
+using GalponERP.Application.Finanzas.Queries.ObtenerCuentasPorCobrar;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,13 @@ public class FinanzasController : ControllerBase
         }
 
         var result = await _mediator.Send(new ObtenerFlujoCajaEmpresarialQuery(inicio, fin));
+        return Ok(result);
+    }
+
+    [HttpGet("cuentas-por-cobrar")]
+    public async Task<IActionResult> ObtenerCuentasPorCobrar()
+    {
+        var result = await _mediator.Send(new ObtenerCuentasPorCobrarQuery());
         return Ok(result);
     }
 }

@@ -1,25 +1,27 @@
-# PLAN DE DESARROLLO - FASE 1.9: CORRECCIONES E INTELIGENCIA OPERATIVA
+# PLAN DE DESARROLLO - FASE 2.0: ERP COMERCIAL SAAS
 
-## SPRINT 29: Gestión de Correcciones (Flexibilidad Auditable)
-*Objetivo: Permitir la edición y eliminación de registros diarios para corregir errores humanos.*
-- [x] 1. **Mortalidad:** Implementar `ActualizarMortalidadCommand` y `EliminarMortalidadCommand` (Soft Delete).
-- [x] 2. **Pesajes:** Implementar `ActualizarPesajeCommand` y `EliminarPesajeCommand` (Soft Delete).
-- [x] 3. **Lotes:** Implementar `ActualizarLoteCommand` (Permitir editar FechaInicio, CantidadInicial y CostoInicial solo si el lote está Abierto).
-- [x] 4. **API:** Exponer los endpoints `PUT` y `DELETE` en `MortalidadController`, `PesajesController` y `LotesController`. Asegurar protección por Roles (Admin/SubAdmin).
+## SPRINT 32: Finanzas Reales (Cuentas por Cobrar y Pagos)
+*Objetivo: Permitir ventas a crédito y amortizaciones parciales para tener un Flujo de Caja verídico.*
+- [x] 1. **Dominio:** Crear entidad `PagoVenta` (Id, VentaId, Monto, FechaPago, MetodoPago, UsuarioIdRegistro).
+- [x] 2. **Dominio:** Actualizar la entidad `Venta`. Añadir la colección de `Pagos` y un método `RegistrarPago(monto)` que actualice dinámicamente el `EstadoPago` (Pendiente, Parcial, Pagado) y calcule el `SaldoPendiente`.
+- [x] 3. **Application:** Crear `RegistrarPagoVentaCommand` y `ObtenerCuentasPorCobrarQuery`.
+- [x] 4. **API:** Exponer `POST /api/ventas/{id}/pagos` y `GET /api/finanzas/cuentas-por-cobrar` en los controladores respectivos. Extraer `UsuarioId` del JWT para la auditoría del pago.
+- [x] 5. **Infraestructura:** Crear y aplicar migración `AddPagosCuentasPorCobrar`.
 
-## SPRINT 30: Business Intelligence y Finanzas Consolidadas
-*Objetivo: Reportes gerenciales que trascienden a un solo lote.*
-- [x] 1. **Finanzas:** Crear `ObtenerFlujoCajaEmpresarialQuery` que consolide Ventas y Gastos de TODOS los lotes en un rango de fechas.
-- [x] 2. **Producción:** Crear `ObtenerReporteMortalidadTransversalQuery` para analizar causas de muerte en toda la granja.
-- [x] 3. **Benchmarking:** Crear `ObtenerComparativaEficienciaGalponesQuery` para medir cuál galpón es más rentable históricamente.
-- [x] 4. **API:** Crear `FinanzasController` y añadir reportes avanzados al `DashboardController`.
+## SPRINT 33: Sanidad SaaS (Plantillas Dinámicas)
+*Objetivo: Eliminar la lógica hardcodeada de vacunas y permitir que cada granja configure sus programas.*
+- [x] 1. **Dominio:** Crear `PlantillaSanitaria` (Nombre, Descripcion) y `ActividadPlantilla` (PlantillaId, TipoActividad, DiaDeAplicacion, ProductoIdRecomendado).
+- [x] 2. **Application:** CRUD para Plantillas Sanitarias.
+- [x] 3. **Application:** Refactorizar `CrearLoteCommandHandler` para que reciba un `PlantillaSanitariaId` opcional y construya el `CalendarioSanitario` dinámicamente basado en esa plantilla.
 
-## SPRINT 31: Gestión de Estado y Auditoría Log (Governance)
-*Objetivo: Control total sobre el cierre de ciclos y rastro de actividad.*
-- [x] 1. **Lotes:** Implementar `ReabrirLoteCommand` (Solo Admin). Debe limpiar los campos de Snapshot (`FCRFinal`, `UtilidadFinal`, etc.) y poner el lote en estado `Abierto`.
-- [x] 2. **Auditoría:** Crear entidad `AuditoriaLog` (UsuarioId, Accion, Entidad, Fecha, DetallesJSON).
-- [x] 3. **Middleware/Behavior:** Implementar un `AuditoriaBehavior` en MediatR que registre automáticamente en la tabla de Logs cualquier comando de tipo `PUT` o `DELETE`.
-- [x] 4. **API:** Exponer `GET /api/auditoria/logs` (Solo Admin).
-- [x] 5. **Documentación:** Actualizar `endpoints.md` con el contrato final de la Fase 1.9.
+## SPRINT 34: Operaciones de Ciclo de Vida Avanzado
+*Objetivo: Reflejar eventualidades del mundo real en los galpones.*
+- [x] 1. **Application:** Implementar `CancelarLoteCommand` (Estado = Cancelado, requiere justificación, inactiva el calendario).
+- [x] 2. **Application:** Implementar `TrasladarLoteCommand` (Cambia el `GalponId` del lote y deja registro en Auditoría).
+- [x] 3. **API:** Exponer `POST /api/lotes/{id}/cancelar` and `POST /api/lotes/{id}/trasladar`.
 
-**FASE 1.9 COMPLETADA.** 🚀
+
+## SPRINT 35: UX, Auditoría y Documentación
+*Objetivo: Preparar la API para la integración final y auditoría administrativa.*
+- [x] 1. **API:** Añadir filtros (Fecha, Usuario, Entidad) a `ObtenerAuditoriaLogsQuery`.
+- [x] 2. **API:** Configurar comentarios XML en Swagger (`GalponERP.Api.csproj` y `Program.cs`) para que el frontend vea la descripción de cada campo.

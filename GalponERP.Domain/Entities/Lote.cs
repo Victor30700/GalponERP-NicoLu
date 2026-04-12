@@ -25,6 +25,7 @@ public class Lote : Entity
     public int PollosVendidos { get; private set; }
     public Moneda CostoUnitarioPollito { get; private set; } = null!;
     public EstadoLote Estado { get; private set; }
+    public string? JustificacionCancelacion { get; private set; }
 
     // Snapshots Contables
     public decimal? FCRFinal { get; private set; }
@@ -57,6 +58,32 @@ public class Lote : Entity
 
     // Constructor para EF Core
     private Lote() : base() { }
+
+    public void Cancelar(string justificacion)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden cancelar lotes activos.");
+
+        if (string.IsNullOrWhiteSpace(justificacion))
+            throw new LoteDomainException("La justificación es obligatoria para cancelar un lote.");
+
+        Estado = EstadoLote.Cancelado;
+        JustificacionCancelacion = justificacion;
+    }
+
+    public void Trasladar(Guid nuevoGalponId)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden trasladar lotes activos.");
+
+        if (nuevoGalponId == Guid.Empty)
+            throw new LoteDomainException("El ID del nuevo galpón es obligatorio.");
+
+        if (nuevoGalponId == GalponId)
+            throw new LoteDomainException("El lote ya se encuentra en ese galpón.");
+
+        GalponId = nuevoGalponId;
+    }
 
     /// <summary>
     /// Registra la mortalidad en el lote.

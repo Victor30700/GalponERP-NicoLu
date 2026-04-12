@@ -125,6 +125,22 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - **Salida:** `204 No Content`
 - **Nota:** Realiza Soft Delete (`IsActive = false`).
 
+### Cancelar Lote
+- **URL:** `/api/Lotes/{id}/cancelar`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON - Body Literal):** `"Justificación de la cancelación"`
+- **Salida:** `204 No Content`
+- **Nota:** Cambia el estado a `Cancelado` e inactiva el calendario sanitario.
+
+### Trasladar Lote
+- **URL:** `/api/Lotes/{id}/trasladar`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON - Body Literal):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` (ID del nuevo Galpón)
+- **Salida:** `204 No Content`
+- **Nota:** Cambia el `GalponId` del lote.
+
 ### Cerrar Lote
 - **URL:** `/api/Lotes/{id}/cerrar`
 - **Método:** `POST`
@@ -265,7 +281,122 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"`
 
+## 2.1 VENTAS Y PAGOS
+
+### Registrar Venta Parcial (Crédito)
+- **URL:** `/api/Ventas/parcial`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON):**
+```json
+{
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "clienteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "fecha": "2026-04-11T12:00:00Z",
+  "cantidadPollos": 100,
+  "pesoTotalVendido": 250.5,
+  "precioPorKilo": 12.50
+}
+```
+- **Salida (JSON):** `{ "ventaId": "..." }`
+- **Nota:** Crea una venta con `EstadoPago = Pendiente`.
+
+### Registrar Pago a Venta
+- **URL:** `/api/Ventas/{id}/pagos`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON):**
+```json
+{
+  "monto": 500.00,
+  "fechaPago": "2026-04-11T15:00:00Z",
+  "metodoPago": 1
+}
+```
+- **Salida (JSON):** `{ "pagoId": "..." }`
+- **Nota:** Actualiza dinámicamente el `EstadoPago` de la venta (Parcial o Pagado). `metodoPago`: 1=Efectivo, 2=Transferencia, 3=Deposito, 4=QR.
+
+### Anular Venta
+- **URL:** `/api/Ventas/{id}/anular`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+- **Salida:** `204 No Content`
+- **Nota:** Soft Delete. Revierte los pollos vendidos en el Lote.
+
+## 2.2 PLANTILLAS SANITARIAS
+
+### Listar Plantillas
+- **URL:** `/api/Plantillas`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "...",
+    "nombre": "Plan Invierno",
+    "descripcion": "Refuerzo de vitaminas",
+    "actividades": [
+      {
+        "id": "...",
+        "tipoActividad": "Vacuna",
+        "diaDeAplicacion": 7,
+        "descripcion": "Newcastle",
+        "productoIdRecomendado": "..."
+      }
+    ]
+  }
+]
+```
+
+### Crear Plantilla
+- **URL:** `/api/Plantillas`
+- **Método:** `POST`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON):**
+```json
+{
+  "nombre": "Plan Estándar 45 días",
+  "descripcion": "Plan base para pollos de engorde",
+  "actividades": [
+    {
+      "tipo": 1,
+      "diaDeAplicacion": 7,
+      "descripcion": "Vacuna Triple",
+      "productoIdRecomendado": null
+    }
+  ]
+}
+```
+- **Nota:** `tipo`: 1=Vacuna, 2=Vitaminas, 3=Desinfectante, 4=Antibiotico, 5=Otros.
+
+### Actualizar Plantilla
+- **URL:** `/api/Plantillas/{id}`
+- **Método:** `PUT`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Entrada (JSON):** Mismo formato que Crear, incluyendo el `id` en el body.
+
 ## 3. FINANZAS E INTELIGENCIA
+
+### Obtener Cuentas por Cobrar
+- **URL:** `/api/Finanzas/cuentas-por-cobrar`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "ventaId": "...",
+    "fecha": "2026-04-11T12:00:00Z",
+    "clienteNombre": "Juan Perez",
+    "loteCodigo": "LOT-001",
+    "totalVenta": 3131.25,
+    "totalPagado": 500.00,
+    "saldoPendiente": 2631.25,
+    "estadoPago": "Parcial"
+  }
+]
+```
 
 ### Obtener Flujo de Caja Empresarial
 - **URL:** `/api/Finanzas/flujo-caja`

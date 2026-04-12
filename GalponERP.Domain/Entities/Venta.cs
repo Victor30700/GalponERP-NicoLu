@@ -18,7 +18,12 @@ public class Venta : Entity
     public Guid UsuarioId { get; private set; }
     public EstadoPago EstadoPago { get; private set; }
 
-    public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo, Guid usuarioId, EstadoPago estadoPago = EstadoPago.Pagado) 
+    private readonly List<PagoVenta> _pagos = new();
+    public IReadOnlyCollection<PagoVenta> Pagos => _pagos.AsReadOnly();
+
+    public Moneda SaldoPendiente => Total - new Moneda(_pagos.Sum(p => p.Monto.Monto));
+
+    public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo, Guid usuarioId, EstadoPago estadoPago = EstadoPago.Pendiente) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -51,6 +56,33 @@ public class Venta : Entity
         Total = precioPorKilo * pesoTotalVendido;
         UsuarioId = usuarioId;
         EstadoPago = estadoPago;
+    }
+
+    public void RegistrarPago(Guid id, Moneda monto, DateTime fechaPago, MetodoPago metodoPago, Guid usuarioId)
+    {
+        if (monto.Monto > SaldoPendiente.Monto)
+            throw new InvalidOperationException($"El monto del pago ({monto}) no puede exceder el saldo pendiente ({SaldoPendiente}).");
+
+        var pago = new PagoVenta(id, Id, monto, fechaPago, metodoPago, usuarioId);
+        _pagos.Add(pago);
+
+        ActualizarEstadoPagoSegunSaldos();
+    }
+
+    private void ActualizarEstadoPagoSegunSaldos()
+    {
+        if (SaldoPendiente.Monto == 0)
+        {
+            EstadoPago = EstadoPago.Pagado;
+        }
+        else if (SaldoPendiente.Monto < Total.Monto)
+        {
+            EstadoPago = EstadoPago.Parcial;
+        }
+        else
+        {
+            EstadoPago = EstadoPago.Pendiente;
+        }
     }
 
     public void ActualizarEstadoPago(EstadoPago nuevoEstado)

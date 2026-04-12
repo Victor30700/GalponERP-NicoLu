@@ -15,6 +15,10 @@ public class ObtenerAuditoriaLogsQueryHandler : IRequestHandler<ObtenerAuditoria
 
     public async Task<IEnumerable<AuditoriaLog>> Handle(ObtenerAuditoriaLogsQuery request, CancellationToken cancellationToken)
     {
-        return await _auditoriaRepository.ObtenerTodosAsync();
+        return await _auditoriaRepository.ObtenerFiltradosAsync(
+            request.Desde, 
+            request.Hasta, 
+            request.UsuarioId, 
+            request.Entidad);
     }
 }

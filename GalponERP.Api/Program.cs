@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Linq;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,6 +97,15 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+
+    // Incluir comentarios XML
+    var apiXmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var apiXmlPath = Path.Combine(AppContext.BaseDirectory, apiXmlFile);
+    if (File.Exists(apiXmlPath)) c.IncludeXmlComments(apiXmlPath);
+
+    var appXmlFile = "GalponERP.Application.xml";
+    var appXmlPath = Path.Combine(AppContext.BaseDirectory, appXmlFile);
+    if (File.Exists(appXmlPath)) c.IncludeXmlComments(appXmlPath);
 });
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

@@ -1,5 +1,6 @@
 using GalponERP.Application.Ventas.Commands.RegistrarVentaParcial;
 using GalponERP.Application.Ventas.Commands.AnularVenta;
+using GalponERP.Application.Ventas.Commands.RegistrarPago;
 using GalponERP.Application.Ventas.Queries.ObtenerVentas;
 using GalponERP.Application.Ventas.Queries.ObtenerVentaPorId;
 using GalponERP.Application.Ventas.Queries.ObtenerVentasPorLote;
@@ -84,5 +85,18 @@ public class VentasController : ControllerBase
 
         await _mediator.Send(new AnularVentaCommand(id, usuarioId));
         return NoContent();
+    }
+
+    [HttpPost("{id}/pagos")]
+    public async Task<IActionResult> RegistrarPago(Guid id, [FromBody] RegistrarPagoVentaCommand command)
+    {
+        var usuarioId = await GetUsuarioIdActual();
+        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+
+        command.VentaId = id;
+        command.UsuarioId = usuarioId;
+
+        var pagoId = await _mediator.Send(command);
+        return Ok(new { PagoId = pagoId });
     }
 }
