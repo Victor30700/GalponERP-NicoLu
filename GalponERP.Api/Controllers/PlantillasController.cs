@@ -1,5 +1,6 @@
 using GalponERP.Application.PlantillasSanitarias.Commands.CrearPlantilla;
 using GalponERP.Application.PlantillasSanitarias.Commands.ActualizarPlantilla;
+using GalponERP.Application.PlantillasSanitarias.Commands.EliminarPlantillaSanitaria;
 using GalponERP.Application.PlantillasSanitarias.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -46,6 +47,13 @@ public class PlantillasController : ControllerBase
     {
         if (id != command.Id) return BadRequest("El ID del comando no coincide con el de la URL.");
         await _mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Eliminar(Guid id)
+    {
+        await _mediator.Send(new EliminarPlantillaSanitariaCommand(id));
         return NoContent();
     }
 }

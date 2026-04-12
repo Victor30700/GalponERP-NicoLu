@@ -4,7 +4,6 @@ using GalponERP.Application.Ventas.Commands.RegistrarPago;
 using GalponERP.Application.Ventas.Queries.ObtenerVentas;
 using GalponERP.Application.Ventas.Queries.ObtenerVentaPorId;
 using GalponERP.Application.Ventas.Queries.ObtenerVentasPorLote;
-using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,29 +17,12 @@ namespace GalponERP.Api.Controllers;
 public class VentasController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ICurrentUserContext _currentUserContext;
 
-    public VentasController(IMediator mediator, IUsuarioRepository usuarioRepository, ICurrentUserContext currentUserContext)
+    public VentasController(IMediator mediator, ICurrentUserContext currentUserContext)
     {
         _mediator = mediator;
-        _usuarioRepository = usuarioRepository;
         _currentUserContext = currentUserContext;
-    }
-
-    private async Task<Guid> GetUsuarioIdActual()
-    {
-        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
-        if (string.IsNullOrEmpty(firebaseUid)) return Guid.Empty;
-
-        var usuario = await _usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
-        
-        if (usuario != null && _currentUserContext is GalponERP.Infrastructure.Authentication.CurrentUserContext context)
-        {
-            context.SetUser(usuario.Id, firebaseUid);
-        }
-
-        return usuario?.Id ?? Guid.Empty;
     }
 
     [HttpGet]
@@ -68,10 +50,10 @@ public class VentasController : ControllerBase
     [HttpPost("parcial")]
     public async Task<IActionResult> RegistrarVentaParcial([FromBody] RegistrarVentaParcialCommand command)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
-        command.UsuarioId = usuarioId;
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
         var id = await _mediator.Send(command);
         return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { VentaId = id });
     }
@@ -80,21 +62,21 @@ public class VentasController : ControllerBase
     [HttpPost("{id}/anular")]
     public async Task<IActionResult> Anular(Guid id)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
-        await _mediator.Send(new AnularVentaCommand(id, usuarioId));
+        await _mediator.Send(new AnularVentaCommand(id, _currentUserContext.UsuarioId.Value));
         return NoContent();
     }
 
     [HttpPost("{id}/pagos")]
     public async Task<IActionResult> RegistrarPago(Guid id, [FromBody] RegistrarPagoVentaCommand command)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
         command.VentaId = id;
-        command.UsuarioId = usuarioId;
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
 
         var pagoId = await _mediator.Send(command);
         return Ok(new { PagoId = pagoId });

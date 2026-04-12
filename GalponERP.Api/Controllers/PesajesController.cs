@@ -2,7 +2,7 @@ using GalponERP.Application.Pesajes.Commands.RegistrarPesaje;
 using GalponERP.Application.Pesajes.Commands.ActualizarPesaje;
 using GalponERP.Application.Pesajes.Commands.EliminarPesaje;
 using GalponERP.Application.Pesajes.Queries.ObtenerPesajesPorLote;
-using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Application.Pesajes.Queries.ObtenerPesajePorId;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -16,40 +16,30 @@ namespace GalponERP.Api.Controllers;
 public class PesajesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ICurrentUserContext _currentUserContext;
 
-    public PesajesController(IMediator mediator, IUsuarioRepository usuarioRepository, ICurrentUserContext currentUserContext)
+    public PesajesController(IMediator mediator, ICurrentUserContext currentUserContext)
     {
         _mediator = mediator;
-        _usuarioRepository = usuarioRepository;
         _currentUserContext = currentUserContext;
-    }
-
-    private async Task<Guid> GetUsuarioIdActual()
-    {
-        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
-        if (string.IsNullOrEmpty(firebaseUid)) return Guid.Empty;
-
-        var usuario = await _usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
-        
-        if (usuario != null && _currentUserContext is GalponERP.Infrastructure.Authentication.CurrentUserContext context)
-        {
-            context.SetUser(usuario.Id, firebaseUid);
-        }
-
-        return usuario?.Id ?? Guid.Empty;
     }
 
     [HttpPost]
     public async Task<IActionResult> Registrar([FromBody] RegistrarPesajeCommand command)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
-        command.UsuarioId = usuarioId;
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
         var id = await _mediator.Send(command);
         return Ok(id);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(Guid id)
+    {
+        var result = await _mediator.Send(new ObtenerPesajePorIdQuery(id));
+        return result != null ? Ok(result) : NotFound();
     }
 
     [HttpGet("lote/{loteId}")]
@@ -63,14 +53,14 @@ public class PesajesController : ControllerBase
     [Authorize(Roles = "Admin,SubAdmin")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarPesajeCommand command)
     {
-        if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
 
         try
         {
-            command.UsuarioId = usuarioId;
+            command.UsuarioId = _currentUserContext.UsuarioId.Value;
             await _mediator.Send(command);
             return NoContent();
         }
@@ -84,12 +74,12 @@ public class PesajesController : ControllerBase
     [Authorize(Roles = "Admin,SubAdmin")]
     public async Task<IActionResult> Eliminar(Guid id)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
         try
         {
-            await _mediator.Send(new EliminarPesajeCommand(id) { UsuarioId = usuarioId });
+            await _mediator.Send(new EliminarPesajeCommand(id) { UsuarioId = _currentUserContext.UsuarioId.Value });
             return NoContent();
         }
         catch (Exception ex)

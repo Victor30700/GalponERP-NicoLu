@@ -29,6 +29,47 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 }
 ```
 
+## 0.1 GALPONES
+
+### Listar Galpones
+- **URL:** `/api/Galpones`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nombre": "Galpón A",
+    "capacidad": 5000,
+    "ubicacion": "Sector Norte",
+    "isActive": true
+  }
+]
+```
+
+### Obtener Galpón por ID
+- **URL:** `/api/Galpones/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombre": "Galpón A",
+  "capacidad": 5000,
+  "ubicacion": "Sector Norte",
+  "isActive": true
+}
+```
+
+### Eliminar Galpón
+- **URL:** `/api/Galpones/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin**)
+- **Salida:** `204 No Content`
+- **Nota:** Soft Delete (`IsActive = false`).
+
 ## 1. LOTES
 
 ### Listar Lotes
@@ -189,6 +230,22 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ]
 ```
 
+### Obtener Mortalidad por ID
+- **URL:** `/api/Mortalidad/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "fecha": "2026-04-10T00:00:00Z",
+  "cantidadBajas": 5,
+  "causa": "Calor excesivo",
+  "usuarioId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
 ### Registrar Mortalidad (Bajas)
 - **URL:** `/api/Mortalidad`
 - **Método:** `POST`
@@ -242,6 +299,22 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ```
 - **Salida (JSON):** `"3fa85f64-5717-4562-b3fc-2c963f66afa6"`
 
+### Obtener Pesaje por ID
+- **URL:** `/api/Pesajes/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin, Empleado**)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "fecha": "2026-04-11T10:00:00Z",
+  "pesoPromedioGramos": 1250.5,
+  "cantidadMuestreada": 50,
+  "usuarioId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
+
 ### Actualizar Pesaje
 - **URL:** `/api/Pesajes/{id}`
 - **Método:** `PUT`
@@ -281,6 +354,24 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
     "justificacion": "..."
   }
 ]
+```
+
+### Obtener Gasto por ID
+- **URL:** `/api/Gastos/{id}`
+- **Método:** `GET`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida (JSON):**
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "galponId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "descripcion": "Pago Luz Abril",
+  "monto": 45.50,
+  "fecha": "2026-04-10T00:00:00Z",
+  "tipoGasto": "Servicios",
+  "usuarioId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
 ```
 
 ### Registrar Gasto Operativo
@@ -395,6 +486,13 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - **Método:** `PUT`
 - **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
 - **Entrada (JSON):** Mismo formato que Crear, incluyendo el `id` en el body.
+
+### Eliminar Plantilla
+- **URL:** `/api/Plantillas/{id}`
+- **Método:** `DELETE`
+- **Autenticación:** Requerida (Bearer, Rol: **Admin, SubAdmin**)
+- **Salida:** `204 No Content`
+- **Nota:** Soft Delete (`IsActive = false`).
 
 ## 2.3 CALENDARIO SANITARIO
 
@@ -611,3 +709,45 @@ Se completó la capa de lectura para habilitar una gestión basada en datos:
 1. **Kárdex Detallado:** El nuevo endpoint de movimientos por producto permite auditar cada gramo de insumo, incluyendo justificaciones de ajustes y consumos operativos.
 2. **Dashboard de Resumen Ejecutivo:** Se consolidaron indicadores críticos (Pollos Vivos, Cuentas por Cobrar, Tareas Pendientes) en una sola consulta optimizada.
 3. **Automatización de Tareas:** El sistema ahora calcula automáticamente qué tareas sanitarias deben realizarse "Hoy" basándose en la fecha de ingreso de cada lote activo, eliminando la necesidad de seguimiento manual por parte del granjero.
+
+# BITÁCORA DE ARQUITECTURA - FASE 2.2
+
+## SPRINT 39: Estandarización de Formularios (Lecturas Individuales)
+
+### Decisiones Tomadas
+1. **Creación de Queries GET by ID:** Se implementaron los queries `ObtenerGalponPorIdQuery`, `ObtenerGastoOperativoPorIdQuery`, `ObtenerMortalidadPorIdQuery` y `ObtenerPesajePorIdQuery` para permitir que el Frontend recupere la información de un solo registro. Esto es fundamental para las pantallas de edición de formularios.
+2. **Uso de DTOs de Respuesta:** Aunque algunos endpoints existentes devolvían entidades de dominio directamente, para los nuevos endpoints se optó por definir registros (`record`) de respuesta específicos (e.g., `GalponDetalleResponse`, `GastoOperativoResponse`). Esto desacopla la API del modelo de dominio y permite una mayor flexibilidad en el futuro.
+3. **Mapeo Manual:** Se realizó el mapeo manual de las entidades a los DTOs en los handlers para mantener el control total sobre los datos expuestos, siguiendo los principios de Clean Architecture.
+
+### Endpoints Agregados
+- `GET /api/galpones/{id}`
+- `GET /api/gastos/{id}`
+- `GET /api/mortalidad/{id}`
+- `GET /api/pesajes/{id}`
+
+## SPRINT 40: Estandarización de Ciclo de Vida (Soft Deletes Faltantes)
+
+### Decisiones Tomadas
+1. **Implementación de Soft Delete:** Se agregaron los comandos `EliminarGalponCommand` y `EliminarPlantillaSanitariaCommand`. Ambos utilizan el método `Eliminar()` heredado de la clase base `Entity`, el cual establece `IsActive = false`. No se eliminan registros físicos para preservar la integridad referencial y permitir auditorías históricas.
+2. **Restricción de Roles:**
+   - La eliminación de Galpones se restringió exclusivamente al rol `Admin` debido a que es una entidad estructural crítica.
+   - La eliminación de Plantillas Sanitarias se permite tanto a `Admin` como a `SubAdmin`, facilitando la gestión operativa de planes sanitarios.
+
+### Endpoints Agregados
+- `DELETE /api/galpones/{id}` (Solo Admin)
+- `DELETE /api/plantillas/{id}` (Admin y SubAdmin)
+
+## SPRINT 41: Refactorización de Clean Code y Rendimiento (ICurrentUserContext)
+
+### Decisiones Tomadas
+1. **Eliminación de Consultas Redundantes:** Se eliminó la dependencia de `IUsuarioRepository` en los controladores operativos (`Gastos`, `Pesajes`, `Inventario`, `Mortalidad`, `Ventas`) para obtener el `UsuarioId`. Anteriormente, se realizaba una consulta a la base de datos basada en el `user_id` de Firebase en cada petición de escritura.
+2. **Uso Obligatorio de ICurrentUserContext:** Se estandarizó el uso de `ICurrentUserContext` para extraer la identidad del usuario directamente del contexto de seguridad actual. Esto mejora el rendimiento al evitar viajes de ida y vuelta a la base de datos y simplifica el código de los controladores eliminando métodos privados repetitivos (`GetUsuarioIdActual`).
+3. **Consistencia en la Identidad:** Al centralizar la obtención del ID del usuario, se garantiza que la auditoría automática y el registro de transacciones utilicen una fuente de verdad única y eficiente.
+
+### Controladores Refactorizados
+- `GastosController`
+- `PesajesController`
+- `InventarioController`
+- `MortalidadController`
+- `VentasController`
+

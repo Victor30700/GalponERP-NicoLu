@@ -2,7 +2,7 @@ using GalponERP.Application.Gastos.Commands.RegistrarGastoOperativo;
 using GalponERP.Application.Gastos.Commands.ActualizarGastoOperativo;
 using GalponERP.Application.Gastos.Commands.EliminarGastoOperativo;
 using GalponERP.Application.Gastos.Queries.ObtenerGastos;
-using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Application.Gastos.Queries.ObtenerGastoOperativoPorId;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -16,29 +16,12 @@ namespace GalponERP.Api.Controllers;
 public class GastosController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ICurrentUserContext _currentUserContext;
 
-    public GastosController(IMediator mediator, IUsuarioRepository usuarioRepository, ICurrentUserContext currentUserContext)
+    public GastosController(IMediator mediator, ICurrentUserContext currentUserContext)
     {
         _mediator = mediator;
-        _usuarioRepository = usuarioRepository;
         _currentUserContext = currentUserContext;
-    }
-
-    private async Task<Guid> GetUsuarioIdActual()
-    {
-        var firebaseUid = User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
-        if (string.IsNullOrEmpty(firebaseUid)) return Guid.Empty;
-
-        var usuario = await _usuarioRepository.ObtenerPorFirebaseUidAsync(firebaseUid);
-        
-        if (usuario != null && _currentUserContext is GalponERP.Infrastructure.Authentication.CurrentUserContext context)
-        {
-            context.SetUser(usuario.Id, firebaseUid);
-        }
-
-        return usuario?.Id ?? Guid.Empty;
     }
 
     [HttpGet]
@@ -48,13 +31,20 @@ public class GastosController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(Guid id)
+    {
+        var result = await _mediator.Send(new ObtenerGastoOperativoPorIdQuery(id));
+        return result != null ? Ok(result) : NotFound();
+    }
+
     [HttpPost]
     public async Task<IActionResult> RegistrarGasto([FromBody] RegistrarGastoOperativoCommand command)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
-        command.UsuarioId = usuarioId;
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -62,15 +52,15 @@ public class GastosController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> ActualizarGasto(Guid id, [FromBody] ActualizarGastoOperativoCommand command)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
         if (id != command.Id)
         {
             return BadRequest(new { message = "El ID de la ruta no coincide con el ID del comando." });
         }
 
-        command.UsuarioId = usuarioId;
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
         await _mediator.Send(command);
         return NoContent();
     }
@@ -78,12 +68,12 @@ public class GastosController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> EliminarGasto(Guid id)
     {
-        var usuarioId = await GetUsuarioIdActual();
-        if (usuarioId == Guid.Empty) return Unauthorized("Usuario no registrado en la base de datos.");
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
 
         var command = new EliminarGastoOperativoCommand(id)
         {
-            UsuarioId = usuarioId
+            UsuarioId = _currentUserContext.UsuarioId.Value
         };
         await _mediator.Send(command);
         return NoContent();

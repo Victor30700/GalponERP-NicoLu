@@ -1,20 +1,20 @@
-# PLAN DE DESARROLLO - FASE 2.1: TRAZABILIDAD OPERATIVA E INVENTARIO
+# PLAN DE DESARROLLO - FASE 2.2: PULIDO FINAL Y RENDIMIENTO (API FRONT-READY)
 
-## SPRINT 36: Ejecución Sanitaria Integrada
-*Objetivo: Permitir la aplicación de vacunas descontando automáticamente el inventario de la bodega.*
-- [x] 1. **Application:** Refactorizar `MarcarVacunaAplicadaCommand` para que reciba `CantidadConsumida` (decimal) y extraiga el `UsuarioId` (del JWT).
-- [x] 2. **Application:** En su Handler, usar `IUnitOfWork` para: 1) Cambiar el estado en `CalendarioSanitario` a Aplicado. 2) Generar un `MovimientoInventario` de tipo SALIDA por la dosis consumida.
-- [x] 3. **Domain/Application:** Validar que exista stock suficiente antes de aplicar la vacuna. Si no hay, lanzar excepción de negocio.
-- [x] 4. **API:** Exponer o actualizar `PATCH /api/calendario/{id}/aplicar`.
+## SPRINT 39: Estandarización de Formularios (Lecturas Individuales)
+*Objetivo: Proveer los endpoints `GET by ID` necesarios para que el Frontend pueda rellenar los formularios de edición.*
+- [x] 1. **Galpones:** Crear `ObtenerGalponPorIdQuery` y exponer `GET /api/galpones/{id}`.
+- [x] 2. **Gastos:** Crear `ObtenerGastoOperativoPorIdQuery` y exponer `GET /api/gastos/{id}`.
+- [x] 3. **Operaciones:** Crear `ObtenerMortalidadPorIdQuery` y `ObtenerPesajePorIdQuery`. Exponer los endpoints respectivos (`GET /api/mortalidad/{id}` y `GET /api/pesajes/{id}`).
 
-## SPRINT 37: Flujo Optimizado de Alimentación Diaria
-*Objetivo: Un endpoint dedicado para registrar el consumo diario de alimento que afecte el stock y los costos del lote en una sola transacción.*
-- [x] 1. **Application:** Crear `RegistrarConsumoAlimentoCommand` (LoteId, ProductoId, Cantidad, Justificacion, UsuarioId).
-- [x] 2. **Application:** El Handler debe usar `IUnitOfWork` para registrar la SALIDA de inventario. El sistema internamente debe calcular los Kg reales (usando `Producto.EquivalenciaEnKg`) para los KPIs biológicos del Lote.
-- [x] 3. **API:** Exponer `POST /api/inventario/consumo-diario`.
+## SPRINT 40: Estandarización de Ciclo de Vida (Soft Deletes Faltantes)
+*Objetivo: Permitir al Admin depurar la base de datos de errores sin romper la integridad referencial.*
+- [x] 1. **Galpones:** Implementar `EliminarGalponCommand` (Soft Delete).
+- [x] 2. **Galpones API:** Exponer `DELETE /api/galpones/{id}` (Restringido a Admin).
+- [x] 3. **Plantillas:** Implementar `EliminarPlantillaSanitariaCommand` (Soft Delete).
+- [x] 4. **Plantillas API:** Exponer `DELETE /api/plantillas/{id}` (Restringido a Admin/SubAdmin).
 
-## SPRINT 38: Visibilidad de Kárdex y Dashboard Global
-*Objetivo: Proveer las consultas (Lectura) finales que el Frontend necesita para renderizar la interfaz operativa.*
-- [x] 1. **API:** Exponer `GET /api/inventario/producto/{id}/movimientos` para el Kárdex histórico detallado de un solo insumo.
-- [x] 2. **API:** Exponer `GET /api/inventario/stock`. Esta consulta debe calcular el saldo neto (Entradas - Salidas) de cada producto y mostrar su `UnidadMedida` para el galponero.
-- [x] 3. **API:** Completar `GET /api/dashboard/resumen`. Usar `.AsNoTracking()` para agrupar rápidamente: Aves Vivas Totales, Saldo Total por Cobrar (Ventas) y Tareas Sanitarias para el día actual.
+## SPRINT 41: Refactorización de Clean Code y Rendimiento (ICurrentUserContext)
+*Objetivo: Eliminar consultas redundantes a la base de datos en los Controladores.*
+- [x] 1. **Refactor de Controladores:** Auditar `GastosController`, `PesajesController`, `InventarioController`, `MortalidadController` y `VentasController`.
+- [x] 2. **Optimización:** Eliminar métodos privados tipo `GetUsuarioIdActual()` que inyecten `IUsuarioRepository`. Reemplazarlos inyectando `ICurrentUserContext` y llamando directamente a `_currentUserContext.UsuarioId`.
+- [x] 3. **Actualización de Documentación:** Revisar exhaustivamente `docs/endpoints.md` asegurando que los nuevos `GET {id}` y `DELETE` estén documentados con sus respuestas JSON.

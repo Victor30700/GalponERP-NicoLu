@@ -1,6 +1,8 @@
 using GalponERP.Application.Galpones.Commands.CrearGalpon;
 using GalponERP.Application.Galpones.Commands.EditarGalpon;
+using GalponERP.Application.Galpones.Commands.EliminarGalpon;
 using GalponERP.Application.Galpones.Queries.ListarGalpones;
+using GalponERP.Application.Galpones.Queries.ObtenerGalponPorId;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +25,7 @@ public class GalponesController : ControllerBase
     public async Task<IActionResult> Crear([FromBody] CrearGalponCommand command)
     {
         var id = await _mediator.Send(command);
-        return CreatedAtAction(nameof(Listar), new { id }, new { GalponId = id });
+        return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { GalponId = id });
     }
 
     [HttpGet]
@@ -31,6 +33,13 @@ public class GalponesController : ControllerBase
     {
         var galpones = await _mediator.Send(new ListarGalponesQuery());
         return Ok(galpones);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(Guid id)
+    {
+        var result = await _mediator.Send(new ObtenerGalponPorIdQuery(id));
+        return result != null ? Ok(result) : NotFound();
     }
 
     [HttpPut("{id}")]
@@ -42,6 +51,14 @@ public class GalponesController : ControllerBase
         }
 
         await _mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Eliminar(Guid id)
+    {
+        await _mediator.Send(new EliminarGalponCommand(id));
         return NoContent();
     }
 }
