@@ -1,6 +1,7 @@
 using GalponERP.Application.Ventas.Commands.RegistrarVentaParcial;
 using GalponERP.Application.Ventas.Commands.AnularVenta;
 using GalponERP.Application.Ventas.Commands.RegistrarPago;
+using GalponERP.Application.Ventas.Commands.ActualizarVenta;
 using GalponERP.Application.Ventas.Queries.ObtenerVentas;
 using GalponERP.Application.Ventas.Queries.ObtenerVentaPorId;
 using GalponERP.Application.Ventas.Queries.ObtenerVentasPorLote;
@@ -56,6 +57,20 @@ public class VentasController : ControllerBase
         command.UsuarioId = _currentUserContext.UsuarioId.Value;
         var id = await _mediator.Send(command);
         return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { VentaId = id });
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarVentaCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        if (id != command.VentaId)
+            return BadRequest("El ID de la venta en la URL no coincide con el del cuerpo de la solicitud.");
+
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [Authorize(Roles = "Admin")]

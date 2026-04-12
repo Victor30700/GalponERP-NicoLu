@@ -99,7 +99,7 @@ public class LotesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("{id}/reabrir")]
+    [HttpPut("{id}/reabrir")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Reabrir(Guid id)
     {

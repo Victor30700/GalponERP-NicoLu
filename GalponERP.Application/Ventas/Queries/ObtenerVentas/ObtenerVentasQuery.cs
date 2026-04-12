@@ -13,4 +13,6 @@ public record VentaResponse(
     int CantidadPollos,
     decimal PesoTotalKg,
     decimal PrecioPorKilo,
-    decimal Total);
+    decimal Total,
+    decimal SaldoPendiente,
+    string EstadoPago);

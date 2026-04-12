@@ -24,7 +24,16 @@ public class VentaRepository : IVentaRepository
     {
         return await _context.Ventas
             .Include(v => v.Pagos)
-            .Where(v => v.LoteId == loteId && v.IsActive)
+            .Where(v => v.LoteId == loteId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Venta>> ObtenerPorClienteAsync(Guid clienteId)
+    {
+        return await _context.Ventas
+            .Include(v => v.Pagos)
+            .Where(v => v.ClienteId == clienteId)
+            .OrderByDescending(v => v.Fecha)
             .ToListAsync();
     }
 

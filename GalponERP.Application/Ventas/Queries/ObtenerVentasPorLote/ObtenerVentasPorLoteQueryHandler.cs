@@ -30,6 +30,8 @@ public class ObtenerVentasPorLoteQueryHandler : IRequestHandler<ObtenerVentasPor
             v.CantidadPollos,
             v.PesoTotalVendido,
             v.PrecioPorKilo.Monto,
-            v.Total.Monto));
+            v.Total.Monto,
+            v.SaldoPendiente.Monto,
+            v.EstadoPago.ToString()));
     }
 }

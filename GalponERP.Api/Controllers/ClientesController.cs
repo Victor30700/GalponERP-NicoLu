@@ -3,6 +3,7 @@ using GalponERP.Application.Clientes.Commands.CrearCliente;
 using GalponERP.Application.Clientes.Commands.EliminarCliente;
 using GalponERP.Application.Clientes.Queries.ListarClientes;
 using GalponERP.Application.Clientes.Queries.ObtenerClientePorId;
+using GalponERP.Application.Clientes.Queries.ObtenerHistorialCliente;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,13 @@ public class ClientesController : ControllerBase
             return NotFound();
         }
         return Ok(cliente);
+    }
+
+    [HttpGet("{id}/historial")]
+    public async Task<IActionResult> ObtenerHistorial(Guid id)
+    {
+        var historial = await _mediator.Send(new ObtenerHistorialClienteQuery(id));
+        return Ok(historial);
     }
 
     [Authorize(Roles = "Admin,SubAdmin")]

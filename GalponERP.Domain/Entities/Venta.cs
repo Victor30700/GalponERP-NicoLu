@@ -69,13 +69,35 @@ public class Venta : Entity
         ActualizarEstadoPagoSegunSaldos();
     }
 
+    public void ActualizarDatos(int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo)
+    {
+        if (cantidadPollos <= 0)
+            throw new ArgumentException("La cantidad de pollos debe ser mayor a cero.", nameof(cantidadPollos));
+
+        if (pesoTotalVendido <= 0)
+            throw new ArgumentException("El peso total vendido debe ser mayor a cero.", nameof(pesoTotalVendido));
+
+        if (precioPorKilo == null)
+            throw new ArgumentNullException(nameof(precioPorKilo));
+
+        CantidadPollos = cantidadPollos;
+        PesoTotalVendido = pesoTotalVendido;
+        PrecioPorKilo = precioPorKilo;
+        Total = precioPorKilo * pesoTotalVendido;
+
+        ActualizarEstadoPagoSegunSaldos();
+    }
+
     private void ActualizarEstadoPagoSegunSaldos()
     {
-        if (SaldoPendiente.Monto == 0)
+        decimal saldo = SaldoPendiente.Monto;
+        decimal total = Total.Monto;
+
+        if (saldo <= 0)
         {
             EstadoPago = EstadoPago.Pagado;
         }
-        else if (SaldoPendiente.Monto < Total.Monto)
+        else if (saldo < total)
         {
             EstadoPago = EstadoPago.Parcial;
         }

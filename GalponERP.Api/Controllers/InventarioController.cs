@@ -5,6 +5,7 @@ using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
+using GalponERP.Application.Inventario.Queries.ObtenerKardexProducto;
 using GalponERP.Domain.Entities;
 using GalponERP.Application.Interfaces;
 using MediatR;
@@ -41,6 +42,13 @@ public class InventarioController : ControllerBase
         var item = stock.FirstOrDefault();
         if (item == null) return NotFound();
         return Ok(item);
+    }
+
+    [HttpGet("productos/{id}/kardex")]
+    public async Task<IActionResult> ObtenerKardex(Guid id)
+    {
+        var kardex = await _mediator.Send(new ObtenerKardexProductoQuery(id));
+        return Ok(kardex);
     }
 
     [HttpGet("movimientos")]

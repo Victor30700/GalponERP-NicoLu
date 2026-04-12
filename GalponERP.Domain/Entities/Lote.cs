@@ -162,6 +162,28 @@ public class Lote : Entity
         CantidadActual -= cantidad;
     }
 
+    public void CorregirVenta(int cantidadAnterior, int cantidadNueva)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden corregir ventas en lotes activos.");
+
+        if (cantidadNueva <= 0)
+            throw new LoteDomainException("La nueva cantidad vendida debe ser mayor a cero.");
+
+        // Revertir el impacto anterior
+        PollosVendidos -= cantidadAnterior;
+        CantidadActual += cantidadAnterior;
+
+        // Aplicar el nuevo impacto
+        int disponibleParaVenta = CantidadInicial - MortalidadAcumulada - PollosVendidos;
+        
+        if (cantidadNueva > disponibleParaVenta)
+            throw new LoteDomainException($"Intento de corregir venta a {cantidadNueva} pollos, pero solo quedan {disponibleParaVenta} disponibles.");
+
+        PollosVendidos += cantidadNueva;
+        CantidadActual -= cantidadNueva;
+    }
+
     public void CerrarLote(decimal fcr, Moneda costoTotal, Moneda utilidadNeta, decimal porcentajeMortalidad)
     {
         if (Estado != EstadoLote.Activo)

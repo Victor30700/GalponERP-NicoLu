@@ -206,10 +206,10 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 
 ### Reabrir Lote
 - **URL:** `/api/Lotes/{id}/reabrir`
-- **Método:** `POST`
+- **Método:** `PUT`
 - **Autenticación:** Requerida (Bearer, Rol: **Admin**)
 - **Salida:** `204 No Content`
-- **Nota:** Limpia los campos de Snapshot contable y pone el lote en estado `Activo`.
+- **Nota:** Limpia los campos de Snapshot contable y pone el lote en estado `Activo`. Restringido ESTRICTAMENTE a Admin.
 
 ## 2. OPERACIONES DIARIAS
 
@@ -1002,3 +1002,35 @@ Se completó la capa de lectura para habilitar una gestión basada en datos:
 ### Endpoints Agregados/Actualizados
 - `POST /api/calendario/actividad-manual` (Añadir tareas fuera de plantilla)
 - `PUT /api/calendario/{id}/reprogramar` (Mover fecha de tarea pendiente con justificación)
+
+# BITÁCORA DE ARQUITECTURA - FASE 2.4: CIERRE FINANCIERO Y KARDEX AVANZADO
+
+## SPRINT 45: Polímero de Ventas y CRM Básico
+
+### Decisiones Tomadas
+1. **Flexibilidad en Ventas (Actualización Atómica):** Se implementó `ActualizarVentaCommand` para permitir la corrección de errores en peso y precio. 
+   - **Cálculo de Saldos:** El sistema recalcula automáticamente el `Total` de la venta. Dado que el `SaldoPendiente` es una propiedad calculada en la entidad `Venta` (`Total - PagosSum`), se garantiza que el saldo refleje siempre la realidad financiera sin redundancia de datos.
+   - **Estado de Pago Dinámico:** Se ajustó la lógica de `ActualizarEstadoPagoSegunSaldos` para manejar pagos excedentes (saldos negativos), marcando la venta como `Pagada` si el saldo es menor o igual a cero.
+   - **Integridad Biológica en Ventas:** Si la `CantidadPollos` es modificada en una venta existente, el sistema utiliza el nuevo método `Lote.CorregirVenta` para ajustar de forma atómica la `CantidadActual` y `PollosVendidos` del lote asociado.
+
+2. **CRM e Historial de Cliente:** Se implementó `ObtenerHistorialClienteQuery` que devuelve todas las ventas de un cliente ordenadas cronológicamente. Se enriqueció el DTO `VentaResponse` para incluir el `SaldoPendiente` y el `EstadoPago`, permitiendo al frontend mostrar estados de cuenta claros para cobranzas.
+
+### Endpoints Agregados/Actualizados
+- `PUT /api/ventas/{id}` (Actualización de datos operativos)
+- `GET /api/clientes/{id}/historial` (Historial transaccional del cliente)
+
+## SPRINT 46: Auditoría de Inventario (Kárdex Real) y Cierres
+
+### Decisiones Tomadas
+1. **Algoritmo de Kárdex en Memoria:** Para garantizar la precisión contable del inventario, el `ObtenerKardexProductoQueryHandler` realiza el cálculo del `SaldoAcumulado` iterando cronológicamente sobre todos los movimientos del producto.
+   - **Impacto por Tipo:** Se normalizó el impacto de cada movimiento: `Entrada`, `Compra` y `AjusteEntrada` suman al saldo; `Salida` y `AjusteSalida` restan.
+   - **Trazabilidad:** Cada fila del Kárdex incluye la `Justificacion` y el `LoteId` opcional, permitiendo auditar el destino exacto de cada insumo.
+
+2. **Agrupación Financiera de Gastos:** Se implementó `ObtenerGastosPorCategoriaQuery` para facilitar la generación de gráficos de torta/barras en el dashboard. El handler agrupa los gastos por `TipoGasto` en un rango de fechas, devolviendo el total acumulado por cada categoría.
+
+3. **Refuerzo de Seguridad en Lotes:** Se migró el endpoint de reapertura de lotes a `PUT /api/lotes/{id}/reabrir` y se confirmó su restricción estricta al rol `Admin`. Esto asegura que solo usuarios con máxima autoridad puedan revertir cierres contables.
+
+### Endpoints Agregados/Actualizados
+- `GET /api/inventario/productos/{id}/kardex` (Trazabilidad con saldo acumulado)
+- `GET /api/finanzas/gastos-por-categoria` (Reporte agrupado para analítica)
+- `PUT /api/lotes/{id}/reabrir` (Estandarización de método y seguridad)
