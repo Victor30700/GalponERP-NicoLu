@@ -771,3 +771,43 @@ Se habilitó el endpoint `GET /api/ventas/{id}/pagos` que muestra todos los pago
 
 ## Estatus de Compilación
 El proyecto compila correctamente sin errores. Todas las dependencias de `IUnitOfWork` y `IVentaRepository` fueron respetadas.
+# BITÁCORA DE ARQUITECTURA - FASE 3.0: MOTOR FINANCIERO AVANZADO
+
+## SPRINT 49: El Pasivo del Negocio (Proveedores)
+- **Entidad Proveedor:** Se ha implementado la entidad `Proveedor` heredando de `Entity` base para soportar Auditoría y Soft Delete.
+- **Relación de Dominio:** Los proveedores ahora son entidades de primer nivel, esenciales para el registro de compras formales y el futuro costeo PPP.
+- **Seguridad:** El CRUD de proveedores sigue las reglas de roles: `Admin` para eliminación, `SubAdmin` para creación/edición, y `Empleado` para lectura.
+
+## SPRINT 50: Integración de Compras y Cuentas por Pagar
+- **Entidad CompraInventario:** Nueva entidad que gestiona la deuda con proveedores. Soporta `EstadoPago` (Pagado, Pendiente, Parcial) y calcula el `SaldoPendiente` dinámicamente.
+- **Transaccionalidad (IUnitOfWork):** El comando `RegistrarIngresoMercaderiaCommand` ahora es atómico. En una sola transacción:
+    1. Se crea el registro financiero (`CompraInventario`).
+    2. Se crea el registro físico en el Kárdex (`MovimientoInventario` tipo `Compra`).
+    3. Se actualiza el stock biológico del producto.
+- **Kárdex Valorado:** Se vinculó `CompraId` a `MovimientoInventario` para permitir la trazabilidad total desde el stock hasta el origen de la compra.
+- **Cuentas por Pagar:** Se habilitó el query `ObtenerCuentasPorPagar` que filtra todas las compras con saldo pendiente, permitiendo una gestión de tesorería proactiva.
+
+## SPRINT 51: El Eslabón Perdido (Costeo PPP)
+- **Algoritmo PPP:** Se implementó `RecalcularCostoPPP` en la entidad `Producto`. El costo unitario se actualiza dinámicamente con cada compra formal: `((StockActual * CostoActual) + (CantidadComprada * PrecioCompra)) / (StockActual + CantidadComprada)`.
+- **Salidas Valoradas:** `RegistrarConsumoAlimentoCommandHandler` ahora asigna el `CostoTotal` al movimiento de salida basado en el PPP vigente.
+- **Cierre de Lote Real:** `CerrarLoteCommandHandler` ahora suma el costo real del alimento consumido (desde el Kárdex) en lugar de usar estimaciones o valor cero.
+- **Valoración de Bodega:** Nuevo endpoint `GET /api/inventario/valoracion` que calcula el capital inmovilizado en insumos.
+
+## SPRINT 52: Inteligencia Predictiva y Papelera Forense
+- **Proyección de Stock:** Algoritmo que cruza el stock actual con el consumo diario estimado por edad de ave (gramos/día/ave) para predecir cuántos días de alimento restan.
+- **Restauración Universal:** Comando `RestaurarEntidadCommand` que utiliza reflexión para revertir el `IsActive = false` en cualquier entidad del sistema (Lotes, Ventas, Gastos, etc.), restringido a `Admin`.
+- **Abstracción de Persistencia:** Se creó e implementó `IGalponDbContext` para desacoplar la Application de la implementación concreta de Infraestructura.
+
+## Estatus de Compilación
+El proyecto compila correctamente. Se han aplicado las migraciones `AddProveedoresYCompras` y `AddCostoPPP`.
+# BITÁCORA DE ARQUITECTURA - FASE 3.1
+
+## SPRINT 56: Conciliación de Almacén y Reportabilidad SaaS
+
+### Decisiones Tomadas
+1. **Motor de Conciliación Masiva:** Se implementó `RegistrarConciliacionStockCommand` para automatizar los ajustes tras inventarios físicos. El sistema:
+   - Calcula el stock teórico (sistema) vs el físico (conteo).
+   - Genera automáticamente movimientos de `AjusteEntrada` o `AjusteSalida` solo por la diferencia.
+   - Valora estos ajustes automáticamente usando el PPP actual del producto para mantener la integridad contable.
+2. **Infraestructura de Reportes PDF:** Se integró la librería `QuestPDF` para la generación de documentos profesionales. Se optó por una arquitectura de "Servicio de Infraestructura" (`PdfService`) inyectado mediante una interfaz en Application, permitiendo generar la "Ficha de Liquidación de Lote" de forma programática.
+3. **Optimización de Descargas:** El endpoint `/api/lotes/{id}/reporte-cierre-pdf` devuelve un flujo de bytes con el MIME type `application/pdf`, permitiendo al navegador o aplicación móvil previsualizar o descargar el documento directamente.

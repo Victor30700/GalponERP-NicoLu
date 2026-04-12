@@ -24,13 +24,20 @@ public class Producto : Entity
     /// </summary>
     public decimal UmbralMinimo { get; private set; }
 
+    /// <summary>
+    /// Costo unitario promedio ponderado (PPP) del producto.
+    /// Se actualiza con cada compra formal.
+    /// </summary>
+    public decimal CostoUnitarioActual { get; private set; }
+
     public Producto(
         Guid id, 
         string nombre, 
         Guid categoriaProductoId, 
         Guid unidadMedidaId, 
         decimal equivalenciaEnKg,
-        decimal umbralMinimo = 0) : base(id)
+        decimal umbralMinimo = 0,
+        decimal costoUnitarioActual = 0) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto es obligatorio.");
@@ -43,6 +50,7 @@ public class Producto : Entity
         UnidadMedidaId = unidadMedidaId;
         EquivalenciaEnKg = equivalenciaEnKg;
         UmbralMinimo = umbralMinimo;
+        CostoUnitarioActual = costoUnitarioActual;
     }
 
     // Constructor para EF Core
@@ -66,5 +74,28 @@ public class Producto : Entity
         UnidadMedidaId = unidadMedidaId;
         EquivalenciaEnKg = equivalenciaEnKg;
         UmbralMinimo = umbralMinimo;
+    }
+
+    /// <summary>
+    /// Actualiza el costo unitario del producto utilizando el algoritmo de Precio Promedio Ponderado.
+    /// PPP = ((StockActual * CostoActual) + (CantidadComprada * PrecioCompra)) / (StockActual + CantidadComprada)
+    /// </summary>
+    public void RecalcularCostoPPP(decimal stockActual, decimal cantidadComprada, decimal precioCompra)
+    {
+        if (cantidadComprada <= 0) return;
+
+        decimal stockNuevo = stockActual + cantidadComprada;
+        
+        if (stockNuevo <= 0)
+        {
+            // Si el stock nuevo es cero o negativo (ajuste extraño), mantenemos el costo de la compra o el actual
+            CostoUnitarioActual = precioCompra > 0 ? precioCompra : CostoUnitarioActual;
+            return;
+        }
+
+        decimal valorTotalAnterior = stockActual * CostoUnitarioActual;
+        decimal valorCompraNueva = cantidadComprada * precioCompra;
+        
+        CostoUnitarioActual = (valorTotalAnterior + valorCompraNueva) / stockNuevo;
     }
 }

@@ -1,22 +1,11 @@
-# BITÁCORA DE ARQUITECTURA - SPRINT 47: SELLO DE AUDITORÍA Y CONSISTENCIA FINAL
+# BITÁCORA DE ARQUITECTURA - FASE 3.1
 
-## 1. Gestión de Pagos (Anulación Segura)
-Se ha implementado una arquitectura de anulación de pagos que garantiza la integridad financiera:
-- **Entidad Venta:** Se modificó la propiedad `SaldoPendiente` para que solo sume los pagos donde `IsActive == true`.
-- **AnularPago (Método de Dominio):** Al anular un pago, se invoca `ActualizarEstadoPagoSegunSaldos()`, lo que permite que una venta que estaba "Pagada" regrese a estado "Parcial" o "Pendiente" de forma automática y atómica.
-- **Seguridad:** El endpoint `DELETE /api/ventas/{id}/pagos/{pagoId}` está restringido estrictamente al rol `Admin`.
+## SPRINT 56: Conciliación de Almacén y Reportabilidad SaaS
 
-## 2. Consistencia de Stock (Kárdex vs Dashboard)
-Se identificó y corrigió una discrepancia en el cálculo del stock actual:
-- **Fuga de Datos:** `ObtenerStockActualQueryHandler` omitía los movimientos de tipo `Compra`, lo que generaba un stock inferior al real en la pantalla de inventario comparado con el Dashboard.
-- **Fórmula Unificada:**
-  ```csharp
-  Impacto = (Tipo == Entrada || Tipo == Compra || Tipo == AjusteEntrada) ? Cantidad : -Cantidad;
-  ```
-- **Normalización a Kg:** Se añadió `StockActualKg` calculado como `StockActual * Producto.EquivalenciaEnKg` para permitir al frontend mostrar biomasa total disponible para alimento.
-
-## 3. Auditoría de Queries
-Se habilitó el endpoint `GET /api/ventas/{id}/pagos` que muestra todos los pagos asociados, incluyendo los anulados (`IsActive = false`), permitiendo a los auditores ver quién anuló un pago y cuándo (vía campos de auditoría de la entidad).
-
-## Estatus de Compilación
-El proyecto compila correctamente sin errores. Todas las dependencias de `IUnitOfWork` y `IVentaRepository` fueron respetadas.
+### Decisiones Tomadas
+1. **Motor de Conciliación Masiva:** Se implementó `RegistrarConciliacionStockCommand` para automatizar los ajustes tras inventarios físicos. El sistema:
+   - Calcula el stock teórico (sistema) vs el físico (conteo).
+   - Genera automáticamente movimientos de `AjusteEntrada` o `AjusteSalida` solo por la diferencia.
+   - Valora estos ajustes automáticamente usando el PPP actual del producto para mantener la integridad contable.
+2. **Infraestructura de Reportes PDF:** Se integró la librería `QuestPDF` para la generación de documentos profesionales. Se optó por una arquitectura de "Servicio de Infraestructura" (`PdfService`) inyectado mediante una interfaz en Application, permitiendo generar la "Ficha de Liquidación de Lote" de forma programática.
+3. **Optimización de Descargas:** El endpoint `/api/lotes/{id}/reporte-cierre-pdf` devuelve un flujo de bytes con el MIME type `application/pdf`, permitiendo al navegador o aplicación móvil previsualizar o descargar el documento directamente.

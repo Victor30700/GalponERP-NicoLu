@@ -2,6 +2,7 @@ using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Exceptions;
 using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Domain.ValueObjects;
 using MediatR;
 
 namespace GalponERP.Application.Inventario.Commands.RegistrarConsumoAlimento;
@@ -51,6 +52,8 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
         // Aunque el Movimiento guarda la cantidad en su unidad (ej: bultos), 
         // los KPIs se calculan posteriormente usando esta relación.
         
+        decimal costoTotalConsumo = request.Cantidad * producto.CostoUnitarioActual;
+
         var movimientoId = Guid.NewGuid();
         var movimiento = new MovimientoInventario(
             movimientoId,
@@ -60,7 +63,8 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
             TipoMovimiento.Salida,
             DateTime.UtcNow,
             usuarioId.Value,
-            request.Justificacion ?? "Consumo diario de alimento"
+            request.Justificacion ?? "Consumo diario de alimento",
+            new Moneda(costoTotalConsumo)
         );
 
         _inventarioRepository.RegistrarMovimiento(movimiento);

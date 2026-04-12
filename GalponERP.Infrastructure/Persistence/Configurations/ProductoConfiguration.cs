@@ -23,6 +23,10 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
             .HasPrecision(18, 2)
             .HasDefaultValue(0);
 
+        builder.Property(p => p.CostoUnitarioActual)
+            .HasPrecision(18, 4)
+            .HasDefaultValue(0);
+
         builder.HasOne(p => p.Categoria)
             .WithMany()
             .HasForeignKey(p => p.CategoriaProductoId)

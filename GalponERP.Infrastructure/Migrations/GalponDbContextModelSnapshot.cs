@@ -261,6 +261,73 @@ namespace GalponERP.Infrastructure.Migrations
                     b.ToTable("Clientes", (string)null);
                 });
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.CompraInventario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EstadoPago")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(2);
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Nota")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioIdRegistro")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Total", "GalponERP.Domain.Entities.CompraInventario.Total#Moneda", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TotalCompra");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "TotalPagado", "GalponERP.Domain.Entities.CompraInventario.TotalPagado#Moneda", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TotalPagado");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("ComprasInventario", (string)null);
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.Galpon", b =>
                 {
                     b.Property<Guid>("Id")
@@ -507,6 +574,9 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<Guid?>("CompraId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal?>("CostoTotal")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
@@ -553,6 +623,8 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompraId");
+
                     b.HasIndex("Fecha");
 
                     b.HasIndex("LoteId");
@@ -560,6 +632,58 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("MovimientosInventario", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.PagoCompra", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompraId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaPago")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MetodoPago")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Monto", "GalponERP.Domain.Entities.PagoCompra.Monto#Moneda", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Monto");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompraId");
+
+                    b.HasIndex("FechaPago");
+
+                    b.ToTable("PagosCompras", (string)null);
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.PagoVenta", b =>
@@ -701,6 +825,12 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<Guid>("CategoriaProductoId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("CostoUnitarioActual")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasDefaultValue(0m);
+
                     b.Property<decimal>("EquivalenciaEnKg")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
@@ -741,6 +871,57 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasIndex("UnidadMedidaId");
 
                     b.ToTable("Productos", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.Proveedor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NitRuc")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("RazonSocial")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NitRuc")
+                        .IsUnique();
+
+                    b.ToTable("Proveedores", (string)null);
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.UnidadMedida", b =>
@@ -949,6 +1130,15 @@ namespace GalponERP.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.CompraInventario", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.Proveedor", null)
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.GastoOperativo", b =>
                 {
                     b.HasOne("GalponERP.Domain.Entities.Galpon", null)
@@ -983,6 +1173,11 @@ namespace GalponERP.Infrastructure.Migrations
 
             modelBuilder.Entity("GalponERP.Domain.Entities.MovimientoInventario", b =>
                 {
+                    b.HasOne("GalponERP.Domain.Entities.CompraInventario", null)
+                        .WithMany()
+                        .HasForeignKey("CompraId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("GalponERP.Domain.Entities.Lote", null)
                         .WithMany()
                         .HasForeignKey("LoteId")
@@ -992,6 +1187,15 @@ namespace GalponERP.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.PagoCompra", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.CompraInventario", null)
+                        .WithMany("Pagos")
+                        .HasForeignKey("CompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -1045,6 +1249,11 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasForeignKey("LoteId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.CompraInventario", b =>
+                {
+                    b.Navigation("Pagos");
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>

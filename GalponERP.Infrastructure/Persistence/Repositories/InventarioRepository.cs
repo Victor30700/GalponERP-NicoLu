@@ -39,7 +39,7 @@ public class InventarioRepository : IInventarioRepository
     public async Task<decimal> ObtenerStockPorProductoIdAsync(Guid productoId)
     {
         var entradas = await _context.MovimientosInventario
-            .Where(m => m.ProductoId == productoId && (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada))
+            .Where(m => m.ProductoId == productoId && (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.AjusteEntrada || m.Tipo == TipoMovimiento.Compra))
             .SumAsync(m => m.Cantidad);
 
         var salidas = await _context.MovimientosInventario

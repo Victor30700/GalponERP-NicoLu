@@ -5,6 +5,7 @@ using GalponERP.Application.Mortalidad.Queries.ObtenerMortalidadPorLote;
 using GalponERP.Application.Mortalidad.Queries.ObtenerMortalidadTodas;
 using GalponERP.Application.Mortalidad.Queries.ObtenerReporteMortalidadTransversal;
 using GalponERP.Application.Mortalidad.Queries.ObtenerMortalidadPorId;
+using GalponERP.Application.Mortalidad.Queries.ObtenerTendenciasMortalidad;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -100,21 +101,10 @@ public class MortalidadController : ControllerBase
         }
     }
 
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> EliminarMortalidad(Guid id)
+    [HttpGet("lote/{loteId}/tendencias")]
+    public async Task<IActionResult> ObtenerTendencias(Guid loteId)
     {
-        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
-            return Unauthorized("Usuario no identificado.");
-
-        try
-        {
-            await _mediator.Send(new EliminarMortalidadCommand(id) { UsuarioId = _currentUserContext.UsuarioId.Value });
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _mediator.Send(new ObtenerTendenciasMortalidadQuery(loteId));
+        return result != null ? Ok(result) : NotFound();
     }
 }

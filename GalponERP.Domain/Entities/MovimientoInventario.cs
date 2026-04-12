@@ -32,6 +32,7 @@ public class MovimientoInventario : Entity
     public Moneda? CostoTotal { get; private set; }
 
     public string? Proveedor { get; private set; }
+    public Guid? CompraId { get; private set; }
 
     public MovimientoInventario(
         Guid id, 
@@ -43,7 +44,8 @@ public class MovimientoInventario : Entity
         Guid usuarioId, 
         string? justificacion = null,
         Moneda? costoTotal = null,
-        string? proveedor = null) 
+        string? proveedor = null,
+        Guid? compraId = null) 
         : base(id)
     {
         if (productoId == Guid.Empty)
@@ -64,6 +66,7 @@ public class MovimientoInventario : Entity
         UsuarioId = usuarioId;
         CostoTotal = costoTotal;
         Proveedor = proveedor;
+        CompraId = compraId;
     }
 
     // Constructor para EF Core

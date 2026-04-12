@@ -47,8 +47,14 @@ public class MovimientoInventarioConfiguration : IEntityTypeConfiguration<Movimi
             .HasForeignKey(m => m.LoteId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne<CompraInventario>()
+            .WithMany()
+            .HasForeignKey(m => m.CompraId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(m => m.ProductoId);
         builder.HasIndex(m => m.LoteId);
+        builder.HasIndex(m => m.CompraId);
         builder.HasIndex(m => m.Fecha);
 
         builder.HasQueryFilter(m => m.IsActive);

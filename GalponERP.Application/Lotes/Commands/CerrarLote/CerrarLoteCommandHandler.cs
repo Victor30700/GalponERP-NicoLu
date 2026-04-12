@@ -65,7 +65,7 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         var costoPollitos = lote.CostoUnitarioPollito * lote.CantidadInicial;
 
         // 4. Calcular Costo de Alimento y Total de Alimento en Kg
-        var movimientos = await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId);
+        var movimientos = (await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId)).ToList();
         var productos = await _productoRepository.ObtenerTodosAsync();
         
         // Identificar productos que son alimento (por nombre de categoría)
@@ -77,8 +77,11 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
             .Where(m => (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida) && productosAlimento.ContainsKey(m.ProductoId))
             .Sum(m => m.Cantidad * productosAlimento[m.ProductoId]);
 
-        // (Usando zero por ahora hasta que se implemente costeo de inventario)
-        var costoAlimento = Moneda.Zero;
+        // Calcular costo real sumando el CostoTotal de cada salida (Valorado con PPP al momento del consumo)
+        var costoAlimento = movimientos
+            .Where(m => m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida)
+            .Select(m => m.CostoTotal ?? Moneda.Zero)
+            .Aggregate(Moneda.Zero, (acc, next) => acc + next);
 
         // 5. Amortización (Supongamos un valor fijo o cero)
         var amortizacion = Moneda.Zero;

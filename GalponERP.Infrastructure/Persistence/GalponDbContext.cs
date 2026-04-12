@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GalponERP.Infrastructure.Persistence;
 
-public class GalponDbContext : DbContext
+public class GalponDbContext : DbContext, IGalponDbContext
 {
     private readonly ICurrentUserContext _currentUserContext;
 
@@ -26,12 +26,22 @@ public class GalponDbContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Venta> Ventas { get; set; }
     public DbSet<PagoVenta> PagosVentas { get; set; }
+    public DbSet<PagoCompra> PagosCompras { get; set; }
     public DbSet<Cliente> Clientes { get; set; }
+    public DbSet<Proveedor> Proveedores { get; set; }
+    public DbSet<CompraInventario> ComprasInventario { get; set; }
     public DbSet<GastoOperativo> GastosOperativos { get; set; }
     public DbSet<PlantillaSanitaria> PlantillasSanitarias { get; set; }
     public DbSet<CalendarioSanitario> CalendarioSanitario { get; set; }
     public DbSet<PesajeLote> PesajesLote { get; set; }
     public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
+
+    public async Task<T?> ObtenerEntidadPorIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity
+    {
+        return await Set<T>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+    }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

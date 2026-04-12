@@ -7,6 +7,8 @@ using GalponERP.Application.Lotes.Commands.CancelarLote;
 using GalponERP.Application.Lotes.Commands.TrasladarLote;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
 using GalponERP.Application.Lotes.Queries.ObtenerDetalleLote;
+using GalponERP.Application.Lotes.Queries.ObtenerRendimientoVivo;
+using GalponERP.Application.Lotes.Queries.ObtenerReporteCierrePdf;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -127,6 +129,21 @@ public class LotesController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("{id}/rendimiento-vivo")]
+    public async Task<IActionResult> ObtenerRendimientoVivo(Guid id)
+    {
+        var result = await _mediator.Send(new ObtenerRendimientoVivoLoteQuery(id));
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/reporte-cierre-pdf")]
+    public async Task<IActionResult> ObtenerReporteCierrePdf(Guid id)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerReporteCierreLotePdfQuery(id));
+        return File(pdfBytes, "application/pdf", $"Liquidacion_Lote_{id}.pdf");
     }
 
     [HttpPost("{id}/trasladar")]

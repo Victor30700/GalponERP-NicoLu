@@ -1,12 +1,17 @@
 using GalponERP.Application.Inventario.Commands.RegistrarMovimiento;
 using GalponERP.Application.Inventario.Commands.RegistrarConsumoAlimento;
 using GalponERP.Application.Inventario.Commands.RegistrarIngresoMercaderia;
+using GalponERP.Application.Inventario.Commands.RegistrarPagoCompra;
+using GalponERP.Application.Inventario.Commands.RegistrarConciliacion;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteAjustes;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
 using GalponERP.Application.Inventario.Queries.ObtenerKardexProducto;
+using GalponERP.Application.Inventario.Queries.ObtenerValoracionInventario;
+using GalponERP.Application.Inventario.Queries.ObtenerProyeccionStock;
+using GalponERP.Application.Inventario.Queries.ListarPagosCompra;
 using GalponERP.Domain.Entities;
 using GalponERP.Application.Interfaces;
 using MediatR;
@@ -34,6 +39,20 @@ public class InventarioController : ControllerBase
     {
         var stock = await _mediator.Send(new ObtenerStockActualQuery(productoId));
         return Ok(stock);
+    }
+
+    [HttpGet("valoracion")]
+    public async Task<IActionResult> ObtenerValoracion()
+    {
+        var valoracion = await _mediator.Send(new ObtenerValoracionInventarioQuery());
+        return Ok(valoracion);
+    }
+
+    [HttpGet("proyecciones")]
+    public async Task<IActionResult> ObtenerProyecciones()
+    {
+        var proyecciones = await _mediator.Send(new ObtenerProyeccionStockQuery());
+        return Ok(proyecciones);
     }
 
     [HttpGet("productos/{id}/stock")]
@@ -89,7 +108,27 @@ public class InventarioController : ControllerBase
 
         command.UsuarioId = _currentUserContext.UsuarioId.Value;
         var id = await _mediator.Send(command);
-        return Ok(new { MovimientoId = id });
+        return Ok(new { CompraId = id });
+    }
+
+    [Authorize(Roles = "Admin,SubAdmin")]
+    [HttpPost("compras/{id}/pagos")]
+    public async Task<IActionResult> RegistrarPagoCompra(Guid id, [FromBody] RegistrarPagoCompraCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue) 
+            return Unauthorized("Usuario no identificado.");
+
+        command.CompraId = id;
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
+        var pagoId = await _mediator.Send(command);
+        return Ok(new { PagoId = pagoId });
+    }
+
+    [HttpGet("compras/{id}/pagos")]
+    public async Task<IActionResult> ListarPagosCompra(Guid id)
+    {
+        var pagos = await _mediator.Send(new ListarPagosCompraQuery(id));
+        return Ok(pagos);
     }
 
     [HttpPost("movimiento")]
@@ -146,5 +185,17 @@ public class InventarioController : ControllerBase
     {
         var result = await _mediator.Send(new VerificarNivelesAlimentoQuery());
         return Ok(result);
+    }
+
+    [Authorize(Roles = "Admin,SubAdmin")]
+    [HttpPost("conciliacion")]
+    public async Task<IActionResult> ConciliarInventario([FromBody] RegistrarConciliacionStockCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
+        await _mediator.Send(command);
+        return NoContent();
     }
 }

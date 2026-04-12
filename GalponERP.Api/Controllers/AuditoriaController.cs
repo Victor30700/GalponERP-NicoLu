@@ -1,4 +1,5 @@
 using GalponERP.Application.Auditoria.Queries.ObtenerAuditoriaLogs;
+using GalponERP.Application.Auditoria.Commands.RestaurarEntidad;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,5 +27,12 @@ public class AuditoriaController : ControllerBase
     {
         var logs = await _mediator.Send(new ObtenerAuditoriaLogsQuery(desde, hasta, usuarioId, entidad));
         return Ok(logs);
+    }
+
+    [HttpPatch("restaurar/{entidad}/{id}")]
+    public async Task<IActionResult> Restaurar(string entidad, Guid id)
+    {
+        await _mediator.Send(new RestaurarEntidadCommand(entidad, id));
+        return NoContent();
     }
 }
