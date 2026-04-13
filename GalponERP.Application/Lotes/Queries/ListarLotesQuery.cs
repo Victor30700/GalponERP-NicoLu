@@ -16,6 +16,7 @@ public record LoteResponse(
     int MortalidadAcumulada,
     int PollosVendidos,
     decimal CostoUnitarioPollito,
+    int EdadSemanas,
     string Estado);
 
 public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumerable<LoteResponse>>
@@ -29,8 +30,8 @@ public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumer
 
     public async Task<IEnumerable<LoteResponse>> Handle(ListarLotesQuery request, CancellationToken cancellationToken)
     {
-        var lotes = request.SoloActivos 
-            ? await _loteRepository.ObtenerActivosAsync() 
+        var lotes = request.SoloActivos
+            ? await _loteRepository.ObtenerActivosAsync()
             : await _loteRepository.ObtenerTodosAsync();
 
         return lotes.Select(l => new LoteResponse(
@@ -43,6 +44,7 @@ public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumer
             l.MortalidadAcumulada,
             l.PollosVendidos,
             l.CostoUnitarioPollito.Monto,
+            l.EdadSemanas,
             l.Estado.ToString()));
     }
 }

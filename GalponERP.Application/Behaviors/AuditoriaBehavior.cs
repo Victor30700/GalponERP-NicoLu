@@ -54,9 +54,12 @@ public class AuditoriaBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest
             var log = new AuditoriaLog(
                 Guid.NewGuid(),
                 usuarioId,
+                "Sistema", // Placeholder ya que no tenemos Nombre en el contexto
                 accion,
                 entidad,
+                entidad, // Usamos el nombre de la clase como nombre de la entidad
                 entidadId,
+                $"Ejecución de {requestName}",
                 JsonSerializer.Serialize(request)
             );
 

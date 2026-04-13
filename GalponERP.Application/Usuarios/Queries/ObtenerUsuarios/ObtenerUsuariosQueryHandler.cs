@@ -14,7 +14,7 @@ public class ObtenerUsuariosQueryHandler : IRequestHandler<ObtenerUsuariosQuery,
 
     public async Task<IEnumerable<UsuarioResponse>> Handle(ObtenerUsuariosQuery request, CancellationToken cancellationToken)
     {
-        var usuarios = await _usuarioRepository.ObtenerTodosAsync();
+        var usuarios = await _usuarioRepository.ObtenerTodosConInactivosAsync();
         
         return usuarios.Select(u => new UsuarioResponse(
             u.Id,

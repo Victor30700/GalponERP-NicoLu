@@ -11,6 +11,7 @@ public class CompraInventario : Entity
 {
     public Guid ProveedorId { get; private set; }
     public DateTime Fecha { get; private set; }
+    public DateTime FechaVencimiento { get; private set; }
     public Moneda Total { get; private set; } = null!;
     public Moneda TotalPagado { get; private set; } = null!;
     public EstadoPago EstadoPago { get; private set; }
@@ -22,7 +23,7 @@ public class CompraInventario : Entity
 
     public Moneda SaldoPendiente => Total - TotalPagado;
 
-    public CompraInventario(Guid id, Guid proveedorId, DateTime fecha, Moneda total, Moneda totalPagado, Guid usuarioIdRegistro, string? nota = null) 
+    public CompraInventario(Guid id, Guid proveedorId, DateTime fecha, Moneda total, Moneda totalPagado, Guid usuarioIdRegistro, string? nota = null, DateTime? fechaVencimiento = null) 
         : base(id)
     {
         if (proveedorId == Guid.Empty)
@@ -45,6 +46,7 @@ public class CompraInventario : Entity
 
         ProveedorId = proveedorId;
         Fecha = fecha;
+        FechaVencimiento = fechaVencimiento ?? fecha.AddDays(30);
         Total = total;
         TotalPagado = totalPagado;
         UsuarioIdRegistro = usuarioIdRegistro;

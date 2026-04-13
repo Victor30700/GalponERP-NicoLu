@@ -5,9 +5,21 @@ using GalponERP.Application.Catalogos.UnidadesMedida.Queries.ListarUnidadesMedid
 using GalponERP.Application.Productos.Commands.CrearProducto;
 using GalponERP.Application.Clientes.Commands.CrearCliente;
 using GalponERP.Application.Proveedores.Commands.CrearProveedor;
+using GalponERP.Application.Productos.Commands.ActualizarProducto;
+using GalponERP.Application.Productos.Commands.EliminarProducto;
+using GalponERP.Application.Productos.Queries;
+using GalponERP.Application.Productos.Queries.ListarProductos;
+using GalponERP.Application.Productos.Queries.ObtenerProductoPorId;
+using GalponERP.Application.Clientes.Commands.ActualizarCliente;
+using GalponERP.Application.Clientes.Commands.EliminarCliente;
+using GalponERP.Application.Clientes.Queries.ListarClientes;
+using GalponERP.Application.Clientes.Queries.ObtenerClientePorId;
+using GalponERP.Application.Agentes.Confirmacion.Commands;
+using GalponERP.Application.Common;
 using MediatR;
 using Microsoft.SemanticKernel;
 using System.Text;
+using System.Text.Json;
 
 namespace GalponERP.Application.Agentes.Plugins;
 
@@ -39,7 +51,7 @@ public class GestionCatalogosPlugin
     }
 
     [KernelFunction]
-    [Description("Crea un nuevo producto. Resuelve automáticamente la categoría y unidad de medida o solicita aclaración.")]
+    [Description("Crea un nuevo producto. Resuelve automáticamente la categoría y unidad de medida.")]
     public async Task<string> CrearProducto(
         [Description("Nombre del producto (ej. 'Maíz Amarillo')")] string nombre,
         [Description("Equivalencia en kilogramos para 1 unidad (ej. 50 para un saco de 50kg)")] decimal equivalenciaKg,
@@ -49,50 +61,17 @@ public class GestionCatalogosPlugin
     {
         // 1. Resolver Categoría
         var categorias = (await _mediator.Send(new ListarCategoriasQuery())).ToList();
-        CategoriaResponse? catSeleccionada = null;
-
-        if (!string.IsNullOrWhiteSpace(nombreCategoria))
-        {
-            catSeleccionada = categorias.FirstOrDefault(c => c.Nombre.Contains(nombreCategoria, StringComparison.OrdinalIgnoreCase));
-        }
-
-        if (catSeleccionada == null)
-        {
-            var listaCats = string.Join(", ", categorias.Select(c => c.Nombre));
-            if (string.IsNullOrWhiteSpace(nombreCategoria))
-            {
-                return $"Para crear el producto '{nombre}', necesito que me indiques una categoría. Las disponibles son: [{listaCats}]. Si no existe la que buscas, pídeme que la cree primero.";
-            }
-            return $"No encontré la categoría '{nombreCategoria}'. Las registradas son: [{listaCats}]. ¿Deseas usar una de estas o que cree una nueva categoría '{nombreCategoria}'?";
-        }
+        var (catSeleccionada, msgCat) = EntityResolver.Resolve(categorias, nombreCategoria, c => c.Nombre, "Categoría");
+        if (catSeleccionada == null) return msgCat!;
 
         // 2. Resolver Unidad de Medida
         var unidades = (await _mediator.Send(new ListarUnidadesMedidaQuery())).ToList();
-        UnidadMedidaResponse? uniSeleccionada = null;
-
-        if (!string.IsNullOrWhiteSpace(nombreUnidad))
-        {
-            uniSeleccionada = unidades.FirstOrDefault(u => u.Nombre.Contains(nombreUnidad, StringComparison.OrdinalIgnoreCase));
-        }
-        else if (unidades.Count == 1)
-        {
-            uniSeleccionada = unidades.First();
-        }
-
-        if (uniSeleccionada == null)
-        {
-            var listaUnis = string.Join(", ", unidades.Select(u => u.Nombre));
-            if (string.IsNullOrWhiteSpace(nombreUnidad))
-            {
-                return $"Necesito saber la unidad de medida para '{nombre}'. Las opciones son: [{listaUnis}].";
-            }
-            return $"No encontré la unidad '{nombreUnidad}'. Las disponibles son: [{listaUnis}].";
-        }
+        var (uniSeleccionada, msgUni) = EntityResolver.Resolve(unidades, nombreUnidad, u => u.Nombre, "Unidad de Medida");
+        if (uniSeleccionada == null) return msgUni!;
 
         // 3. Ejecutar Comando
         try
         {
-            // Usando el namespace correcto según el archivo leído: GalponERP.Application.Productos.Commands.CrearProducto
             var command = new CrearProductoCommand(nombre, catSeleccionada.Id, uniSeleccionada.Id, equivalenciaKg, umbralMinimo);
             var result = await _mediator.Send(command);
             return $"Producto '{nombre}' creado exitosamente en la categoría '{catSeleccionada.Nombre}' con unidad '{uniSeleccionada.Nombre}'. ID: {result}";
@@ -141,6 +120,133 @@ public class GestionCatalogosPlugin
         catch (Exception ex)
         {
             return $"Error al registrar proveedor: {ex.Message}";
+        }
+    }
+
+    [KernelFunction]
+    [Description("Actualiza la información de un producto existente.")]
+    public async Task<string> ActualizarProducto(
+        [Description("Nombre actual del producto para identificarlo")] string nombreIdentificador,
+        [Description("Opcional: Nuevo nombre")] string? nuevoNombre = null,
+        [Description("Opcional: Nueva equivalencia en Kg")] decimal equivalenciaKg = 0,
+        [Description("Opcional: Nuevo umbral mínimo")] decimal umbralMinimo = -1)
+    {
+        var productos = await _mediator.Send(new ListarProductosQuery());
+        var (p, msgP) = EntityResolver.Resolve(productos, nombreIdentificador, x => x.Nombre, "Producto");
+        if (p == null) return msgP!;
+
+        try
+        {
+            var pFull = await _mediator.Send(new ObtenerProductoPorIdQuery(p.Id));
+            if (pFull == null) return "No se pudo recuperar el detalle completo del producto.";
+
+            var command = new ActualizarProductoCommand(
+                pFull.Id,
+                nuevoNombre ?? pFull.Nombre,
+                pFull.CategoriaId,
+                pFull.UnidadMedidaId,
+                equivalenciaKg > 0 ? equivalenciaKg : pFull.EquivalenciaEnKg,
+                umbralMinimo >= 0 ? umbralMinimo : pFull.UmbralMinimo);
+
+            await _mediator.Send(command);
+            return $"Producto '{pFull.Nombre}' actualizado correctamente.";
+        }
+        catch (Exception ex)
+        {
+            return $"Error al actualizar producto: {ex.Message}";
+        }
+    }
+
+    [KernelFunction]
+    [Description("Elimina (desactiva) un producto del sistema. Requiere confirmación.")]
+    public async Task<string> EliminarProducto(
+        [Description("Nombre del producto a eliminar")] string nombre,
+        [Description("ID de la conversación actual")] Guid conversacionId,
+        [Description("Indica si el usuario ha confirmado la acción destructiva")] bool confirmar = false)
+    {
+        var productos = await _mediator.Send(new ListarProductosQuery());
+        var (p, msgP) = EntityResolver.Resolve(productos, nombre, x => x.Nombre, "Producto");
+        if (p == null) return msgP!;
+
+        if (!confirmar)
+        {
+            var parametros = new { nombre, conversacionId };
+            var json = JsonSerializer.Serialize(parametros);
+            await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(GestionCatalogosPlugin), nameof(EliminarProducto), json));
+
+            return $"⚠️ ATENCIÓN: Estás a punto de eliminar el producto '{p.Nombre}'. Esta acción lo desactivará del catálogo y no podrá usarse en nuevos registros. ¿Estás seguro de que deseas continuar?";
+        }
+
+        try
+        {
+            await _mediator.Send(new EliminarProductoCommand(p.Id));
+            return $"El producto '{p.Nombre}' ha sido eliminado (desactivado) exitosamente.";
+        }
+        catch (Exception ex)
+        {
+            return $"Error al eliminar producto: {ex.Message}";
+        }
+    }
+
+    [KernelFunction]
+    [Description("Actualiza los datos de un cliente.")]
+    public async Task<string> ActualizarCliente(
+        [Description("Nombre actual del cliente")] string nombreIdentificador,
+        [Description("Opcional: Nuevo nombre")] string? nuevoNombre = null,
+        [Description("Opcional: Nuevo RUC/ID")] string? nuevoRuc = null,
+        [Description("Opcional: Nueva dirección")] string? nuevaDireccion = null,
+        [Description("Opcional: Nuevo teléfono")] string? nuevoTelefono = null)
+    {
+        var clientes = await _mediator.Send(new ListarClientesQuery());
+        var (c, msgC) = EntityResolver.Resolve(clientes, nombreIdentificador, x => x.Nombre, "Cliente");
+        if (c == null) return msgC!;
+
+        try
+        {
+            var command = new ActualizarClienteCommand(
+                c.Id,
+                nuevoNombre ?? c.Nombre,
+                nuevoRuc ?? c.Ruc,
+                nuevaDireccion ?? c.Direccion,
+                nuevoTelefono ?? c.Telefono);
+
+            await _mediator.Send(command);
+            return $"Datos del cliente '{c.Nombre}' actualizados con éxito.";
+        }
+        catch (Exception ex)
+        {
+            return $"Error al actualizar cliente: {ex.Message}";
+        }
+    }
+
+    [KernelFunction]
+    [Description("Elimina (desactiva) un cliente del sistema. Requiere confirmación.")]
+    public async Task<string> EliminarCliente(
+        [Description("Nombre del cliente a eliminar")] string nombre,
+        [Description("ID de la conversación actual")] Guid conversacionId,
+        [Description("Confirmación de la acción")] bool confirmar = false)
+    {
+        var clientes = await _mediator.Send(new ListarClientesQuery());
+        var (c, msgC) = EntityResolver.Resolve(clientes, nombre, x => x.Nombre, "Cliente");
+        if (c == null) return msgC!;
+
+        if (!confirmar)
+        {
+            var parametros = new { nombre, conversacionId };
+            var json = JsonSerializer.Serialize(parametros);
+            await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(GestionCatalogosPlugin), nameof(EliminarCliente), json));
+
+            return $"⚠️ ADVERTENCIA: Se desactivará al cliente '{c.Nombre}'. Esto impedirá realizar nuevas ventas a su nombre. ¿Confirmas la eliminación?";
+        }
+
+        try
+        {
+            await _mediator.Send(new EliminarClienteCommand(c.Id));
+            return $"Cliente '{c.Nombre}' eliminado correctamente.";
+        }
+        catch (Exception ex)
+        {
+            return $"Error al eliminar cliente: {ex.Message}";
         }
     }
 }

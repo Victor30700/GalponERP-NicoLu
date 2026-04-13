@@ -4,9 +4,12 @@ using GalponERP.Application.Lotes.Commands.CerrarLote;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
 using GalponERP.Application.Galpones.Queries.ListarGalpones;
 using GalponERP.Application.PlantillasSanitarias.Queries;
+using GalponERP.Application.Agentes.Confirmacion.Commands;
+using GalponERP.Application.Common;
 using MediatR;
 using Microsoft.SemanticKernel;
 using System.Text;
+using System.Text.Json;
 
 namespace GalponERP.Application.Agentes.Plugins;
 
@@ -20,49 +23,52 @@ public class GestionLotesPlugin
     }
 
     [KernelFunction]
-    [Description("Inicia un nuevo lote de producción en un galpón específico.")]
+    [Description("Inicia un nuevo lote de producción en un galpón específico. Requiere confirmación.")]
     public async Task<string> AbrirNuevoLote(
         [Description("Cantidad inicial de pollitos")] int cantidadInicial,
         [Description("Costo unitario por cada pollito")] decimal costoUnitario,
+        [Description("ID de la conversación actual")] Guid conversacionId,
         [Description("Opcional: Nombre del galpón (ej. 'Galpón 1')")] string? nombreGalpon = null,
-        [Description("Opcional: Nombre de la plantilla sanitaria a usar (ej. 'Cobb 500 Estándar')")] string? nombrePlantilla = null)
+        [Description("Opcional: Nombre de la plantilla sanitaria a usar (ej. 'Cobb 500 Estándar')")] string? nombrePlantilla = null,
+        [Description("Obligatorio para ejecutar la acción: confirmar=true")] bool confirmar = false)
     {
         // 1. Resolver Galpón (Regla 7 y 8)
         var galpones = (await _mediator.Send(new ListarGalponesQuery())).Where(g => g.IsActive).ToList();
         if (!galpones.Any()) return "Error: No hay galpones activos registrados.";
 
-        GalponResponse? galponSeleccionado = null;
-        if (galpones.Count == 1) galponSeleccionado = galpones.First();
-        else if (!string.IsNullOrWhiteSpace(nombreGalpon))
-            galponSeleccionado = galpones.FirstOrDefault(g => g.Nombre.Contains(nombreGalpon, StringComparison.OrdinalIgnoreCase));
-
-        if (galponSeleccionado == null)
-        {
-            var lista = string.Join(", ", galpones.Select(g => g.Nombre));
-            if (string.IsNullOrWhiteSpace(nombreGalpon))
-                return $"Para abrir un lote, necesito saber en qué galpón. Disponibles: [{lista}].";
-            return $"No encontré el Galpón '{nombreGalpon}'. Registros: [{lista}].";
-        }
+        var (galponSeleccionado, msgGalpon) = EntityResolver.Resolve(galpones, nombreGalpon, g => g.Nombre, "Galpón");
+        if (galponSeleccionado == null) return msgGalpon!;
 
         // 2. Resolver Plantilla Sanitaria (Opcional)
         Guid? plantillaId = null;
         var plantillas = (await _mediator.Send(new ObtenerPlantillasQuery())).ToList();
         if (plantillas.Any())
         {
-            PlantillaSanitariaDto? plantillaSeleccionada = null;
-            if (plantillas.Count == 1) plantillaSeleccionada = plantillas.First();
-            else if (!string.IsNullOrWhiteSpace(nombrePlantilla))
-                plantillaSeleccionada = plantillas.FirstOrDefault(p => p.Nombre.Contains(nombrePlantilla, StringComparison.OrdinalIgnoreCase));
-
-            if (plantillaSeleccionada == null && !string.IsNullOrWhiteSpace(nombrePlantilla))
-            {
-                var listaP = string.Join(", ", plantillas.Select(p => p.Nombre));
-                return $"No encontré la plantilla '{nombrePlantilla}'. Disponibles: [{listaP}]. ¿Deseas usar alguna de estas?";
-            }
+            var (plantillaSeleccionada, msgPlantilla) = EntityResolver.Resolve(plantillas, nombrePlantilla, p => p.Nombre, "Plantilla");
+            // Nota: Plantilla es opcional, si no se encuentra y se especificó nombre, informamos.
+            if (plantillaSeleccionada == null && !string.IsNullOrWhiteSpace(nombrePlantilla)) return msgPlantilla!;
             plantillaId = plantillaSeleccionada?.Id;
         }
 
-        // 3. Ejecutar Comando
+        // 3. Verificar Confirmación
+        if (!confirmar)
+        {
+            var parametros = new
+            {
+                cantidadInicial,
+                costoUnitario,
+                conversacionId,
+                nombreGalpon = galponSeleccionado.Nombre,
+                nombrePlantilla
+            };
+            
+            var json = JsonSerializer.Serialize(parametros);
+            await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(GestionLotesPlugin), nameof(AbrirNuevoLote), json));
+
+            return $"¿Confirmas que deseas abrir un nuevo lote en '{galponSeleccionado.Nombre}' con {cantidadInicial} pollitos a S/ {costoUnitario} c/u?";
+        }
+
+        // 4. Ejecutar Comando
         try
         {
             var command = new CrearLoteCommand(galponSeleccionado.Id, DateTime.UtcNow, cantidadInicial, costoUnitario, plantillaId);
@@ -76,26 +82,35 @@ public class GestionLotesPlugin
     }
 
     [KernelFunction]
-    [Description("Cierra un lote de producción finalizado y muestra el resumen de rentabilidad.")]
+    [Description("Cierra un lote de producción finalizado. Acción CRÍTICA: Requiere confirmación.")]
     public async Task<string> CerrarLote(
-        [Description("Opcional: Nombre del galpón donde está el lote (ej. 'Galpón 1')")] string? nombreGalpon = null)
+        [Description("ID de la conversación actual")] Guid conversacionId,
+        [Description("Opcional: Nombre del galpón donde está el lote (ej. 'Galpón 1')")] string? nombreGalpon = null,
+        [Description("Obligatorio para ejecutar la acción: confirmar=true")] bool confirmar = false)
     {
         // 1. Resolver Lote Activo
         var lotesActivos = (await _mediator.Send(new ListarLotesQuery(SoloActivos: true))).ToList();
         if (!lotesActivos.Any()) return "No hay lotes activos para cerrar.";
 
-        LoteResponse? loteSeleccionado = null;
-        if (lotesActivos.Count == 1) loteSeleccionado = lotesActivos.First();
-        else if (!string.IsNullOrWhiteSpace(nombreGalpon))
-            loteSeleccionado = lotesActivos.FirstOrDefault(l => l.NombreGalpon.Contains(nombreGalpon, StringComparison.OrdinalIgnoreCase));
+        var (loteSeleccionado, msgLote) = EntityResolver.Resolve(lotesActivos, nombreGalpon, l => l.NombreGalpon, "Lote Activo");
+        if (loteSeleccionado == null) return msgLote!;
 
-        if (loteSeleccionado == null)
+        // 2. Verificar Confirmación
+        if (!confirmar)
         {
-            var lista = string.Join(", ", lotesActivos.Select(l => l.NombreGalpon));
-            return $"Hay múltiples lotes activos en: [{lista}]. ¿Cuál de ellos deseas cerrar?";
+            var parametros = new
+            {
+                conversacionId,
+                nombreGalpon = loteSeleccionado.NombreGalpon
+            };
+            
+            var json = JsonSerializer.Serialize(parametros);
+            await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(GestionLotesPlugin), nameof(CerrarLote), json));
+
+            return $"⚠️ ATENCIÓN: Estás a punto de CERRAR el lote en '{loteSeleccionado.NombreGalpon}'. Esta acción es irreversible y generará el balance final. ¿Estás seguro de que deseas proceder?";
         }
 
-        // 2. Ejecutar Comando
+        // 3. Ejecutar Comando
         try
         {
             var result = await _mediator.Send(new CerrarLoteCommand(loteSeleccionado.Id));

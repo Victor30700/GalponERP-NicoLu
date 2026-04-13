@@ -4,10 +4,13 @@ using GalponERP.Application.Finanzas.Queries.ObtenerFlujoCajaEmpresarial;
 using GalponERP.Application.Gastos.Commands.RegistrarGastoOperativo;
 using GalponERP.Application.Galpones.Queries.ListarGalpones;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
+using GalponERP.Application.Agentes.Confirmacion.Commands;
+using GalponERP.Application.Common;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.SemanticKernel;
 using System.Text;
+using System.Text.Json;
 using GalponERP.Domain.Interfaces.Repositories;
 
 namespace GalponERP.Application.Agentes.Plugins;
@@ -72,36 +75,21 @@ public class FinanzasPlugin
     }
 
     [KernelFunction]
-    [Description("Registra un gasto operativo. Si no se especifican galpón o categoría, el sistema intentará inferirlos.")]
+    [Description("Registra un gasto operativo. Requiere confirmación si el monto es alto (> S/ 500).")]
     public async Task<string> RegistrarGastoRapido(
         [Description("Monto del gasto")] decimal monto,
         [Description("Descripción breve del gasto")] string descripcion,
+        [Description("ID de la conversación actual")] Guid conversacionId,
         [Description("Opcional: Nombre del galpón (ej. 'Galpón 1')")] string? nombreGalpon = null,
-        [Description("Opcional: Categoría del gasto (ej. 'Luz', 'Sueldos')")] string? categoriaGasto = null)
+        [Description("Opcional: Categoría del gasto (ej. 'Luz', 'Sueldos')")] string? categoriaGasto = null,
+        [Description("Obligatorio para ejecutar la acción: confirmar=true")] bool confirmar = false)
     {
         // 1. Resolver Galpón (Regla 7 y 8)
         var galpones = (await _mediator.Send(new ListarGalponesQuery())).Where(g => g.IsActive).ToList();
         if (!galpones.Any()) return "Error: No hay galpones registrados en el sistema.";
 
-        GalponResponse? galponSeleccionado = null;
-        if (galpones.Count == 1) 
-        {
-            galponSeleccionado = galpones.First();
-        }
-        else if (!string.IsNullOrWhiteSpace(nombreGalpon))
-        {
-            galponSeleccionado = galpones.FirstOrDefault(g => g.Nombre.Contains(nombreGalpon, StringComparison.OrdinalIgnoreCase));
-        }
-
-        if (galponSeleccionado == null)
-        {
-            var nombresGalpones = string.Join(", ", galpones.Select(g => g.Nombre));
-            if (string.IsNullOrWhiteSpace(nombreGalpon))
-            {
-                return $"Hay múltiples galpones en el sistema: [{nombresGalpones}]. Pregúntale al usuario a cuál de estos cargar el gasto.";
-            }
-            return $"No encontré el Galpón '{nombreGalpon}'. Los registros disponibles son: [{nombresGalpones}]. Pregúntale al usuario a cuál de estos se refiere.";
-        }
+        var (galponSeleccionado, msgGalpon) = EntityResolver.Resolve(galpones, nombreGalpon, g => g.Nombre, "Galpón");
+        if (galponSeleccionado == null) return msgGalpon!;
 
         // 2. Resolver Lote Activo en ese Galpón (Cascaded)
         var lotesActivos = await _mediator.Send(new ListarLotesQuery(SoloActivos: true));
@@ -115,27 +103,28 @@ public class FinanzasPlugin
             categoriasDisponibles.AddRange(new[] { "Luz", "Agua", "Sueldos", "Alimento", "Medicamentos", "Mantenimiento", "Otros" });
         }
 
-        string? categoriaSeleccionada = null;
-        if (categoriasDisponibles.Count == 1) 
-        {
-            categoriaSeleccionada = categoriasDisponibles.First();
-        }
-        else if (!string.IsNullOrWhiteSpace(categoriaGasto))
-        {
-            categoriaSeleccionada = categoriasDisponibles.FirstOrDefault(c => c.Contains(categoriaGasto, StringComparison.OrdinalIgnoreCase));
-        }
+        var (categoriaSeleccionada, msgCat) = EntityResolver.Resolve(categoriasDisponibles, categoriaGasto, c => c, "Categoría de Gasto");
+        if (categoriaSeleccionada == null) return msgCat!;
 
-        if (categoriaSeleccionada == null)
+        // 4. Verificar Confirmación (Regla 10: Gastos > 500 siempre requieren confirmación)
+        if (!confirmar && monto > 500)
         {
-            var nombresCategorias = string.Join(", ", categoriasDisponibles);
-            if (string.IsNullOrWhiteSpace(categoriaGasto))
+            var parametros = new
             {
-                return $"Debo registrar el gasto en el {galponSeleccionado.Nombre}, pero hay múltiples categorías: [{nombresCategorias}]. Pregúntale al usuario cuál de estas usar.";
-            }
-            return $"No encontré la categoría de gasto '{categoriaGasto}'. Los registros disponibles son: [{nombresCategorias}]. Pregúntale al usuario a cuál de estos se refiere.";
+                monto,
+                descripcion,
+                conversacionId,
+                nombreGalpon = galponSeleccionado.Nombre,
+                categoriaGasto = categoriaSeleccionada
+            };
+            
+            var json = JsonSerializer.Serialize(parametros);
+            await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(FinanzasPlugin), nameof(RegistrarGastoRapido), json));
+
+            return $"⚠️ GASTO ELEVADO: Estás intentando registrar un gasto de S/ {monto} por '{descripcion}'. ¿Confirmas esta operación?";
         }
 
-        // 4. Ejecutar Comando
+        // 5. Ejecutar Comando
         try
         {
             var command = new RegistrarGastoOperativoCommand(

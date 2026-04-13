@@ -1,20 +1,11 @@
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
+using GalponERP.Application.Productos.Queries;
 
 namespace GalponERP.Application.Productos.Queries.ListarProductos;
 
 public record ListarProductosQuery() : IRequest<IEnumerable<ProductoResponse>>;
-
-public record ProductoResponse(
-    Guid Id,
-    string Nombre,
-    Guid CategoriaProductoId,
-    string CategoriaNombre,
-    Guid UnidadMedidaId,
-    string UnidadMedidaNombre,
-    decimal EquivalenciaEnKg,
-    bool IsActive);
 
 public class ListarProductosQueryHandler : IRequestHandler<ListarProductosQuery, IEnumerable<ProductoResponse>>
 {
@@ -37,6 +28,7 @@ public class ListarProductosQueryHandler : IRequestHandler<ListarProductosQuery,
             p.UnidadMedidaId,
             p.Unidad?.Nombre ?? "Sin Unidad",
             p.EquivalenciaEnKg,
+            p.UmbralMinimo,
             p.IsActive));
     }
 }

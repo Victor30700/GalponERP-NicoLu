@@ -3,6 +3,7 @@ using GalponERP.Application.Mortalidad.Commands.RegistrarMortalidad;
 using GalponERP.Application.Interfaces;
 using GalponERP.Application.Galpones.Queries.ListarGalpones;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
+using GalponERP.Application.Common;
 using MediatR;
 using Microsoft.SemanticKernel;
 
@@ -22,10 +23,16 @@ public class ProduccionPlugin
     [KernelFunction]
     [Description("Registra las bajas o mortalidad de aves. Si no se especifica el galpón, el sistema intentará inferirlo o preguntará.")]
     public async Task<string> RegistrarBajasGalpon(
-        [Description("Cantidad de aves muertas")] int cantidad,
+        [Description("Cantidad de aves muertas (debe ser mayor a cero)")] int cantidad,
         [Description("Causa o motivo de la muerte")] string motivo,
         [Description("Opcional: Nombre legible del galpón (ej. 'Galpón 1')")] string? nombreGalpon = null)
     {
+        // 0. Validación de rango (Sprint 83 - Paso 3)
+        if (cantidad <= 0)
+        {
+            return "Error: La cantidad de bajas debe ser mayor a cero. No se permiten valores negativos o nulos.";
+        }
+
         // 1. Obtener Lotes Activos para inferencia inteligente
         var lotesActivos = (await _mediator.Send(new ListarLotesQuery(SoloActivos: true))).ToList();
 
@@ -34,30 +41,12 @@ public class ProduccionPlugin
             return "Error: No hay ningún lote activo en el sistema. Dile al usuario que primero debe abrir un lote para poder registrar bajas.";
         }
 
-        LoteResponse? loteSeleccionado = null;
-
-        // 2. Inferencia Inteligente (Regla 7)
-        // Si solo hay 1 lote activo, elegirlo automáticamente (incluso si el usuario dio un nombre mal escrito o no dio ninguno)
-        if (lotesActivos.Count == 1)
-        {
-            loteSeleccionado = lotesActivos.First();
-        }
-        else if (!string.IsNullOrWhiteSpace(nombreGalpon))
-        {
-            // 3. Si hay más de uno y el usuario dio un nombre, intentar coincidir
-            loteSeleccionado = lotesActivos.FirstOrDefault(l => 
-                l.NombreGalpon.Contains(nombreGalpon, StringComparison.OrdinalIgnoreCase));
-        }
-
-        // 4. Fallback Conversacional (Regla 8)
+        // 2. Resolución de Entidad con EntityResolver (Sprint 83 - Paso 1)
+        var (loteSeleccionado, message) = EntityResolver.Resolve(lotesActivos, nombreGalpon, l => l.NombreGalpon, "Galpón con lote activo");
+        
         if (loteSeleccionado == null)
         {
-            var nombresGalponesActivos = string.Join(", ", lotesActivos.Select(l => l.NombreGalpon));
-            if (string.IsNullOrWhiteSpace(nombreGalpon))
-            {
-                return $"Hay múltiples lotes activos en: [{nombresGalponesActivos}]. Pregúntale al usuario a cuál de estos se refiere.";
-            }
-            return $"No encontré el galpón '{nombreGalpon}'. Los registros disponibles con lotes activos son: [{nombresGalponesActivos}]. Pregúntale al usuario a cuál de estos se refiere.";
+            return message!;
         }
 
         // 5. Ejecución del Comando

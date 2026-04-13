@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<ILoteRepository, LoteRepository>();
         services.AddScoped<IInventarioRepository, InventarioRepository>();
         services.AddScoped<ICompraInventarioRepository, CompraInventarioRepository>();
+        services.AddScoped<IOrdenCompraRepository, OrdenCompraRepository>();
         services.AddScoped<IProductoRepository, ProductoRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IClienteRepository, ClienteRepository>();
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IVentaRepository, VentaRepository>();
         services.AddScoped<IGastoOperativoRepository, GastoOperativoRepository>();
         services.AddScoped<ICalendarioSanitarioRepository, CalendarioSanitarioRepository>();
+        services.AddScoped<IRegistroBienestarRepository, RegistroBienestarRepository>();
         services.AddScoped<IPlantillaSanitariaRepository, PlantillaSanitariaRepository>();
         services.AddScoped<IGalponRepository, GalponRepository>();
         services.AddScoped<IMortalidadRepository, MortalidadRepository>();
@@ -40,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
         services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
         services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
+        services.AddScoped<IConversacionRepository, ConversacionRepository>();
         
         services.AddScoped<IGalponDbContext>(sp => sp.GetRequiredService<GalponDbContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -47,7 +50,10 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationService, FirebaseAuthService>();
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddScoped<INotificationService, FirebaseNotificationService>();
+        services.AddScoped<IWhatsAppService, WhatsAppService>();
+        services.AddScoped<IVoiceService, VoiceService>();
         services.AddScoped<IPdfService, PdfService>();
+        services.AddHttpClient();
         services.AddHttpContextAccessor();
 
         // Configuración de Semantic Kernel con Ollama

@@ -81,6 +81,10 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Detalles")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("DetallesJSON")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -92,6 +96,10 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.Property<Guid>("EntidadId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("EntidadNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
@@ -113,6 +121,10 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.Property<Guid?>("UsuarioModificacionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("UsuarioNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -281,6 +293,9 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("FechaVencimiento")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -326,6 +341,108 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasIndex("ProveedorId");
 
                     b.ToTable("ComprasInventario", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.ConfiguracionSistema", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Direccion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MonedaPorDefecto")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("USD");
+
+                    b.Property<string>("Nit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("NombreEmpresa")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Telefono")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionSistema", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.Conversacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaInicio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ResumenActual")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UltimoIndiceMensajeResumido")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Conversaciones", (string)null);
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.Galpon", b =>
@@ -428,6 +545,50 @@ namespace GalponERP.Infrastructure.Migrations
                     b.ToTable("GastosOperativos", (string)null);
                 });
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.IntencionPendiente", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConversacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FuncionNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ParametrosJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PluginNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Procesada")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IntencionesPendientes");
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>
                 {
                     b.Property<Guid>("Id")
@@ -518,6 +679,49 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasIndex("GalponId");
 
                     b.ToTable("Lotes", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.MensajeChat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Contenido")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ConversacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversacionId");
+
+                    b.ToTable("MensajesChat", (string)null);
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.MortalidadDiaria", b =>
@@ -632,6 +836,122 @@ namespace GalponERP.Infrastructure.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("MovimientosInventario", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.OrdenCompra", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Nota")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("ProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioIdRegistro")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Total", "GalponERP.Domain.Entities.OrdenCompra.Total#Moneda", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TotalOrden");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("OrdenesCompra", (string)null);
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.OrdenCompraItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OrdenCompraId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "PrecioUnitario", "GalponERP.Domain.Entities.OrdenCompraItem.PrecioUnitario#Moneda", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("PrecioUnitario");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Total", "GalponERP.Domain.Entities.OrdenCompraItem.Total#Moneda", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Monto")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("TotalItem");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrdenCompraId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("OrdenesCompraItems", (string)null);
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.PagoCompra", b =>
@@ -924,6 +1244,53 @@ namespace GalponERP.Infrastructure.Migrations
                     b.ToTable("Proveedores", (string)null);
                 });
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.RegistroBienestar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ConsumoAgua")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("Humedad")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Observaciones")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Temperatura")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid?>("UsuarioCreacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UsuarioModificacionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RegistroBienestar");
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.UnidadMedida", b =>
                 {
                     b.Property<Guid>("Id")
@@ -969,6 +1336,10 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("CodigoVinculacion")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<string>("Direccion")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -980,6 +1351,9 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasColumnType("character varying(150)");
 
                     b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaExpiracionCodigo")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("FechaModificacion")
@@ -1009,11 +1383,19 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<int>("Rol")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<Guid?>("UsuarioCreacionId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("UsuarioModificacionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("WhatsAppNumero")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
@@ -1022,6 +1404,10 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.HasIndex("FirebaseUid")
                         .IsUnique();
+
+                    b.HasIndex("Telefono")
+                        .IsUnique()
+                        .HasFilter("\"Telefono\" IS NOT NULL");
 
                     b.ToTable("Usuarios", (string)null);
                 });
@@ -1155,11 +1541,24 @@ namespace GalponERP.Infrastructure.Migrations
 
             modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>
                 {
-                    b.HasOne("GalponERP.Domain.Entities.Galpon", null)
+                    b.HasOne("GalponERP.Domain.Entities.Galpon", "Galpon")
                         .WithMany()
                         .HasForeignKey("GalponId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Galpon");
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.MensajeChat", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.Conversacion", "Conversacion")
+                        .WithMany("Mensajes")
+                        .HasForeignKey("ConversacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversacion");
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.MortalidadDiaria", b =>
@@ -1188,6 +1587,34 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.OrdenCompra", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Proveedor");
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.OrdenCompraItem", b =>
+                {
+                    b.HasOne("GalponERP.Domain.Entities.OrdenCompra", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrdenCompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GalponERP.Domain.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.PagoCompra", b =>
@@ -1256,9 +1683,19 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Navigation("Pagos");
                 });
 
+            modelBuilder.Entity("GalponERP.Domain.Entities.Conversacion", b =>
+                {
+                    b.Navigation("Mensajes");
+                });
+
             modelBuilder.Entity("GalponERP.Domain.Entities.Lote", b =>
                 {
                     b.Navigation("Pesajes");
+                });
+
+            modelBuilder.Entity("GalponERP.Domain.Entities.OrdenCompra", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("GalponERP.Domain.Entities.PlantillaSanitaria", b =>

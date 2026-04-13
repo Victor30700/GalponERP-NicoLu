@@ -1,6 +1,8 @@
 using GalponERP.Application.Usuarios.Commands.ActualizarUsuario;
 using GalponERP.Application.Usuarios.Commands.EliminarUsuario;
 using GalponERP.Application.Usuarios.Commands.RegistrarUsuario;
+using GalponERP.Application.Usuarios.Commands.GenerarCodigoWhatsApp;
+using GalponERP.Application.Usuarios.Commands.DesvincularWhatsApp;
 using GalponERP.Application.Usuarios.Queries.ObtenerUsuarios;
 using GalponERP.Application.Usuarios.Queries.ObtenerUsuarioActual;
 using GalponERP.Application.Interfaces;
@@ -40,6 +42,22 @@ public class UsuariosController : ControllerBase
         }
 
         return Ok(usuario);
+    }
+
+    [Authorize(Roles = "Admin,SubAdmin,Empleado")]
+    [HttpPost("me/whatsapp/code")]
+    public async Task<IActionResult> GenerarCodigoWhatsApp()
+    {
+        var codigo = await _mediator.Send(new GenerarCodigoWhatsAppCommand());
+        return Ok(new { Codigo = codigo });
+    }
+
+    [Authorize(Roles = "Admin,SubAdmin,Empleado")]
+    [HttpDelete("me/whatsapp")]
+    public async Task<IActionResult> DesvincularWhatsApp()
+    {
+        await _mediator.Send(new DesvincularWhatsAppCommand());
+        return NoContent();
     }
 
     [Authorize(Roles = "Admin")]

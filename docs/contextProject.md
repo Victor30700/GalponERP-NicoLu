@@ -991,3 +991,379 @@ Se redefinió la identidad de la IA en `AgenteOrquestadorService`:
 
 ### 3. Refuerzo de la Regla de Oro de UX
 El sistema ahora garantiza que el usuario nunca llegue a un callejón sin salida técnico, siempre recibiendo alternativas válidas extraídas directamente de los Queries del sistema.
+## Sprint 64: El Operador Total (Brechas Críticas)
+
+### 1. Módulo de Ventas (`VentasPlugin.cs`)
+- Se habilitó la capacidad de registrar ventas parciales directamente desde el chat.
+- La IA resuelve automáticamente el cliente y el lote activo, aplicando la Regla 8 en caso de ambigüedad.
+- Consulta de ventas recientes para seguimiento financiero.
+
+### 2. Gestión del Ciclo de Vida del Lote (`GestionLotesPlugin.cs`)
+- **Apertura de Lotes:** Capacidad para iniciar nuevos ciclos de producción en galpones vacíos, vinculando plantillas sanitarias de forma inteligente.
+- **Cierre de Lotes:** Proceso de liquidación que devuelve un resumen detallado de rentabilidad (Utilidad, FCR, Mortalidad).
+
+### 3. Identificación de Brechas Pendientes
+Se realizó un escaneo profundo del sistema identificando los siguientes plugins a desarrollar para completar la cobertura:
+- **SanidadPlugin:** Control de calendario y aplicación de vacunas.
+- **PesajesPlugin:** Seguimiento del crecimiento de las aves.
+- **AbastecimientoPlugin:** Carga de stock mediante registro de compras.
+- **AuditoriaPlugin:** Consulta de historial de acciones por usuario.
+
+# Bitácora de Arquitectura - Operador Maestro de Sistemas (OMS)
+
+## Registro del Kernel y Plugins
+El Kernel de Microsoft Semantic Kernel se ha configurado centralmente para ser inyectado en los servicios necesarios.
+
+### Configuración en el Contenedor DI
+El registro principal se realiza en `GalponERP.Infrastructure/DependencyInjection.cs`:
+
+```csharp
+services.AddKernel()
+        .AddOllamaChatCompletion(
+            modelId: "gemma4:e4b",
+            endpoint: new Uri("http://localhost:11434")
+        );
+```
+
+### Registro de Plugins en el Orquestador
+Los plugins se registran en el constructor de `AgenteOrquestadorService` en `GalponERP.Application/Agentes/AgenteOrquestadorService.cs`. Se han añadido los siguientes plugins en el Sprint 64:
+
+4. **AbastecimientoPlugin**: Gestiona el ciclo de compras de insumos, permitiendo registrar ingresos de mercadería, consultar cuentas por pagar y registrar pagos a proveedores.
+5. **PesajesPlugin**: Permite el seguimiento del crecimiento de las aves mediante el registro de pesajes y la comparación automática contra los estándares de la raza Cobb 500.
+6. **ConfiguracionPlugin**: Facilita el ajuste de parámetros técnicos del sistema, como los umbrales de stock mínimo para alertas automáticas.
+7. **ReportesPlugin**: Interfaz con el servicio de reportería para generar documentos oficiales (PDF) y resúmenes ejecutivos de inventario y flujo de caja.
+
+## Sprint 64: Consciencia Temporal y Auditoría (IA DETECTIVE) - COMPLETADO
+...
+(el contenido anterior se mantiene)
+...
+
+## Sprint 65: Abastecimiento y Crecimiento (IA LOGÍSTICA) - COMPLETADO
+...
+(el contenido anterior se mantiene)
+...
+
+## Sprint 66: Reportería y Mantenimiento (IA ADMINISTRATIVA) - COMPLETADO
+
+### Mejoras Implementadas:
+- **Generación de Reportes PDF**: Integración con `IPdfService` para permitir que la IA genere fichas de liquidación de lotes a pedido del usuario.
+- **Auditoría Financiera y de Stock**: Nuevas funciones para obtener resúmenes de flujo de caja y valoración de inventario en tiempo real.
+- **Mantenimiento Avanzado de Catálogos**: Extensión de `GestionCatalogosPlugin` para incluir `Actualizar` y `Eliminar` con la **Regla de Seguridad de Confirmación**.
+- **Seguridad en Acciones Destructivas**: La IA ahora detecta si una acción es de alto impacto y solicita confirmación explícita del usuario antes de proceder con el comando C#.
+
+---
+*Fin de la Fase de Implementación del Operador Maestro de Sistemas (OMS).*
+
+# Documentación de Arquitectura: Operador Inteligente Omnicanal
+
+Esta bitácora documenta las decisiones técnicas y cambios realizados durante la implementación de la Fase de Operador Inteligente Omnicanal (Sprints 67, 68 y 69).
+
+---
+
+## 1. Persistencia y Memoria Conversacional (Sprint 67)
+
+### Objetivo
+Transformar el `AgenteOrquestadorService` de un servicio *stateless* a uno *stateful*, permitiendo que la IA recuerde mensajes anteriores dentro de una misma sesión.
+
+### Decisiones Técnicas
+*   **Modelo de Datos:** Se crearon las entidades `Conversacion` (agrupador de mensajes por usuario) y `MensajeChat` (registro individual con roles: `user`, `assistant`).
+*   **Gestión de Contexto:** Para evitar la saturación de tokens en el LLM, el orquestador recupera únicamente los últimos 10 mensajes de la conversación activa (`ObtenerHistorialChatQuery`) antes de procesar el nuevo prompt.
+*   **CQRS:** Se implementaron comandos MediatR para separar la lógica de negocio del servicio de orquestación:
+    *   `CrearConversacionCommand`: Inicializa un hilo de chat.
+    *   `GuardarMensajeCommand`: Registra interacciones de forma asíncrona.
+
+### Diagrama de Flujo (Lógica)
+1. Usuario envía mensaje -> 2. Orquestador busca `conversacionId` -> 3. Carga historial (N=10) -> 4. Inyecta en `ChatHistory` de Semantic Kernel -> 5. Procesa con Plugins -> 6. Guarda respuesta -> 7. Retorna al cliente.
+
+---
+
+## 2. Integración Omnicanal con WhatsApp (Sprint 68)
+
+### Objetivo
+Permitir que los operadores en campo interactúen con el sistema mediante la API oficial de WhatsApp Business (Meta).
+
+### Decisiones Técnicas
+*   **Identidad de Usuario:** Se añadió el campo `Telefono` a la entidad `Usuario`. El sistema mapea el número remitente del webhook de WhatsApp al `UsuarioId` correspondiente.
+*   **Seguridad y Auditoría:** Al recibir un mensaje de WhatsApp, el sistema establece manualmente el `ICurrentUserContext` con los datos del usuario encontrado, asegurando que cualquier acción ejecutada por la IA (ej. registrar mortalidad) quede correctamente auditada en el log del sistema.
+*   **Webhook Resilience:** Se implementó `WhatsAppWebhookController` con validación de tokens de Meta y manejo de payloads tipo texto.
+
+---
+
+## 3. Procesamiento de Voz (STT y TTS) (Sprint 69)
+
+### Objetivo
+Habilitar comandos de voz tanto en WhatsApp como en la interfaz Web para agilizar la operación manos libres.
+
+### Decisiones Técnicas
+*   **Servicio de Voz (`IVoiceService`):** Integración con OpenAI Whisper para transcripción (STT) y OpenAI TTS para síntesis de voz.
+*   **Flujo en WhatsApp:** 
+    1. Recibe Audio (ID de Media) -> 2. Descarga binario de Meta -> 3. Whisper (STT) -> 4. Orquestador -> 5. Respuesta Texto por WhatsApp.
+*   **Flujo en Web (`VoiceChatController`):**
+    1. Recibe `FormData` con archivo de audio -> 2. Whisper (STT) -> 3. Orquestador -> 4. OpenAI TTS (Genera audio de respuesta) -> 5. Retorna JSON con texto y audio en Base64.
+
+---
+
+## 4. Configuración del Sistema (Nuevas Secciones)
+
+Para el correcto funcionamiento, se deben configurar las siguientes secciones en el proveedor de configuración (ej. `appsettings.json` o Variables de Entorno):
+
+### WhatsApp (Meta API)
+```json
+"WhatsApp": {
+  "AccessToken": "tu_token_de_acceso",
+  "PhoneNumberId": "id_del_numero",
+  "VerifyToken": "token_de_verificacion_webhook",
+  "ApiVersion": "v18.0"
+}
+```
+
+### OpenAI (STT / TTS)
+```json
+"OpenAI": {
+  "ApiKey": "tu_api_key_de_openai"
+}
+```
+
+### CORS
+Se habilitó una política CORS "AllowFrontend" en `Program.cs` para permitir peticiones desde `http://localhost:3000`.
+
+---
+**Nota:** Todas las acciones destructivas o críticas ejecutadas vía voz o chat siguen requiriendo confirmación explícita según las "Instrucciones del Sistema".
+
+# Bitácora de Arquitectura - Operador Inteligente Omnicanal
+
+## Sprint 70: Seguridad y Confirmación (Regla 10)
+
+### Objetivo
+Implementar un mecanismo de seguridad para acciones de alto impacto (Cerrar Lotes, Registrar Gastos > 500, etc.) mediante un flujo de confirmación en dos pasos.
+
+### Decisiones Técnicas
+1.  **Persistencia de Intenciones:** Se creó la entidad `IntencionPendiente` para almacenar temporalmente los parámetros de una función que requiere confirmación. Esto asegura que si el sistema se reinicia o el usuario tarda en responder, la intención no se pierda.
+2.  **ConfirmacionPlugin:** Se implementó un nuevo plugin que permite al LLM confirmar o cancelar acciones pendientes.
+3.  **Interceptación en Orquestador:** El `AgenteOrquestadorService` intercepta una etiqueta especial `[EJECUTAR_PENDIENTE:ID]` generada por el `ConfirmacionPlugin` tras la confirmación del usuario. Esto permite re-ejecutar la función original con los parámetros guardados y forzando `confirmar=true`.
+4.  **Uso de System.Text.Json:** Para la serialización de parámetros de funciones en la base de datos, cumpliendo con la ligereza de la aplicación.
+
+## Sprint 71: Resolución de Entidades y Búsqueda Difusa (Regla 8)
+
+### Objetivo
+Mejorar la robustez del sistema al identificar entidades (galpones, lotes, productos) mediante lenguaje natural, permitiendo errores tipográficos y ofreciendo sugerencias cuando la coincidencia no es exacta.
+
+### Decisiones Técnicas
+1.  **Algoritmo Levenshtein:** Se implementó una extensión de cadena (`StringExtensions.cs`) que calcula la distancia de Levenshtein para determinar la similitud entre dos textos.
+2.  **EntityResolver centralizado:** Se creó una clase utilitaria `EntityResolver.cs` que estandariza la lógica de resolución en todos los plugins. Aplica las siguientes reglas en orden:
+    *   **Inferencia (Regla 7):** Si solo hay una entidad disponible, se selecciona automáticamente.
+    *   **Coincidencia Exacta/Parcial:** Busca coincidencias exactas o de tipo "contiene".
+    *   **Búsqueda Difusa (Regla 8):** Si la similitud es > 0.8, selecciona automáticamente. Si es > 0.5, devuelve una lista de sugerencias al LLM.
+3.  **Snapshot de Estado (Regla 5):** El `AgenteOrquestadorService` ahora inyecta un resumen de los lotes activos directamente en el System Prompt. Esto permite que la IA sepa qué está pasando en la granja sin tener que llamar a funciones de consulta explícitamente, mejorando la proactividad.
+
+### Beneficios
+*   **UX Superior:** El usuario puede escribir "galpon uno" o "galon 1" y el sistema lo entenderá.
+*   **Menos Fallos:** Se reducen los errores por IDs inexistentes o nombres mal escritos.
+*   **Contexto Inmediato:** La IA puede saludar diciendo: "Veo que tienes 2 lotes activos, ¿en cuál de ellos deseas trabajar hoy?".
+
+## Sprint 72: Gestión de Memoria y Resúmenes (Token Management)
+
+### Objetivo
+Optimizar el uso de tokens y mantener la coherencia en conversaciones largas mediante una ventana deslizante de mensajes y resúmenes automáticos persistentes.
+
+### Decisiones Técnicas
+1.  **Resumen Persistente:** Se añadieron los campos `ResumenActual` y `UltimoIndiceMensajeResumido` a la entidad `Conversacion`. Esto permite que el asistente "recuerde" lo esencial sin necesidad de procesar cientos de mensajes previos.
+2.  **Ventana Deslizante (Sliding Window):** El orquestador ahora solo inyecta los últimos 5 mensajes del historial en el `ChatHistory`, además del resumen acumulado. Esto mantiene el contexto inmediato fresco y el contexto histórico comprimido.
+3.  **Resumen Automático via LLM:** Cuando la conversación alcanza un umbral (actualmente configurado al detectar 10 mensajes en la carga), se dispara un proceso en segundo plano que utiliza al propio LLM para generar un resumen conciso de los nuevos puntos clave, integrándolo con el resumen anterior si existía.
+4.  **Actualización de Query y Command:** Se modificaron los Handlers de historial para devolver el objeto `HistorialChatResponse` que incluye el resumen, y se creó `ActualizarResumenCommand` para la persistencia.
+
+### Beneficios
+*   **Eficiencia:** Reduce drásticamente el consumo de tokens en sesiones largas.
+*   **Velocidad:** El modelo responde más rápido al procesar prompts más cortos.
+*   **Continuidad:** El sistema puede retomar una conversación días después basándose en el resumen guardado en la base de datos.
+
+## Sprint 73: Vinculación Segura de WhatsApp (Handshake)
+
+### Objetivo
+Establecer un mecanismo de identidad seguro para que solo usuarios autorizados de GalponERP puedan operar el sistema vía WhatsApp, vinculando su número mediante un código de un solo uso.
+
+### Decisiones Técnicas
+1.  **Handshake de 6 Dígitos:** Se implementó un flujo de vinculación donde el usuario genera un código aleatorio desde el ERP (Web) que expira en 15 minutos.
+2.  **Mapeo de Identidad:** El `WhatsAppWebhookController` ahora busca al usuario por el campo `WhatsAppNumero`. Si no lo encuentra, entra en "Modo Vinculación".
+3.  **Proceso de Vinculación:** Si un mensaje de un número desconocido contiene exactamente 6 dígitos, el sistema busca un usuario con ese código activo. Al encontrarlo, guarda el número de WhatsApp en el perfil del usuario y completa la vinculación.
+4.  **Seguridad por Diseño:** El sistema ignora cualquier comando de números no vinculados, respondiendo únicamente con instrucciones para realizar el handshake. Se añadió la capacidad de desvincular el número desde el perfil.
+
+### Beneficios
+*   **Seguridad:** Evita que cualquier persona con el número del bot pueda acceder a datos sensibles.
+*   **Trazabilidad:** Todos los mensajes de WhatsApp se asocian correctamente al usuario de Firebase para auditoría y logs.
+*   **Autogestión:** El usuario puede cambiar su número vinculado sin intervención del administrador.
+
+## Sprint 74: Notificaciones Proactivas (Background Worker)
+
+### Objetivo
+Transformar el sistema de un asistente reactivo a un operador proactivo que monitorea el estado del negocio en tiempo real y notifica anomalías críticas automáticamente a los administradores vía WhatsApp.
+
+### Decisiones Técnicas
+1.  **AnalisisDatosJob:** Se implementó un nuevo servicio en segundo plano (`BackgroundService`) que se ejecuta cada 12 horas para analizar indicadores clave de rendimiento (KPIs).
+2.  **Detección de Anomalías:** El Job integra múltiples consultas de MediatR para verificar:
+    *   **Inventario:** Niveles críticos de alimento (menos de 3 días).
+    *   **Mortalidad:** Picos de mortalidad superiores al 2% semanal por lote.
+3.  **Generación de Mensajes via IA:** A diferencia de las alertas tradicionales estáticas, el Job utiliza el nuevo método `GenerarMensajeProactivoAsync` del Orquestador. Esto permite que la IA redacte un mensaje contextualizado, profesional y con sugerencias de acción, en lugar de un texto predefinido.
+4.  **Omnicanalidad Proactiva:** Las alertas se envían directamente a los números de WhatsApp vinculados de los administradores, utilizando el handshake de seguridad establecido en el sprint anterior.
+
+### Beneficios
+*   **Prevención:** Permite actuar antes de que un problema de stock o sanidad se vuelva irreversible.
+*   **Inteligencia de Negocio:** La IA actúa como un supervisor 24/7 que resume problemas complejos en mensajes de WhatsApp fáciles de digerir.
+*   **Valor Agregado:** El ERP deja de ser una base de datos pasiva para convertirse en un socio activo en la gestión de la granja.
+
+# Bitácora de Arquitectura - Pollos NicoLu
+
+## Sprint 75: Sanidad y Bienestar Animal (Operación Completa)
+### Decisiones Técnicas:
+1. **Refactorización de SanidadPlugin:** Se integró `EntityResolver` para permitir búsquedas difusas de lotes y productos, cumpliendo con la Regla 6 (Cero Guids en el lenguaje natural).
+2. **Registro de Aplicaciones Sanitarias:** Se mejoró `RegistrarAplicacionVacuna` para que pueda buscar actividades pendientes por nombre si no se proporciona un ID, mejorando la experiencia de usuario vía WhatsApp/Voz.
+3. **Nueva Entidad RegistroBienestar:** Se creó la entidad `RegistroBienestar` para capturar parámetros ambientales (Temperatura, Humedad) y de consumo (Agua) de forma diaria. Esto permite un monitoreo más granular de la salud del lote más allá de solo la mortalidad.
+4. **Persistencia de Bienestar:** Se implementó el patrón repositorio y comando (MediatR) para el manejo de registros de bienestar, asegurando la separación de responsabilidades.
+
+### Nuevas Funcionalidades:
+- `ProgramarActividadSanitaria`: Permite al usuario agendar vacunas o tratamientos manualmente desde el chat.
+- `RegistrarParametrosBienestar`: Permite reportar condiciones ambientales y consumo de agua.
+
+## Sprint 76: Abastecimiento, Compras y Cuentas por Pagar
+### Decisiones Técnicas:
+1. **Gestión de Órdenes de Compra (OC):** Se crearon las entidades `OrdenCompra` y `OrdenCompraItem` para separar la intención de compra de la recepción física. Esto permite un control administrativo más robusto.
+2. **Flujo de Recepción Integrado:** Se implementó `RecibirOrdenCompraCommand` que realiza tres acciones en una transacción: marca la OC como recibida, crea el registro de `CompraInventario` y actualiza el stock/PPP de los productos.
+3. **Control de Vencimientos:** Se añadió el campo `FechaVencimiento` a `CompraInventario` para permitir que la IA alerte sobre deudas próximas a vencer o ya vencidas.
+4. **Búsqueda Difusa en Abastecimiento:** Se integró `EntityResolver` en `AbastecimientoPlugin` para resolver nombres de proveedores y productos desde el lenguaje natural.
+
+### Nuevas Funcionalidades:
+- `CrearOrdenCompra`: Permite generar pedidos multi-ítem a proveedores.
+- `ConsultarOrdenesPendientes`: Lista las OCs que aún no llegan al almacén.
+- `RecibirOrdenCompra`: Procesa la entrada de mercadería vinculada a una OC.
+- `ConsultarCuentasPorPagar`: Ahora incluye alertas visuales (⚠️, ⏳) basadas en la fecha de vencimiento.
+
+## Sprint 77: Auditoría y Seguridad Administrativa
+### Decisiones Técnicas:
+1. **Administración de Accesos (AdministracionPlugin):** Se creó el plugin para permitir la gestión de usuarios vía chat. Al ser acciones de alto impacto, tanto el cambio de roles como el bloqueo de usuarios requieren confirmación explícita mediante el sistema de intenciones pendientes.
+2. **Reactivación de Entidades (Soft Delete):** Se modificó la entidad base `Entity` para incluir el método `Activar()`, complementando el `Desactivar()` existente, lo cual permite bloquear y desbloquear usuarios sin perder la integridad referencial ni violar la arquitectura.
+3. **Consulta en Repositorio con Filtros Ignorados:** Se modificó `IUsuarioRepository` para incluir `ObtenerTodosConInactivosAsync()` y se ajustó `ObtenerPorIdAsync` usando `.IgnoreQueryFilters()` para garantizar que un administrador pueda encontrar y reactivar a un usuario previamente bloqueado (oculto por el filtro global de EF Core).
+4. **Identidad del Creador de Gastos (AuditoriaPlugin):** Se añadió el método `ConsultarQuienRegistroGasto`, el cual utiliza la propiedad de auditoría interna `UsuarioId` (o `UsuarioCreacionId`) y cruza la información con la tabla de usuarios para responder de manera humana a preguntas como "¿Quién registró el recibo de luz?".
+5. **Snapshot de Estado con Alertas (AgenteOrquestadorService):** Se refactorizó la inyección de contexto en el prompt del sistema. Ahora, la IA consulta proactivamente los últimos registros de `AuditoriaLog` (últimas 24 horas) y se entera si se han producido eventos críticos de seguridad (bloqueos, cambios de rol o eliminaciones), permitiendo que advierta al administrador al iniciar la conversación.
+
+### Nuevas Funcionalidades:
+- `ListarUsuarios`: Muestra el estado (Activo/Bloqueado) y los roles de todos los usuarios.
+- `CambiarRolUsuario`: Actualiza el nivel de acceso (Admin, SubAdmin, Empleado).
+- `CambiarEstadoBloqueoUsuario`: Suspende o reactiva el acceso al sistema para un usuario específico.
+- `ConsultarQuienRegistroGasto`: Identifica al autor de un registro financiero utilizando búsqueda difusa sobre la descripción del gasto.
+
+## Sprint 78: Análisis Avanzado y Correlación IA
+### Decisiones Técnicas:
+1. **AnalisisPlugin y Correlación Cruzada:** Se implementó un plugin de análisis que cruza datos de tres dominios: Inventario (Consumo de alimento), Mortalidad (Bajas acumuladas) y Producción (Lotes). Esto permite identificar qué marcas de alimento están asociadas a menores tasas de mortalidad.
+2. **Modo Consultor Experto:** Se creó una función que simula el razonamiento de un consultor avícola, analizando desviaciones en los lotes activos y sugiriendo acciones correctivas proactivas en lugar de solo reaccionar a comandos del usuario.
+3. **Optimización de Prompt de Sistema (100% Cobertura):** Se realizó la actualización final del prompt del sistema para consolidar el rol de "Operador Maestro". Ahora el modelo tiene conciencia total de sus capacidades en Sanidad, Abastecimiento, Auditoría, Finanzas y Análisis.
+4. **Persistencia de Consultas de Lote:** Se creó `ObtenerMovimientosLoteQuery` para permitir que los plugins extraigan el historial detallado de insumos de un lote específico, facilitando análisis futuros (ej. costo de medicación por lote).
+
+### Nuevas Funcionalidades:
+- `AnalizarImpactoAlimentoEnMortalidad`: Reporte comparativo de eficiencia de marcas de alimento.
+- `ModoConsultorSugiereMejoras`: Diagnóstico integral de la granja con recomendaciones estratégicas.
+- **Prompt Maestro:** Nueva personalidad de la IA orientada a resultados y proactividad total.
+
+# Bitácora de Arquitectura - Fase 3: Robustez de Grado Industrial
+
+## Sprint 79: Estabilización Técnica y Refuerzo de Calidad
+
+### Decisiones Técnicas:
+1. **Dependencia de EntityFrameworkCore en Application:** Se agregó el paquete `Microsoft.EntityFrameworkCore` al proyecto `GalponERP.Application` para permitir que las interfaces y los handlers utilicen `DbSet` y métodos de extensión de EF Core sin depender de la implementación concreta de Infrastructure.
+2. **Refuerzo de Entidades (Lote):** Se agregó la propiedad calculada `EdadSemanas` a la entidad `Lote` y se incluyó en `LoteResponse`. Esto permite que el Orquestador proporcione información de edad más precisa en el Snapshot de Estado.
+3. **Corrección de Constructores (Usuario):** Se unificó el constructor de `Usuario` y el método `ActualizarPerfil` para incluir el campo `Telefono`, asegurando que el Seeder y los Handlers de comandos sean consistentes con la definición de la entidad.
+4. **Validación de Nulos en Plugins:** Se implementaron verificaciones de nulidad después de llamadas a `_mediator.Send()` en plugins que recuperan detalles de entidades (ej. `ObtenerProductoPorIdQuery`), evitando excepciones de referencia nula en tiempo de ejecución.
+5. **Estandarización de Excepciones en Plugins:** Se envolvieron todas las `[KernelFunction]` en bloques `try-catch` para asegurar que el LLM reciba una respuesta textual controlada ante fallos técnicos, en lugar de una excepción que rompa el flujo de la conversación.
+6. **Ampliación de Pruebas Unitarias:** Se crearon suites de pruebas para `OrdenCompra` y `RegistroBienestar` cubriendo lógica de negocio crítica:
+   - `OrdenCompra`: Validación de estados, cálculo automático de totales al agregar ítems, y restricciones de modificación.
+   - `RegistroBienestar`: Validación de integridad de datos y actualización de parámetros ambientales.
+
+## Sprint 80: Automatización de Alertas (Background Jobs)
+
+### Decisiones Técnicas:
+1. **Ampliación de IRegistroBienestarRepository:** Se agregó el método `ObtenerPorLoteAsync` para permitir consultas históricas y de tendencias de bienestar.
+2. **Nueva Query de Bienestar:** Se implementó `ObtenerUltimoRegistroBienestarQuery` para facilitar al Orquestador y a los Background Jobs el acceso al estado ambiental más reciente de un lote.
+3. **Robustez en AnalisisDatosJob:** Se transformó el job proactivo en un monitor integral que ahora audita:
+   - **Finanzas:** Alertas de deudas vencidas o por vencer (ventana de 3 días).
+   - **Logística:** Identificación de Órdenes de Compra con más de 7 días de retraso.
+   - **Bienestar Animal:** Detección de anomalías térmicas y de consumo hídrico basadas en la edad fisiológica del lote (semanas de vida).
+4. **Integración con IA Proactiva:** Todas las anomalías detectadas se consolidan y se envían al `IAgenteOrquestadorService` para que genere un mensaje natural y profesional antes de ser enviado por WhatsApp.
+
+## Sprint 81: Inteligencia de Suministro y Optimización Final
+
+### Decisiones Técnicas:
+1. **Algoritmo de Predicción de Stock:** Se implementó `PredecirAgotamientoStockQuery` que utiliza una media móvil de los últimos 14 días para proyectar la fecha exacta de agotamiento de cualquier insumo, permitiendo una planificación logística anticipada.
+2. **Poda Agresiva de Contexto:** Se refactorizó `AgenteOrquestadorService` para implementar una ventana deslizante inteligente. Cuando el historial supera los 15 mensajes, se genera automáticamente un resumen técnico y se reinicia la ventana de mensajes recientes (Top 5), optimizando el uso de tokens y manteniendo la relevancia del contexto.
+3. **Validación de Consistencia (Cross-Domain):** Se creó un motor de auditoría financiera (`ValidarConsistenciaFinancieraQuery`) que reconcilia en tiempo real los registros de Compras con los movimientos de Inventario y los pagos en Finanzas, alertando sobre discrepancias o falta de documentos de respaldo.
+4. **Unificación de Plugins:** Se consolidaron las funciones de inventario y se estandarizaron las respuestas de error en `InventarioPlugin` y `AuditoriaPlugin` para incluir las nuevas capacidades de predicción y auditoría integral.
+
+### Estado Final de la Fase 3:
+- El sistema ha alcanzado un nivel de robustez industrial.
+- El backend es estable, tipado y cuenta con manejo de excepciones profesional.
+- La IA es proactiva, auditable y capaz de auto-gestionar su memoria de largo plazo.
+# Documentación de Excelencia Arquitectónica - Pollos NicoLu
+
+## Sprint 82: Centralización de Inteligencia (Snapshot Único)
+
+### Objetivo
+Consolidar la "Verdad Única" del sistema en un snapshot dinámico inyectado al Agente Orquestador, eliminando la dispersión de lógica de cálculo y asegurando consistencia absoluta con el Dashboard Web.
+
+### Cambios Realizados
+
+#### 1. Implementación de `ObtenerDashboardSnapshotQuery`
+- **Ubicación:** `GalponERP.Application/Dashboard/Queries/ObtenerDashboardSnapshotQuery.cs`
+- **Funcionalidad:** Centraliza la recolección de datos de múltiples repositorios:
+    - **Producción:** Lotes activos, cantidad de pollos vivos y mortalidad del mes.
+    - **Inventario:** Stock de alimento, días restantes de autonomía y alertas de stock mínimo.
+    - **Finanzas:** Saldos totales por cobrar (Ventas) y por pagar (Compras), e inversión total acumulada en lotes en curso.
+    - **Sanidad:** Conteo de tareas pendientes para el día actual.
+    - **Seguridad:** Filtrado de eventos críticos de auditoría en las últimas 24 horas (eliminaciones, cambios de rol, bloqueos).
+- **Precisión:** Se utiliza redondeo a 2 decimales para montos financieros y pesos, y 1 decimal para días de stock, asegurando precisión industrial.
+
+#### 2. Refactorización de `AgenteOrquestadorService`
+- Se eliminó la lógica manual de construcción del snapshot que residía en el servicio.
+- El agente ahora consume directamente el `DashboardSnapshotResponse` vía MediatR.
+- Se mejoró el formateo del prompt del sistema con secciones claras (PRODUCCIÓN, INVENTARIO, FINANZAS, SEGURIDAD, SANIDAD) y emojis para resaltar alertas críticas.
+
+### Validación de Consistencia
+- El cálculo de `MortalidadMesActual` y `DiasAlimentoRestantes` utiliza exactamente la misma lógica que el Dashboard Web, garantizando que la IA y la interfaz de usuario nunca se contradigan.
+- Se corrigió el valor por defecto de días de stock a `999` cuando no hay consumo registrado, manteniendo la paridad con la lógica web.
+
+### Impacto en la UX
+La IA ahora tiene visibilidad inmediata de:
+- Deudas pendientes con proveedores (CxP).
+- Cobros pendientes de clientes (CxC).
+- Alertas de seguridad en tiempo real.
+- Estado crítico de insumos.
+
+---
+
+## Sprint 84: Cierre del Ciclo Financiero y Auditoría Total
+
+### Objetivo
+Culminar la capacidad operativa del Agente para gestionar el ciclo completo de ingresos (Ventas/Cobros) y proporcionar una herramienta de auditoría infalible que garantice la integridad de los datos financieros.
+
+### Cambios Realizados
+
+#### 1. Cierre del Ciclo de Ingresos
+- **Gestión de Cobros:** Se integró el comando `RegistrarPagoVenta` en el `VentasPlugin`, permitiendo a la IA registrar pagos recibidos de clientes.
+- **Consultas de Cartera:** Se añadió `ConsultarVentasPendientes` para identificar rápidamente cuentas por cobrar (CxC) con alertas de atraso (7 y 15 días).
+
+#### 2. Auditoría Consistente de 360 Grados
+- **Expansión de `ValidarConsistenciaFinancieraQuery`:** Se amplió la lógica de validación para incluir el flujo de ventas y cobros, asegurando que:
+    - Ninguna venta tenga cobros que excedan su total.
+    - Los saldos pendientes coincidan con la diferencia entre el total vendido y los pagos registrados.
+- **Interfaz del Agente:** El comando `AuditarConsistenciaIntegral` ahora presenta un reporte estructurado en dos bloques (Abastecimiento y Comercialización), proporcionando una visión clara de la deuda (CxP) y el saldo por cobrar (CxC).
+
+#### 3. Estabilización y Calidad
+- **Build de Producción:** Se ejecutó una compilación completa de la solución (`dotnet build`), resolviendo conflictos de nombres y accesos a propiedades en los DTOs del Dashboard.
+- **Resolución de Conflictos:** Se refactorizaron los DTOs compartidos para evitar duplicidad de definiciones, asegurando un código limpio y mantenible.
+
+### Resumen de Maestría Operativa (Fase 4 Completada)
+El Backend de Pollos NicoLu está ahora **blindado**:
+- **Consistencia Total:** La IA, el Dashboard y la base de datos comparten la misma lógica de cálculo.
+- **Interacción Robusta:** El sistema es tolerante a errores de usuario gracias al `EntityResolver` mejorado.
+- **Control Financiero:** El ciclo de caja está 100% cubierto, desde la compra de insumos hasta el cobro final de ventas.
+- **Trazabilidad:** Cada acción es auditable y la IA puede justificar sus respuestas basándose en logs reales.
+
+---
+*Fin del Proyecto - Fase: Maestría Operativa*

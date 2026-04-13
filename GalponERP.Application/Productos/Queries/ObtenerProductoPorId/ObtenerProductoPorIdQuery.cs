@@ -1,19 +1,10 @@
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
+using GalponERP.Application.Productos.Queries;
 
 namespace GalponERP.Application.Productos.Queries.ObtenerProductoPorId;
 
 public record ObtenerProductoPorIdQuery(Guid Id) : IRequest<ProductoResponse?>;
-
-public record ProductoResponse(
-    Guid Id,
-    string Nombre,
-    Guid CategoriaProductoId,
-    string CategoriaNombre,
-    Guid UnidadMedidaId,
-    string UnidadMedidaNombre,
-    decimal EquivalenciaEnKg,
-    bool IsActive);
 
 public class ObtenerProductoPorIdQueryHandler : IRequestHandler<ObtenerProductoPorIdQuery, ProductoResponse?>
 {
@@ -39,6 +30,7 @@ public class ObtenerProductoPorIdQueryHandler : IRequestHandler<ObtenerProductoP
             p.UnidadMedidaId,
             p.Unidad?.Nombre ?? "Sin Unidad",
             p.EquivalenciaEnKg,
+            p.UmbralMinimo,
             p.IsActive);
     }
 }

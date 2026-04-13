@@ -1,5 +1,6 @@
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Primitives;
+using GalponERP.Domain.ValueObjects;
 using GalponERP.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,12 +31,18 @@ public class GalponDbContext : DbContext, IGalponDbContext
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<Proveedor> Proveedores { get; set; }
     public DbSet<CompraInventario> ComprasInventario { get; set; }
+    public DbSet<OrdenCompra> OrdenesCompra { get; set; }
+    public DbSet<OrdenCompraItem> OrdenesCompraItems { get; set; }
     public DbSet<GastoOperativo> GastosOperativos { get; set; }
     public DbSet<PlantillaSanitaria> PlantillasSanitarias { get; set; }
     public DbSet<CalendarioSanitario> CalendarioSanitario { get; set; }
+    public DbSet<RegistroBienestar> RegistroBienestar { get; set; }
     public DbSet<PesajeLote> PesajesLote { get; set; }
     public DbSet<ConfiguracionSistema> Configuracion { get; set; }
     public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
+    public DbSet<Conversacion> Conversaciones { get; set; }
+    public DbSet<MensajeChat> MensajesChat { get; set; }
+    public DbSet<IntencionPendiente> IntencionesPendientes { get; set; }
 
     public async Task<T?> ObtenerEntidadPorIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity
     {
@@ -67,6 +74,10 @@ public class GalponDbContext : DbContext, IGalponDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Configurar Moneda como un Owned Type (Objeto de Valor) por defecto
+        // para evitar que EF Core lo intente tratar como una entidad independiente
+        modelBuilder.Owned<Moneda>();
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GalponDbContext).Assembly);
 
         // Global Query Filter for Soft Delete (IsActive)

@@ -1,5 +1,6 @@
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
+using GalponERP.Application.Productos.Queries;
 
 namespace GalponERP.Application.Catalogos.Queries.ObtenerProductos;
 
@@ -20,9 +21,11 @@ public class ObtenerProductosQueryHandler : IRequestHandler<ObtenerProductosQuer
             p.Id,
             p.Nombre,
             p.CategoriaProductoId,
-            p.Categoria?.Nombre ?? "Sin Categoria",
+            p.Categoria?.Nombre ?? "Sin Categoría",
             p.UnidadMedidaId,
             p.Unidad?.Nombre ?? "Sin Unidad",
-            p.EquivalenciaEnKg));
+            p.EquivalenciaEnKg,
+            p.UmbralMinimo,
+            p.IsActive));
     }
 }

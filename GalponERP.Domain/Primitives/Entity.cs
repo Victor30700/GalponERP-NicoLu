@@ -40,5 +40,6 @@ public abstract class Entity
     }
 
     public void Desactivar() => IsActive = false;
+    public void Activar() => IsActive = true;
     public void Eliminar() => IsActive = false;
 }

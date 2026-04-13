@@ -28,6 +28,8 @@ public class Lote : Entity
     public EstadoLote Estado { get; private set; }
     public string? JustificacionCancelacion { get; private set; }
 
+    public int EdadSemanas => (DateTime.Now - FechaIngreso).Days / 7;
+
     // Snapshots Contables
     public decimal? FCRFinal { get; private set; }
     public Moneda? CostoTotalFinal { get; private set; }

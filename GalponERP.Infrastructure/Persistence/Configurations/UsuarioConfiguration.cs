@@ -39,6 +39,21 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Property(u => u.Profesion)
             .HasMaxLength(100);
 
+        builder.Property(u => u.Telefono)
+            .HasMaxLength(20);
+
+        builder.HasIndex(u => u.Telefono)
+            .IsUnique()
+            .HasFilter("\"Telefono\" IS NOT NULL");
+
+        builder.Property(u => u.WhatsAppNumero)
+            .HasMaxLength(20);
+
+        builder.Property(u => u.CodigoVinculacion)
+            .HasMaxLength(10);
+
+        builder.Property(u => u.FechaExpiracionCodigo);
+
         builder.Property(u => u.Rol)
             .IsRequired();
 

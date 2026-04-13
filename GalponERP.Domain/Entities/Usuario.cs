@@ -14,9 +14,13 @@ public class Usuario : Entity
     public DateTime FechaNacimiento { get; private set; }
     public string Direccion { get; private set; } = string.Empty;
     public string Profesion { get; private set; } = string.Empty;
+    public string? Telefono { get; private set; }
+    public string? WhatsAppNumero { get; private set; }
+    public string? CodigoVinculacion { get; private set; }
+    public DateTime? FechaExpiracionCodigo { get; private set; }
     public RolGalpon Rol { get; private set; }
 
-    public Usuario(Guid id, string firebaseUid, string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, RolGalpon rol) : base(id)
+    public Usuario(Guid id, string firebaseUid, string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string telefono, RolGalpon rol) : base(id)
     {
         if (string.IsNullOrWhiteSpace(firebaseUid))
             throw new ArgumentException("El FirebaseUid es obligatorio.");
@@ -34,13 +38,38 @@ public class Usuario : Entity
         FechaNacimiento = fechaNacimiento;
         Direccion = direccion;
         Profesion = profesion;
+        Telefono = telefono;
         Rol = rol;
+    }
+
+    public void GenerarCodigoVinculacion()
+    {
+        var random = new Random();
+        CodigoVinculacion = random.Next(100000, 999999).ToString();
+        FechaExpiracionCodigo = DateTime.UtcNow.AddMinutes(15);
+    }
+
+    public bool ValidarCodigoVinculacion(string codigo)
+    {
+        return CodigoVinculacion == codigo && FechaExpiracionCodigo > DateTime.UtcNow;
+    }
+
+    public void VincularWhatsApp(string numero)
+    {
+        WhatsAppNumero = numero;
+        CodigoVinculacion = null;
+        FechaExpiracionCodigo = null;
+    }
+
+    public void DesvincularWhatsApp()
+    {
+        WhatsAppNumero = null;
     }
 
     // Constructor para EF Core
     private Usuario() : base() { }
 
-    public void ActualizarPerfil(string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, RolGalpon rol)
+    public void ActualizarPerfil(string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string telefono, RolGalpon rol)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("El email es obligatorio.");
@@ -54,6 +83,7 @@ public class Usuario : Entity
         FechaNacimiento = fechaNacimiento;
         Direccion = direccion;
         Profesion = profesion;
+        Telefono = telefono;
         Rol = rol;
     }
 

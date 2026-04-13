@@ -82,6 +82,7 @@ public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCo
             request.FechaNacimiento,
             request.Direccion ?? string.Empty,
             request.Profesion ?? string.Empty,
+            request.Telefono ?? string.Empty,
             request.Rol);
 
         _usuarioRepository.Agregar(usuario);

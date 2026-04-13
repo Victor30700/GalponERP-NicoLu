@@ -71,8 +71,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddHostedService<AlertaInventarioJob>();
 builder.Services.AddHostedService<AlertaSanitariaJob>();
+builder.Services.AddHostedService<AnalisisDatosJob>();
 
 builder.Services.AddControllers();
 
@@ -127,6 +139,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -158,6 +171,7 @@ using (var scope = app.Services.CreateScope())
                 new DateTime(1980, 1, 1), 
                 "Dirección del Galpón", 
                 "Gerente", 
+                "0000000000",
                 GalponERP.Domain.Entities.RolGalpon.Admin);
             context.Usuarios.Add(admin);
             context.SaveChanges();

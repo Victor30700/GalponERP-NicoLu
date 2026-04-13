@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Dashboard.Queries;
 
-public record AlertaStockDto(string ProductoNombre, decimal StockActual, decimal UmbralMinimo);
+public record AlertaStockDashboardDto(string ProductoNombre, decimal StockActual, decimal UmbralMinimo);
 
 public record ResumenDashboardResponse(
     int TotalPollosVivos,
@@ -15,7 +15,7 @@ public record ResumenDashboardResponse(
     decimal SaldoPorCobrarTotal,
     int TareasSanitariasHoy,
     decimal InversionTotalEnCurso,
-    List<AlertaStockDto> AlertasStockMinimo);
+    List<AlertaStockDashboardDto> AlertasStockMinimo);
 
 public record ObtenerResumenDashboardQuery() : IRequest<ResumenDashboardResponse>;
 
@@ -63,7 +63,7 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
         var productos = (await _productoRepository.ObtenerTodosAsync()).ToList();
         var todosLosMovimientos = (await _inventarioRepository.ObtenerTodosAsync()).ToList();
         
-        var alertasStock = new List<AlertaStockDto>();
+        var alertasStock = new List<AlertaStockDashboardDto>();
         decimal stockTotalAlimentoKg = 0;
         decimal consumoDiarioGlobalKg = 0;
 
@@ -83,7 +83,7 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
             
             if (p.UmbralMinimo > 0 && stockActual < p.UmbralMinimo)
             {
-                alertasStock.Add(new AlertaStockDto(p.Nombre, stockActual, p.UmbralMinimo));
+                alertasStock.Add(new AlertaStockDashboardDto(p.Nombre, stockActual, p.UmbralMinimo));
             }
 
             // Lógica específica para Alimento (Alertas de Días Restantes)

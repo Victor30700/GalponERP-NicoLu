@@ -31,6 +31,7 @@ public class ActualizarUsuarioCommandHandler : IRequestHandler<ActualizarUsuario
             request.FechaNacimiento,
             request.Direccion,
             request.Profesion,
+            request.Telefono,
             request.Rol);
 
         _usuarioRepository.Actualizar(usuario);
