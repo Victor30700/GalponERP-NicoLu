@@ -39,10 +39,15 @@ export default function LoteDashboard() {
     queryFn: () => api.get<any>(`/api/Lotes/${id}`),
   })
 
-  const { data: tendencias } = useQuery({
+  const { data: tendenciasResponse } = useQuery({
     queryKey: ['lote-tendencias', id],
     queryFn: () => api.get<any>(`/api/Mortalidad/lote/${id}/tendencias`),
   })
+
+  // Normalizar tendencias: manejar si viene como arreglo directo o dentro de un objeto
+  const tendencias = Array.isArray(tendenciasResponse) 
+    ? tendenciasResponse 
+    : (tendenciasResponse?.tendencias || [])
 
   const { data: calendario = [] } = useQuery({
     queryKey: ['calendario', id],

@@ -28,7 +28,7 @@ public class AnalisisPlugin
 
             var correlacion = new Dictionary<string, (int TotalBajas, int TotalAvesIniciales, int CantidadLotes)>();
 
-            foreach (var lote in lotes.OrderByDescending(l => l.FechaIngreso).Take(10)) // Analizar últimos 10 lotes
+            foreach (var lote in lotes.OrderByDescending(l => l.FechaInicio).Take(10)) // Analizar últimos 10 lotes
             {
                 var movimientos = await _mediator.Send(new ObtenerMovimientosLoteQuery(lote.Id));
                 var alimentoPrincipal = movimientos
@@ -88,14 +88,14 @@ public class AnalisisPlugin
             sb.AppendLine("\n2. Estado de Lotes Actuales:");
             foreach (var lote in lotesActivos)
             {
-                var mortalidad = (double)lote.MortalidadAcumulada / lote.CantidadInicial * 100;
+                var mortalidad = (double)lote.MortalidadPorcentaje;
                 if (mortalidad > 5)
                 {
-                    sb.AppendLine($"- ⚠️ Lote en '{lote.NombreGalpon}' tiene mortalidad alta ({mortalidad:F2}%). Sugerencia: Revisar bioseguridad y ventilación.");
+                    sb.AppendLine($"- ⚠️ Lote en '{lote.GalponNombre}' tiene mortalidad alta ({mortalidad:F2}%). Sugerencia: Revisar bioseguridad y ventilación.");
                 }
                 else
                 {
-                    sb.AppendLine($"- Lote en '{lote.NombreGalpon}' se mantiene estable ({mortalidad:F2}%).");
+                    sb.AppendLine($"- Lote en '{lote.GalponNombre}' se mantiene estable ({mortalidad:F2}%).");
                 }
             }
 

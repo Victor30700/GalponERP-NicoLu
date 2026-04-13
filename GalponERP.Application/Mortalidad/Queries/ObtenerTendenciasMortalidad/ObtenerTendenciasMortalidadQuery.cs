@@ -2,13 +2,11 @@ using MediatR;
 
 namespace GalponERP.Application.Mortalidad.Queries.ObtenerTendenciasMortalidad;
 
-public record ObtenerTendenciasMortalidadQuery(Guid LoteId) : IRequest<TendenciasMortalidadResponse>;
+public record ObtenerTendenciasMortalidadQuery(Guid LoteId) : IRequest<IEnumerable<TendenciaChartDto>>;
 
-public record TendenciasMortalidadResponse(
-    Guid LoteId,
-    IEnumerable<MortalidadPorSemanaDto> Tendencias);
-
-public record MortalidadPorSemanaDto(
-    int SemanaVida,
-    int CantidadBajas,
-    decimal PorcentajeSemanal);
+public record TendenciaChartDto(
+    string Fecha,
+    int Cantidad,
+    decimal Porcentaje,
+    int Semana,
+    decimal Fcr);

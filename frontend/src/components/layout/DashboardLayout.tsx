@@ -8,14 +8,14 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+  const { profile, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !profile) {
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [profile, loading, router])
 
   if (loading) {
     return (
@@ -25,7 +25,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!user) return null
+  if (!profile) return null
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">

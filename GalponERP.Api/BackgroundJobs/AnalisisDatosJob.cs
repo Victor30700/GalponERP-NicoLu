@@ -56,12 +56,12 @@ public class AnalisisDatosJob : BackgroundService
                     foreach (var lote in lotesActivos)
                     {
                         var tendencias = await mediator.Send(new ObtenerTendenciasMortalidadQuery(lote.Id), stoppingToken);
-                        if (tendencias != null && tendencias.Tendencias.Any())
+                        if (tendencias != null && tendencias.Any())
                         {
-                            var ultimaSemana = tendencias.Tendencias.Last();
-                            if (ultimaSemana.PorcentajeSemanal > 2) // Umbral de ejemplo: 2% semanal
+                            var ultimaSemana = tendencias.Last();
+                            if (ultimaSemana.Porcentaje > 2) // Umbral de ejemplo: 2% semanal
                             {
-                                anomaliasEncontradas.Add($"Mortalidad alta en {lote.NombreGalpon}: {ultimaSemana.PorcentajeSemanal}% en la semana {ultimaSemana.SemanaVida}.");
+                                anomaliasEncontradas.Add($"Mortalidad alta en {lote.NombreGalpon}: {ultimaSemana.Porcentaje}% en la semana {ultimaSemana.Semana}.");
                             }
                         }
 

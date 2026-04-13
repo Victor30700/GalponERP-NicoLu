@@ -53,11 +53,11 @@ export function LoginForm() {
         <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-4 border border-primary/30">
           <LogIn className="text-primary" size={32} />
         </div>
-        <h1 className="text-3xl font-black text-white tracking-tighter">GALPON<span className="text-primary text-4xl">.</span>ERP</h1>
+        <h1 className="text-3xl font-black text-white tracking-tighter">Pollos<span className="text-primary text-4xl">-</span>NicoLu</h1>
         <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Acceso de Operador</p>
       </div>
 
-      <div className="space-y-5">
+      <form onSubmit={handleManualSubmit} className="space-y-5">
         <div className="space-y-2">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Profesional</label>
           <div className="relative">
@@ -67,7 +67,8 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-700 font-medium"
-              placeholder="admin@galponerp.com"
+              placeholder="admin@admin.com"
+              required
             />
           </div>
         </div>
@@ -82,6 +83,7 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-700 font-medium"
               placeholder="••••••••"
+              required
             />
           </div>
         </div>
@@ -98,9 +100,8 @@ export function LoginForm() {
         )}
 
         <button
-          onClick={() => handleManualSubmit()}
+          type="submit"
           disabled={isLoading}
-          type="button"
           className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-primary/20 group"
         >
           {isLoading ? (
@@ -115,7 +116,7 @@ export function LoginForm() {
             </>
           )}
         </button>
-      </div>
+      </form>
       
       <div className="mt-8 pt-6 border-t border-white/5 text-center">
         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-[0.2em]">

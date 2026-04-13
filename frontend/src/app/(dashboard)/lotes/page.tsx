@@ -44,7 +44,7 @@ export default function LotesPage() {
       header: 'Población', 
       accessor: (item: Lote) => (
         <div>
-          <p className="text-white font-medium">{item.avesVivas.toLocaleString()} vivas</p>
+          <p className="text-white font-medium">{(item.avesVivas ?? 0).toLocaleString()} vivas</p>
           <p className="text-[10px] text-slate-500">Inició con {item.cantidadInicial}</p>
         </div>
       )
@@ -55,11 +55,11 @@ export default function LotesPage() {
         <div className="flex items-center gap-4">
           <div>
             <p className="text-[10px] text-slate-500 uppercase font-bold">FCR</p>
-            <p className="text-blue-400 font-bold">{item.fcrActual.toFixed(2)}</p>
+            <p className="text-blue-400 font-bold">{(item.fcrActual ?? 0).toFixed(2)}</p>
           </div>
           <div>
             <p className="text-[10px] text-slate-500 uppercase font-bold">Bajas</p>
-            <p className="text-red-400 font-bold">{item.mortalidadPorcentaje.toFixed(1)}%</p>
+            <p className="text-red-400 font-bold">{(item.mortalidadPorcentaje ?? 0).toFixed(1)}%</p>
           </div>
         </div>
       )
@@ -115,11 +115,11 @@ export default function LotesPage() {
           <div className="grid grid-cols-2 gap-2">
             <div className="p-3 bg-white/5 rounded-xl border border-white/5">
               <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Aves Vivas</p>
-              <p className="text-white font-black text-lg">{item.avesVivas.toLocaleString()}</p>
+              <p className="text-white font-black text-lg">{(item.avesVivas ?? 0).toLocaleString()}</p>
             </div>
             <div className="p-3 bg-white/5 rounded-xl border border-white/5">
               <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">FCR Actual</p>
-              <p className="text-blue-400 font-black text-lg">{item.fcrActual.toFixed(2)}</p>
+              <p className="text-blue-400 font-black text-lg">{(item.fcrActual ?? 0).toFixed(2)}</p>
             </div>
           </div>
 

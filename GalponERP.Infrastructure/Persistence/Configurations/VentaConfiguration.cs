@@ -48,7 +48,8 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
 
         builder.Property(v => v.EstadoPago)
             .IsRequired()
-            .HasDefaultValue(EstadoPago.Pendiente);
+            .HasDefaultValue(EstadoPago.Pendiente)
+            .HasSentinel((EstadoPago)0);
 
         builder.HasMany(v => v.Pagos)
             .WithOne()

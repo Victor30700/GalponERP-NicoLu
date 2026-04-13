@@ -71,7 +71,7 @@ public class InventarioPlugin
             var lotesActivos = (await _mediator.Send(new ListarLotesQuery(SoloActivos: true))).ToList();
             if (!lotesActivos.Any()) return "Error: No hay lotes activos. No se puede registrar consumo.";
 
-            var (loteSeleccionado, msgLote) = EntityResolver.Resolve(lotesActivos, nombreGalpon, l => l.NombreGalpon, "Galpón");
+            var (loteSeleccionado, msgLote) = EntityResolver.Resolve(lotesActivos, nombreGalpon, l => l.GalponNombre, "Galpón");
             if (loteSeleccionado == null) return msgLote!;
 
             // 2. Resolver Producto (Regla 7 y 8 - Cascaded)
@@ -90,7 +90,7 @@ public class InventarioPlugin
                 {
                     cantidad,
                     conversacionId,
-                    nombreGalpon = loteSeleccionado.NombreGalpon,
+                    nombreGalpon = loteSeleccionado.GalponNombre,
                     nombreProducto = productoSeleccionado.Nombre,
                     justificacion
                 };
@@ -98,13 +98,13 @@ public class InventarioPlugin
                 var json = JsonSerializer.Serialize(parametros);
                 await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(InventarioPlugin), nameof(RegistrarConsumoAlimento), json));
 
-                return $"Entiendo que quieres registrar un consumo de {cantidad} {productoSeleccionado.UnidadMedidaNombre} de '{productoSeleccionado.Nombre}' en el '{loteSeleccionado.NombreGalpon}'. ¿Es correcto? Por favor, confirma para proceder.";
+                return $"Entiendo que quieres registrar un consumo de {cantidad} {productoSeleccionado.UnidadMedidaNombre} de '{productoSeleccionado.Nombre}' en el '{loteSeleccionado.GalponNombre}'. ¿Es correcto? Por favor, confirma para proceder.";
             }
 
             // 4. Ejecutar Comando
             var command = new RegistrarConsumoAlimentoCommand(loteSeleccionado.Id, productoSeleccionado.Id, cantidad, justificacion);
             var result = await _mediator.Send(command);
-            return $"Consumo registrado exitosamente. Se consumieron {cantidad} {productoSeleccionado.UnidadMedidaNombre} de '{productoSeleccionado.Nombre}' en el '{loteSeleccionado.NombreGalpon}'. ID de operación: {result}";
+            return $"Consumo registrado exitosamente. Se consumieron {cantidad} {productoSeleccionado.UnidadMedidaNombre} de '{productoSeleccionado.Nombre}' en el '{loteSeleccionado.GalponNombre}'. ID de operación: {result}";
         }
         catch (Exception ex)
         {

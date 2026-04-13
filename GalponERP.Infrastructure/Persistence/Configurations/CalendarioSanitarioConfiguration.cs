@@ -29,7 +29,8 @@ public class CalendarioSanitarioConfiguration : IEntityTypeConfiguration<Calenda
         builder.Property(c => c.Tipo)
             .HasConversion<string>()
             .HasMaxLength(30)
-            .HasDefaultValue(TipoActividad.Otros);
+            .HasDefaultValue(TipoActividad.Otros)
+            .HasSentinel((TipoActividad)0);
 
         builder.Property(c => c.EsManual)
             .IsRequired()

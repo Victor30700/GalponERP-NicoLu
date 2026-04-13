@@ -92,7 +92,7 @@ public class GestionLotesPlugin
         var lotesActivos = (await _mediator.Send(new ListarLotesQuery(SoloActivos: true))).ToList();
         if (!lotesActivos.Any()) return "No hay lotes activos para cerrar.";
 
-        var (loteSeleccionado, msgLote) = EntityResolver.Resolve(lotesActivos, nombreGalpon, l => l.NombreGalpon, "Lote Activo");
+        var (loteSeleccionado, msgLote) = EntityResolver.Resolve(lotesActivos, nombreGalpon, l => l.GalponNombre, "Lote Activo");
         if (loteSeleccionado == null) return msgLote!;
 
         // 2. Verificar Confirmación
@@ -101,13 +101,13 @@ public class GestionLotesPlugin
             var parametros = new
             {
                 conversacionId,
-                nombreGalpon = loteSeleccionado.NombreGalpon
+                nombreGalpon = loteSeleccionado.GalponNombre
             };
             
             var json = JsonSerializer.Serialize(parametros);
             await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(GestionLotesPlugin), nameof(CerrarLote), json));
 
-            return $"⚠️ ATENCIÓN: Estás a punto de CERRAR el lote en '{loteSeleccionado.NombreGalpon}'. Esta acción es irreversible y generará el balance final. ¿Estás seguro de que deseas proceder?";
+            return $"⚠️ ATENCIÓN: Estás a punto de CERRAR el lote en '{loteSeleccionado.GalponNombre}'. Esta acción es irreversible y generará el balance final. ¿Estás seguro de que deseas proceder?";
         }
 
         // 3. Ejecutar Comando
@@ -115,7 +115,7 @@ public class GestionLotesPlugin
         {
             var result = await _mediator.Send(new CerrarLoteCommand(loteSeleccionado.Id));
             var sb = new StringBuilder();
-            sb.AppendLine($"Lote en '{loteSeleccionado.NombreGalpon}' cerrado exitosamente.");
+            sb.AppendLine($"Lote en '{loteSeleccionado.GalponNombre}' cerrado exitosamente.");
             sb.AppendLine("RESUMEN DE CIERRE:");
             sb.AppendLine($"- Ingresos Totales: S/ {result.TotalIngresos}");
             sb.AppendLine($"- Costos Totales: S/ {result.TotalCostos}");

@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   title: "GalponERP - Pollos NicoLu",
   description: "Sistema de gestión avícola integral para producción de pollos",
   manifest: "/manifest.json",
-  themeColor: "#020617",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -31,6 +30,10 @@ export const metadata: Metadata = {
   icons: {
     apple: "/window.svg",
   },
+};
+
+export const viewport = {
+  themeColor: "#020617",
 };
 
 export default function RootLayout({

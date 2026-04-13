@@ -9,6 +9,7 @@ using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Reflection;
 
@@ -76,7 +77,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000")
+            policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000", "https://localhost:3000", "https://127.0.0.1:3000")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -158,7 +159,7 @@ using (var scope = app.Services.CreateScope())
 
         var context = services.GetRequiredService<GalponERP.Infrastructure.Persistence.GalponDbContext>();
         var adminUid = "utq0GMrQZESnNsyQWUEFOV5fKf23";
-        var existingAdmin = context.Usuarios.FirstOrDefault(u => u.FirebaseUid == adminUid);
+        var existingAdmin = await context.Usuarios.FirstOrDefaultAsync(u => u.FirebaseUid == adminUid);
         
         if (existingAdmin == null)
         {
@@ -174,7 +175,7 @@ using (var scope = app.Services.CreateScope())
                 "0000000000",
                 GalponERP.Domain.Entities.RolGalpon.Admin);
             context.Usuarios.Add(admin);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
     }
     catch (Exception ex)

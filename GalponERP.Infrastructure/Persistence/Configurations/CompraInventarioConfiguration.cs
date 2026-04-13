@@ -31,7 +31,8 @@ public class CompraInventarioConfiguration : IEntityTypeConfiguration<CompraInve
 
         builder.Property(c => c.EstadoPago)
             .IsRequired()
-            .HasDefaultValue(EstadoPago.Pendiente);
+            .HasDefaultValue(EstadoPago.Pendiente)
+            .HasSentinel((EstadoPago)0);
 
         builder.HasOne<Proveedor>()
             .WithMany()

@@ -1,13 +1,13 @@
 'use client'
 
-import { Search, Bell, User } from 'lucide-react'
+import { Search, Bell, User, LogOut } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { navigationItems } from '@/config/navigation'
 import { useAuth } from '@/context/AuthContext'
 
 export function TopNavbar() {
   const pathname = usePathname()
-  const { profile } = useAuth()
+  const { profile, logout } = useAuth()
   
   // Encontrar el nombre de la página actual basado en la ruta
   const currentPage = navigationItems.find(item => item.href === pathname)?.name || 'Dashboard'
@@ -53,6 +53,14 @@ export function TopNavbar() {
               <User size={18} />
             )}
           </div>
+          
+          <button 
+            onClick={logout}
+            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+            title="Cerrar Sesión"
+          >
+            <LogOut size={20} />
+          </button>
         </div>
       </div>
     </header>

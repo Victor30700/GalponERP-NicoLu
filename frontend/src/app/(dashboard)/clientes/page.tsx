@@ -9,20 +9,27 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Save, User, Phone, Mail, MapPin } from 'lucide-react'
+import { toast } from 'sonner'
+import { confirmDestructiveAction } from '@/lib/swal'
 
 // Schema de validación
 const clienteSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
-  apellidos: z.string().min(3, 'Los apellidos son muy cortos'),
-  email: z.string().email('Email inválido'),
-  telefono: z.string().min(7, 'Teléfono inválido'),
+  ruc: z.string().min(3, 'RUC/NIT inválido'),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
+  telefono: z.string().min(7, 'Teléfono inválido').optional().or(z.literal('')),
   direccion: z.string().optional(),
 })
 
 type ClienteFormValues = z.infer<typeof clienteSchema>
 
-interface Cliente extends ClienteFormValues {
+interface Cliente {
   id: string
+  nombre: string
+  ruc: string
+  email?: string
+  telefono?: string
+  direccion?: string
 }
 
 export default function ClientesPage() {
@@ -42,21 +49,26 @@ export default function ClientesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] })
       closeForm()
+      toast.success('Cliente creado con éxito')
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: (data: { id: string; values: ClienteFormValues }) => 
-      api.patch(`/api/Clientes/${data.id}`, data.values),
+      api.put(`/api/Clientes/${data.id}`, data.values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] })
       closeForm()
+      toast.success('Cliente actualizado con éxito')
     },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/Clientes/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clientes'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] })
+      toast.success('Cliente eliminado')
+    },
   })
 
   // Form handling
@@ -80,10 +92,16 @@ export default function ClientesPage() {
   const openForm = (cliente?: Cliente) => {
     if (cliente) {
       setEditingCliente(cliente)
-      reset(cliente)
+      reset({
+        nombre: cliente.nombre,
+        ruc: cliente.ruc,
+        email: cliente.email || '',
+        telefono: cliente.telefono || '',
+        direccion: cliente.direccion || '',
+      })
     } else {
       setEditingCliente(null)
-      reset({ nombre: '', apellidos: '', email: '', telefono: '', direccion: '' })
+      reset({ nombre: '', ruc: '', email: '', telefono: '', direccion: '' })
     }
     setIsFormOpen(true)
   }
@@ -100,16 +118,16 @@ export default function ClientesPage() {
       accessor: (item: Cliente) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-            {item.nombre.charAt(0)}{item.apellidos.charAt(0)}
+            {item.nombre?.charAt(0) || 'C'}
           </div>
           <div>
-            <p className="font-medium text-white">{item.nombre} {item.apellidos}</p>
-            <p className="text-xs text-slate-500">{item.email}</p>
+            <p className="font-medium text-white">{item.nombre}</p>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest">{item.ruc}</p>
           </div>
         </div>
       )
     },
-    { header: 'Teléfono', accessor: 'telefono' },
+    { header: 'Teléfono', accessor: (item: Cliente) => item.telefono || 'N/A' },
     { header: 'Dirección', accessor: (item: Cliente) => item.direccion || 'No especificada' },
   ]
 
@@ -122,20 +140,28 @@ export default function ClientesPage() {
         isLoading={isLoading}
         onAdd={() => openForm()}
         onEdit={(item) => openForm(item)}
-        onDelete={(item) => {
-          if (confirm('¿Estás seguro de eliminar este cliente?')) {
+        onDelete={async (item) => {
+          const result = await confirmDestructiveAction(
+            '¿Eliminar cliente?',
+            `¿Estás seguro de que deseas eliminar a ${item.nombre}? Esta acción no se puede deshacer.`
+          );
+          
+          if (result.isConfirmed) {
             deleteMutation.mutate(item.id)
           }
         }}
         renderMobileCard={(item) => (
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-white">{item.nombre} {item.apellidos}</h3>
+            <h3 className="text-lg font-bold text-white">{item.nombre}</h3>
+            <p className="text-xs text-primary font-bold uppercase tracking-widest mb-2">{item.ruc}</p>
             <div className="flex items-center gap-2 text-slate-400 text-sm">
-              <Phone size={14} /> {item.telefono}
+              <Phone size={14} /> {item.telefono || 'Sin teléfono'}
             </div>
-            <div className="flex items-center gap-2 text-slate-400 text-sm">
-              <Mail size={14} /> {item.email}
-            </div>
+            {item.email && (
+              <div className="flex items-center gap-2 text-slate-400 text-sm">
+                <Mail size={14} /> {item.email}
+              </div>
+            )}
           </div>
         )}
       />
@@ -168,32 +194,31 @@ export default function ClientesPage() {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Nombre</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                      <input
-                        {...register('nombre')}
-                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                        placeholder="Ej. Juan"
-                      />
-                    </div>
-                    {errors.nombre && <p className="text-xs text-red-400 ml-1">{errors.nombre.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Apellidos</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-400 ml-1">Nombre / Razón Social</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input
-                      {...register('apellidos')}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                      placeholder="Ej. Pérez"
+                      {...register('nombre')}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                      placeholder="Ej. Inversiones Pollito"
                     />
-                    {errors.apellidos && <p className="text-xs text-red-400 ml-1">{errors.apellidos.message}</p>}
                   </div>
+                  {errors.nombre && <p className="text-xs text-red-400 ml-1">{errors.nombre.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Correo Electrónico</label>
+                  <label className="text-sm font-medium text-slate-400 ml-1">RUC / NIT</label>
+                  <input
+                    {...register('ruc')}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    placeholder="Ej. 12345678-9"
+                  />
+                  {errors.ruc && <p className="text-xs text-red-400 ml-1">{errors.ruc.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-400 ml-1">Correo Electrónico (Opcional)</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input

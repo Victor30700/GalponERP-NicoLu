@@ -8,12 +8,14 @@ import {
   DollarSign, 
   Settings,
   ShieldCheck,
-  ClipboardList
+  ClipboardList,
+  MessageSquare
 } from 'lucide-react'
 
 export const navigationItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Lotes', href: '/lotes', icon: Bird },
+  { name: 'Chat con IA', href: '/chat', icon: MessageSquare },
   { name: 'Galpones', href: '/galpones', icon: Warehouse },
   { name: 'Inventario', href: '/inventario', icon: Package },
   { name: 'Ventas', href: '/ventas', icon: ShoppingCart },

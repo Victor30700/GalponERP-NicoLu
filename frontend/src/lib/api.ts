@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7258';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5167';
 
 async function getHeaders() {
   const headers: Record<string, string> = {
@@ -28,7 +28,7 @@ export const api = {
   },
 
   async post<T>(endpoint: string, body: any): Promise<T> {
-    console.log(`FETCH POST: ${BASE_URL}${endpoint}`);
+    console.log(`FETCH POST: ${BASE_URL}${endpoint}`, body);
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: await getHeaders(),
