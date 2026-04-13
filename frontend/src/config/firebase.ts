@@ -10,8 +10,20 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Inicialización segura
+let app;
+let auth: any = null;
+
+try {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "OBTENER_DE_CONSOLA_FIREBASE") {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    console.log("Firebase inicializado correctamente");
+  } else {
+    console.warn("Firebase no se inicializó: Claves ausentes o por defecto.");
+  }
+} catch (error) {
+  console.error("Error al inicializar Firebase:", error);
+}
 
 export { auth };

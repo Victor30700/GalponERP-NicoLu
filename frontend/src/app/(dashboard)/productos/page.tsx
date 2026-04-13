@@ -1,0 +1,253 @@
+'use client'
+
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import { UniversalGrid } from '@/components/shared/UniversalGrid'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Save, Package, Tag, Scale, Info } from 'lucide-react'
+import { toast } from 'sonner'
+
+const productoSchema = z.object({
+  nombre: z.string().min(3, 'El nombre es muy corto'),
+  descripcion: z.string().optional(),
+  categoriaId: z.string().uuid('Categoría inválida'),
+  unidadMedidaId: z.string().uuid('Unidad de medida inválida'),
+  stockMinimo: z.number().min(0, 'No puede ser negativo'),
+})
+
+type ProductoFormValues = z.infer<typeof productoSchema>
+
+interface Producto extends ProductoFormValues {
+  id: string
+  categoriaNombre: string
+  unidadMedidaNombre: string
+}
+
+interface Categoria {
+  id: string
+  nombre: string
+}
+
+interface UnidadMedida {
+  id: string
+  nombre: string
+}
+
+export default function ProductosPage() {
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingProducto, setEditingProducto] = useState<Producto | null>(null)
+  const queryClient = useQueryClient()
+
+  // Queries
+  const { data: productos = [], isLoading } = useQuery({
+    queryKey: ['productos'],
+    queryFn: () => api.get<Producto[]>('/api/Productos'),
+  })
+
+  const { data: categorias = [] } = useQuery({
+    queryKey: ['categorias'],
+    queryFn: () => api.get<Categoria[]>('/api/Categorias'),
+  })
+
+  const { data: unidades = [] } = useQuery({
+    queryKey: ['unidadesMedida'],
+    queryFn: () => api.get<UnidadMedida[]>('/api/UnidadesMedida'),
+  })
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (newProd: ProductoFormValues) => api.post('/api/Productos', newProd),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] })
+      toast.success('Producto creado correctamente')
+      closeForm()
+    },
+    onError: (err: any) => toast.error(err.message),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { id: string; values: ProductoFormValues }) => 
+      api.patch(`/api/Productos/${data.id}`, data.values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] })
+      toast.success('Producto actualizado')
+      closeForm()
+    },
+    onError: (err: any) => toast.error(err.message),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/Productos/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] })
+      toast.success('Producto eliminado')
+    },
+    onError: (err: any) => toast.error(err.message),
+  })
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProductoFormValues>({
+    resolver: zodResolver(productoSchema),
+  })
+
+  const onSubmit = (data: ProductoFormValues) => {
+    const values = { ...data, stockMinimo: Number(data.stockMinimo) }
+    if (editingProducto) {
+      updateMutation.mutate({ id: editingProducto.id, values })
+    } else {
+      createMutation.mutate(values)
+    }
+  }
+
+  const openForm = (prod?: Producto) => {
+    if (prod) {
+      setEditingProducto(prod)
+      reset(prod)
+    } else {
+      setEditingProducto(null)
+      reset({ nombre: '', descripcion: '', categoriaId: '', unidadMedidaId: '', stockMinimo: 0 })
+    }
+    setIsFormOpen(true)
+  }
+
+  const closeForm = () => {
+    setIsFormOpen(false)
+    setEditingProducto(null)
+    reset()
+  }
+
+  const columns = [
+    { 
+      header: 'Producto', 
+      accessor: (item: Producto) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold text-xs">
+            <Package size={14} />
+          </div>
+          <div>
+            <p className="font-medium text-white">{item.nombre}</p>
+            <p className="text-xs text-slate-500">{item.descripcion || 'Sin descripción'}</p>
+          </div>
+        </div>
+      )
+    },
+    { 
+      header: 'Categoría', 
+      accessor: (item: Producto) => (
+        <span className="px-2 py-1 bg-white/5 rounded-md text-xs text-slate-300">
+          {item.categoriaNombre}
+        </span>
+      )
+    },
+    { header: 'Unidad', accessor: 'unidadMedidaNombre' },
+    { header: 'Stock Mín.', accessor: 'stockMinimo' },
+  ]
+
+  return (
+    <div className="relative">
+      <UniversalGrid
+        title="Catálogo de Productos"
+        items={productos}
+        columns={columns}
+        isLoading={isLoading}
+        onAdd={() => openForm()}
+        onEdit={(item) => openForm(item)}
+        onDelete={(item) => {
+          if (confirm('¿Eliminar producto del catálogo?')) {
+            deleteMutation.mutate(item.id)
+          }
+        }}
+        renderMobileCard={(item) => (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white">{item.nombre}</h3>
+              <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/10 uppercase">
+                {item.categoriaNombre}
+              </span>
+            </div>
+            <p className="text-sm text-slate-400">{item.descripcion}</p>
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium uppercase tracking-tighter">
+                <Scale size={12} /> {item.unidadMedidaNombre}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium uppercase tracking-tighter">
+                <Tag size={12} /> Mín: {item.stockMinimo}
+              </div>
+            </div>
+          </div>
+        )}
+      />
+
+      <AnimatePresence>
+        {isFormOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeForm} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass-dark z-[70] shadow-2xl p-6 overflow-y-auto" >
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-white">{editingProducto ? 'Editar Producto' : 'Nuevo Producto'}</h2>
+                <button onClick={closeForm} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-400 ml-1">Nombre del Producto</label>
+                  <div className="relative">
+                    <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input {...register('nombre')} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="Ej. Alimento Iniciador" />
+                  </div>
+                  {errors.nombre && <p className="text-xs text-red-400 ml-1">{errors.nombre.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-400 ml-1">Categoría</label>
+                  <select {...register('categoriaId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                    <option value="">Selecciona una categoría</option>
+                    {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                  {errors.categoriaId && <p className="text-xs text-red-400 ml-1">{errors.categoriaId.message}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-400 ml-1">Unidad de Medida</label>
+                    <select {...register('unidadMedidaId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                      <option value="">Selecciona unidad</option>
+                      {unidades.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+                    </select>
+                    {errors.unidadMedidaId && <p className="text-xs text-red-400 ml-1">{errors.unidadMedidaId.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-400 ml-1">Stock Mínimo</label>
+                    <input type="number" step="0.01" {...register('stockMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
+                    {errors.stockMinimo && <p className="text-xs text-red-400 ml-1">{errors.stockMinimo.message}</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-400 ml-1">Descripción (Opcional)</label>
+                  <div className="relative">
+                    <Info className="absolute left-3 top-3 text-slate-500" size={18} />
+                    <textarea {...register('descripcion')} rows={3} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="Detalles adicionales..." />
+                  </div>
+                </div>
+
+                <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-8 shadow-lg shadow-blue-500/20" >
+                  <Save size={20} />
+                  {editingProducto ? 'Actualizar Producto' : 'Crear Producto'}
+                </button>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
