@@ -11,7 +11,9 @@ import {
   Tag,
   ShieldCheck,
   ClipboardList,
-  MessageSquare
+  MessageSquare,
+  Truck,
+  Ruler
 } from 'lucide-react'
 
 export const navigationItems = [
@@ -21,12 +23,14 @@ export const navigationItems = [
   { name: 'Galpones', href: '/galpones', icon: Warehouse },
   { name: 'Inventario', href: '/inventario', icon: Package },
   { name: 'Categorías', href: '/categorias', icon: Tag },
+  { name: 'Unidades', href: '/unidades-medida', icon: Ruler },
   { name: 'Productos', href: '/productos', icon: Package },
   { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
   { name: 'Gastos', href: '/gastos', icon: Receipt },
   { name: 'Finanzas', href: '/finanzas', icon: DollarSign },
   { name: 'Sanidad', href: '/sanidad', icon: ShieldCheck },
   { name: 'Plantillas', href: '/plantillas', icon: ClipboardList },
+  { name: 'Proveedores', href: '/proveedores', icon: Truck },
   { name: 'Clientes', href: '/clientes', icon: Users },
   { name: 'Auditoría', href: '/auditoria', icon: ClipboardList },
   { name: 'Configuración', href: '/configuracion', icon: Settings },
