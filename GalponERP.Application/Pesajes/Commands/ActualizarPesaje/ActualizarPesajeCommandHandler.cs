@@ -40,8 +40,13 @@ public class ActualizarPesajeCommandHandler : IRequestHandler<ActualizarPesajeCo
             throw new Exception("No se pueden editar pesajes de un lote cerrado o cancelado.");
         }
 
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.Fecha.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.Fecha, DateTimeKind.Utc) 
+            : request.Fecha.ToUniversalTime();
+
         // 1. Actualizar el registro de pesaje
-        pesaje.Actualizar(request.Fecha, request.PesoPromedioGramos, request.CantidadMuestreada);
+        pesaje.Actualizar(fechaUtc, request.PesoPromedioGramos, request.CantidadMuestreada);
         pesaje.SetAuditoriaModificacion(DateTime.UtcNow, request.UsuarioId);
 
         // 2. Persistir

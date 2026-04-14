@@ -103,7 +103,7 @@ export default function GalponesPage() {
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
             <Warehouse size={20} />
           </div>
-          <span className="font-bold text-white text-lg">{item.nombre}</span>
+          <span className="font-bold text-foreground text-lg">{item.nombre}</span>
         </div>
       )
     },
@@ -111,7 +111,7 @@ export default function GalponesPage() {
       header: 'Capacidad', 
       accessor: (item: Galpon) => (
         <div className="flex items-center gap-2">
-          <Users size={16} className="text-slate-500" />
+          <Users size={16} className="text-muted-foreground" />
           <span className="text-slate-300 font-medium">{item.capacidad.toLocaleString()} aves</span>
         </div>
       )
@@ -120,8 +120,8 @@ export default function GalponesPage() {
       header: 'Ubicación', 
       accessor: (item: Galpon) => (
         <div className="flex items-center gap-2">
-          <MapPin size={16} className="text-slate-500" />
-          <span className="text-slate-400">{item.ubicacion}</span>
+          <MapPin size={16} className="text-muted-foreground" />
+          <span className="text-muted-foreground">{item.ubicacion}</span>
         </div>
       )
     },
@@ -148,16 +148,16 @@ export default function GalponesPage() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
                 <Warehouse size={24} />
               </div>
-              <h3 className="text-xl font-black text-white">{item.nombre}</h3>
+              <h3 className="text-xl font-black text-foreground">{item.nombre}</h3>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Capacidad</p>
-                <p className="text-white font-bold">{item.capacidad.toLocaleString()}</p>
+              <div className="p-3 bg-muted/50 rounded-xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Capacidad</p>
+                <p className="text-foreground font-bold">{item.capacidad.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Ubicación</p>
-                <p className="text-white font-bold truncate">{item.ubicacion}</p>
+              <div className="p-3 bg-muted/50 rounded-xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Ubicación</p>
+                <p className="text-foreground font-bold truncate">{item.ubicacion}</p>
               </div>
             </div>
           </div>
@@ -168,36 +168,36 @@ export default function GalponesPage() {
         {isFormOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeForm} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60]" />
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} className="fixed bottom-0 left-0 right-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-md glass-dark z-[70] shadow-2xl p-8 rounded-t-[2.5rem] md:rounded-none overflow-y-auto" >
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} className="fixed bottom-0 left-0 right-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-md glass z-[70] shadow-2xl p-8 rounded-t-[2.5rem] md:rounded-none overflow-y-auto" >
               <div className="flex items-center justify-between mb-10">
                 <div>
-                  <h2 className="text-3xl font-black text-white">{editingGalpon ? 'Editar' : 'Nuevo'}</h2>
+                  <h2 className="text-3xl font-black text-foreground">{editingGalpon ? 'Editar' : 'Nuevo'}</h2>
                   <p className="text-emerald-500 font-bold uppercase tracking-widest text-xs mt-1">Infraestructura</p>
                 </div>
-                <button onClick={closeForm} className="p-3 bg-white/5 rounded-2xl text-slate-400 hover:text-white transition-all"><X size={24} /></button>
+                <button onClick={closeForm} className="p-3 bg-muted/50 rounded-2xl text-muted-foreground hover:text-foreground transition-all"><X size={24} /></button>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Nombre del Galpón</label>
-                  <input {...register('nombre')} className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder:text-slate-700" placeholder="Ej. Galpón Norte 01" />
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Nombre del Galpón</label>
+                  <input {...register('nombre')} className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder:text-slate-700" placeholder="Ej. Galpón Norte 01" />
                   {errors.nombre && <p className="text-xs text-red-400 font-bold ml-1">{errors.nombre.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Capacidad Máxima (Aves)</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Capacidad Máxima (Aves)</label>
                   <div className="relative">
-                    <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-                    <input type="number" {...register('capacidad', { valueAsNumber: true })} className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" />
+                    <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                    <input type="number" {...register('capacidad', { valueAsNumber: true })} className="w-full pl-14 pr-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" />
                   </div>
                   {errors.capacidad && <p className="text-xs text-red-400 font-bold ml-1">{errors.capacidad.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Ubicación Geográfica / Sector</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Ubicación Geográfica / Sector</label>
                   <div className="relative">
-                    <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-                    <input {...register('ubicacion')} className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" placeholder="Ej. Km 12 - Lado Este" />
+                    <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                    <input {...register('ubicacion')} className="w-full pl-14 pr-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all" placeholder="Ej. Km 12 - Lado Este" />
                   </div>
                   {errors.ubicacion && <p className="text-xs text-red-400 font-bold ml-1">{errors.ubicacion.message}</p>}
                 </div>
@@ -216,3 +216,5 @@ export default function GalponesPage() {
     </div>
   )
 }
+
+

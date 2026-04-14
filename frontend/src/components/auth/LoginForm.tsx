@@ -47,26 +47,26 @@ export function LoginForm() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-md p-8 glass-dark rounded-3xl shadow-2xl relative z-10 border border-white/10"
+      className="w-full max-w-md p-8 glass rounded-3xl shadow-2xl relative z-10 border border-border"
     >
       <div className="flex flex-col items-center mb-8">
         <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-4 border border-primary/30">
           <LogIn className="text-primary" size={32} />
         </div>
-        <h1 className="text-3xl font-black text-white tracking-tighter">Pollos<span className="text-primary text-4xl">-</span>NicoLu</h1>
-        <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Acceso de Operador</p>
+        <h1 className="text-3xl font-black text-foreground tracking-tighter">Pollos<span className="text-primary text-4xl">-</span>NicoLu</h1>
+        <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest mt-1">Acceso de Operador</p>
       </div>
 
       <form onSubmit={handleManualSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Profesional</label>
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Email Profesional</label>
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-700 font-medium"
+              className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-700 font-medium"
               placeholder="admin@admin.com"
               required
             />
@@ -74,14 +74,14 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Contraseña de Seguridad</label>
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Contraseña de Seguridad</label>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-700 font-medium"
+              className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-700 font-medium"
               placeholder="••••••••"
               required
             />
@@ -118,11 +118,13 @@ export function LoginForm() {
         </button>
       </form>
       
-      <div className="mt-8 pt-6 border-t border-white/5 text-center">
+      <div className="mt-8 pt-6 border-t border-border text-center">
         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-[0.2em]">
           Conectado a: {process.env.NEXT_PUBLIC_API_URL?.replace('https://', '')}
         </p>
       </div>
     </motion.div>
+
   )
 }
+

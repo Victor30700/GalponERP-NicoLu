@@ -27,11 +27,16 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
 
     public async Task<Guid> Handle(CrearLoteCommand request, CancellationToken cancellationToken)
     {
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.FechaIngreso.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.FechaIngreso, DateTimeKind.Utc) 
+            : request.FechaIngreso.ToUniversalTime();
+
         var loteId = Guid.NewGuid();
         var lote = new Lote(
             loteId,
             request.GalponId,
-            request.FechaIngreso,
+            fechaUtc,
             request.CantidadInicial,
             new Moneda(request.CostoUnitarioPollito)
         );

@@ -10,11 +10,11 @@ export const confirmAction = async (title: string, text: string, icon: 'warning'
     cancelButtonColor: '#1e293b',  // slate-800
     confirmButtonText: 'Confirmar',
     cancelButtonText: 'Cancelar',
-    background: '#0f172a', // slate-950
-    color: '#f8fafc', // slate-50
+    background: 'hsl(var(--background))',
+    color: 'hsl(var(--foreground))',
     customClass: {
-      popup: 'rounded-3xl border border-white/10 shadow-2xl',
-      title: 'font-bold text-white',
+      popup: 'rounded-3xl border border-border shadow-2xl',
+      title: 'font-bold text-foreground',
       confirmButton: 'rounded-xl font-black px-6 py-2.5 text-black uppercase text-xs tracking-widest',
       cancelButton: 'rounded-xl font-bold px-6 py-2.5 text-slate-400 uppercase text-xs tracking-widest'
     }
@@ -31,11 +31,11 @@ export const promptAction = async (title: string, placeholder: string) => {
     cancelButtonColor: '#1e293b',
     confirmButtonText: 'Enviar',
     cancelButtonText: 'Cancelar',
-    background: '#0f172a',
-    color: '#f8fafc',
+    background: 'hsl(var(--background))',
+    color: 'hsl(var(--foreground))',
     customClass: {
-      popup: 'rounded-3xl border border-white/10 shadow-2xl',
-      input: 'bg-white/5 border-white/10 text-white rounded-xl focus:ring-primary/50',
+      popup: 'rounded-3xl border border-border shadow-2xl',
+      input: 'bg-muted/50 border-border text-foreground rounded-xl focus:ring-primary/50',
       confirmButton: 'rounded-xl font-black px-6 py-2.5 text-black uppercase text-xs tracking-widest',
       cancelButton: 'rounded-xl font-bold px-6 py-2.5 text-slate-400 uppercase text-xs tracking-widest'
     }
@@ -52,11 +52,11 @@ export const confirmDestructiveAction = async (title: string, text: string) => {
     cancelButtonColor: '#1e293b',  // slate-800
     confirmButtonText: 'Sí, eliminar',
     cancelButtonText: 'Cancelar',
-    background: '#0f172a', // slate-950
-    color: '#f8fafc', // slate-50
+    background: 'hsl(var(--background))',
+    color: 'hsl(var(--foreground))',
     customClass: {
-      popup: 'rounded-3xl border border-white/10 shadow-2xl',
-      title: 'font-bold',
+      popup: 'rounded-3xl border border-border shadow-2xl',
+      title: 'font-bold text-foreground',
       confirmButton: 'rounded-xl font-bold px-6 py-2.5',
       cancelButton: 'rounded-xl font-bold px-6 py-2.5'
     }
@@ -70,10 +70,12 @@ export const showSuccessAlert = (title: string, text?: string) => {
     icon: 'success',
     timer: 2000,
     showConfirmButton: false,
-    background: '#0f172a',
-    color: '#f8fafc',
+    background: 'hsl(var(--background))',
+    color: 'hsl(var(--foreground))',
     customClass: {
-      popup: 'rounded-3xl border border-white/10 shadow-2xl',
+      popup: 'rounded-3xl border border-border shadow-2xl',
+      title: 'text-foreground'
     }
   });
 };
+

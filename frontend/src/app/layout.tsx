@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProviderWrapper } from "@/components/providers/ThemeProviderWrapper";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { Toaster } from "sonner";
+import { ToasterWrapper } from "@/components/shared/ToasterWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#020617",
+  themeColor: "#10b981",
 };
 
 export default function RootLayout({
@@ -44,25 +45,18 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <AuthProvider>
-          <QueryProvider>
-            {children}
-            <Toaster 
-              theme="dark" 
-              position="top-right" 
-              toastOptions={{
-                style: {
-                  background: '#0f172a',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#f1f5f9',
-                },
-              }}
-            />
-          </QueryProvider>
-        </AuthProvider>
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300 dark" suppressHydrationWarning>
+        <ThemeProviderWrapper>
+          <AuthProvider>
+            <QueryProvider>
+              {children}
+              <ToasterWrapper />
+            </QueryProvider>
+          </AuthProvider>
+        </ThemeProviderWrapper>
       </body>
     </html>
   );

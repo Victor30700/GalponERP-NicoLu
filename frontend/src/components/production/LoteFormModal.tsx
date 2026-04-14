@@ -109,18 +109,18 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
             exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-            className="fixed inset-0 m-auto w-full max-w-xl h-fit glass-dark z-[110] p-8 rounded-[2.5rem] border border-white/10 shadow-2xl"
+            className="fixed inset-0 m-auto w-full max-w-xl h-fit glass z-[110] p-8 rounded-[2.5rem] border border-border shadow-2xl"
           >
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-primary/10 text-primary">
                   <Bird size={24} />
                 </div>
-                <h2 className="text-2xl font-black text-white">
+                <h2 className="text-2xl font-black text-foreground">
                   {isEditing ? 'Editar Lote' : 'Nuevo Lote'}
                 </h2>
               </div>
-              <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-slate-400 hover:bg-white/10 transition-colors">
+              <button onClick={onClose} className="p-2 bg-muted/50 rounded-full text-muted-foreground hover:bg-muted/80 transition-colors">
                 <X size={24} />
               </button>
             </div>
@@ -128,49 +128,49 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Galpón</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Galpón</label>
                   <div className="relative">
                     <select
                       value={formData.galponId}
                       onChange={(e) => setFormData({ ...formData, galponId: e.target.value })}
-                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                      className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
                     >
-                      <option value="" className="bg-slate-900">Seleccionar Galpón</option>
+                      <option value="" className="bg-background">Seleccionar Galpón</option>
                       {galpones.map((g: any) => (
-                        <option key={g.id} value={g.id} className="bg-slate-900">{g.nombre}</option>
+                        <option key={g.id} value={g.id} className="bg-background">{g.nombre}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Fecha de Ingreso</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Fecha de Ingreso</label>
                   <div className="relative">
                     <input
                       type="date"
                       value={formData.fechaIngreso}
                       onChange={(e) => setFormData({ ...formData, fechaIngreso: e.target.value })}
-                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                      className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Cantidad Inicial</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Cantidad Inicial</label>
                   <div className="relative">
                     <input
                       type="number"
                       value={formData.cantidadInicial}
                       onChange={(e) => setFormData({ ...formData, cantidadInicial: e.target.value })}
                       placeholder="Ej: 2500"
-                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                      className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
-                    <Hash size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Hash size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Costo Unitario Pollito</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Costo Unitario Pollito</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -178,29 +178,30 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
                       value={formData.costoUnitarioPollito}
                       onChange={(e) => setFormData({ ...formData, costoUnitarioPollito: e.target.value })}
                       placeholder="Ej: 10.50"
-                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                      className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
-                    <DollarSign size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <DollarSign size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   </div>
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Plantilla Sanitaria</label>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Plantilla Sanitaria</label>
                   <div className="relative">
                     <select
                       value={formData.plantillaSanitariaId}
                       onChange={(e) => setFormData({ ...formData, plantillaSanitariaId: e.target.value })}
-                      className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                      className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
                     >
-                      <option value="" className="bg-slate-900">Sin Plantilla (Manual)</option>
+                      <option value="" className="bg-background">Sin Plantilla (Manual)</option>
                       {plantillas.map((p: any) => (
-                        <option key={p.id} value={p.id} className="bg-slate-900">{p.nombre}</option>
+                        <option key={p.id} value={p.id} className="bg-background">{p.nombre}</option>
                       ))}
                     </select>
-                    <ClipboardList size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <ClipboardList size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   </div>
                 </div>
               </div>
+
 
               <div className="pt-4">
                 <button
@@ -219,3 +220,4 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
     </AnimatePresence>
   )
 }
+

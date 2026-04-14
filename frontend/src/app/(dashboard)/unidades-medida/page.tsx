@@ -82,14 +82,14 @@ export default function UnidadesMedidaPage() {
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold">
             <Ruler size={14} />
           </div>
-          <span className="font-medium text-white">{item.nombre}</span>
+          <span className="font-medium text-foreground">{item.nombre}</span>
         </div>
       )
     },
     { 
         header: 'Abreviatura', 
         accessor: (item: UnidadMedida) => (
-            <span className="px-2 py-1 bg-white/5 rounded text-xs font-mono text-slate-400 border border-white/5">
+            <span className="px-2 py-1 bg-muted/50 rounded text-xs font-mono text-muted-foreground border border-border">
                 {item.abreviatura}
             </span>
         ) 
@@ -123,7 +123,7 @@ export default function UnidadesMedidaPage() {
         renderMobileCard={(item) => (
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-bold text-white">{item.nombre}</h3>
+              <h3 className="text-lg font-bold text-foreground">{item.nombre}</h3>
               <p className="text-sm text-blue-400 font-mono">{item.abreviatura}</p>
             </div>
           </div>
@@ -145,25 +145,25 @@ export default function UnidadesMedidaPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-md glass-dark z-[70] shadow-2xl p-6 overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-md glass z-[70] shadow-2xl p-6 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-foreground">
                   {editingUnidad ? 'Editar Unidad' : 'Nueva Unidad'}
                 </h2>
-                <button onClick={closeForm} className="p-2 bg-white/5 rounded-full text-slate-400">
+                <button onClick={closeForm} className="p-2 bg-muted/50 rounded-full text-muted-foreground">
                   <X size={20} />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Nombre Completo</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Nombre Completo</label>
                   <div className="relative">
-                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
                       {...register('nombre')}
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                       placeholder="Ej. Kilogramos"
                     />
                   </div>
@@ -171,12 +171,12 @@ export default function UnidadesMedidaPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Abreviatura</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Abreviatura</label>
                   <div className="relative">
-                    <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
                       {...register('abreviatura')}
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
+                      className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
                       placeholder="Ej. kg"
                     />
                   </div>
@@ -196,6 +196,10 @@ export default function UnidadesMedidaPage() {
           </>
         )}
       </AnimatePresence>
+
     </div>
   )
 }
+
+
+

@@ -19,7 +19,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/5 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-border pb-safe">
         <div className="flex items-center justify-around h-16">
           {mainActions.map((item) => {
             const isActive = pathname === item.href
@@ -29,7 +29,7 @@ export function BottomNav() {
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 w-full h-full transition-colors",
-                  isActive ? "text-primary" : "text-slate-400"
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <item.icon size={20} />
@@ -46,7 +46,7 @@ export function BottomNav() {
           
           <button
             onClick={() => setShowMenu(true)}
-            className="flex flex-col items-center justify-center gap-1 w-full h-full text-slate-400"
+            className="flex flex-col items-center justify-center gap-1 w-full h-full text-muted-foreground"
           >
             <MoreHorizontal size={20} />
             <span className="text-[10px] font-medium uppercase tracking-tighter">Más</span>
@@ -70,11 +70,11 @@ export function BottomNav() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 z-[70] glass-dark rounded-t-3xl p-6 md:hidden max-h-[80vh] overflow-y-auto"
+              className="fixed bottom-0 left-0 right-0 z-[70] glass rounded-t-3xl p-6 md:hidden max-h-[80vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">Menú</h2>
-                <button onClick={() => setShowMenu(false)} className="p-2 bg-white/5 rounded-full text-slate-400">
+                <h2 className="text-xl font-bold text-foreground">Menú</h2>
+                <button onClick={() => setShowMenu(false)} className="p-2 bg-muted/50 rounded-full text-muted-foreground">
                   <X size={20} />
                 </button>
               </div>
@@ -87,7 +87,7 @@ export function BottomNav() {
                     onClick={() => setShowMenu(false)}
                     className={cn(
                       "flex items-center gap-3 p-4 rounded-2xl transition-all",
-                      pathname === item.href ? "bg-primary text-primary-foreground" : "bg-white/5 text-slate-400"
+                      pathname === item.href ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground"
                     )}
                   >
                     <item.icon size={20} />
@@ -98,7 +98,7 @@ export function BottomNav() {
 
               <button
                 onClick={logout}
-                className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-red-400/10 text-red-400 font-medium"
+                className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-destructive/10 text-destructive font-medium"
               >
                 <LogOut size={20} />
                 Cerrar Sesión

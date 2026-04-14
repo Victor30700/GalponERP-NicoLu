@@ -33,11 +33,16 @@ public class RegistrarMortalidadCommandHandler : IRequestHandler<RegistrarMortal
         // 1. Registrar las bajas en la entidad Lote (actualiza contadores)
         lote.RegistrarBajas(request.Cantidad);
 
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.Fecha.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.Fecha, DateTimeKind.Utc) 
+            : request.Fecha.ToUniversalTime();
+
         // 2. Crear el registro de mortalidad diaria
         var mortalidad = new MortalidadDiaria(
             Guid.NewGuid(),
             request.LoteId,
-            request.Fecha,
+            fechaUtc,
             request.Cantidad,
             request.Causa,
             request.UsuarioId

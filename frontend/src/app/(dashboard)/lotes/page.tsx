@@ -39,8 +39,8 @@ export default function LotesPage() {
             <Bird size={20} />
           </div>
           <div>
-            <p className="font-bold text-white">{item.nombreLote}</p>
-            <p className="text-xs text-slate-500 uppercase tracking-wider">{item.galponNombre}</p>
+            <p className="font-bold text-foreground">{item.nombreLote}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">{item.galponNombre}</p>
           </div>
         </div>
       )
@@ -49,8 +49,8 @@ export default function LotesPage() {
       header: 'Población', 
       accessor: (item: Lote) => (
         <div>
-          <p className="text-white font-medium">{(item.avesVivas ?? 0).toLocaleString()} vivas</p>
-          <p className="text-[10px] text-slate-500">Inició con {item.cantidadInicial}</p>
+          <p className="text-foreground font-medium">{(item.avesVivas ?? 0).toLocaleString()} vivas</p>
+          <p className="text-[10px] text-muted-foreground">Inició con {item.cantidadInicial}</p>
         </div>
       )
     },
@@ -59,11 +59,11 @@ export default function LotesPage() {
       accessor: (item: Lote) => (
         <div className="flex items-center gap-4">
           <div>
-            <p className="text-[10px] text-slate-500 uppercase font-bold">FCR</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold">FCR</p>
             <p className="text-blue-400 font-bold">{(item.fcrActual ?? 0).toFixed(2)}</p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 uppercase font-bold">Bajas</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold">Bajas</p>
             <p className="text-red-400 font-bold">{(item.mortalidadPorcentaje ?? 0).toFixed(1)}%</p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function LotesPage() {
         <span className={cn(
           "px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest",
           item.estado === 'Activo' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
-          item.estado === 'Cerrado' ? "bg-slate-500/10 text-slate-500 border border-white/5" :
+          item.estado === 'Cerrado' ? "bg-slate-500/10 text-muted-foreground border border-border" :
           "bg-red-500/10 text-red-500 border border-red-500/20"
         )}>
           {item.estado}
@@ -87,7 +87,7 @@ export default function LotesPage() {
       accessor: (item: Lote) => (
         <Link 
           href={`/lotes/${item.id}`}
-          className="flex items-center gap-2 text-primary hover:text-white transition-colors font-bold text-xs uppercase tracking-widest"
+          className="flex items-center gap-2 text-primary hover:text-foreground transition-colors font-bold text-xs uppercase tracking-widest"
         >
           Gestionar <ArrowRight size={14} />
         </Link>
@@ -102,7 +102,7 @@ export default function LotesPage() {
           onClick={() => setShowAll(!showAll)}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-            showAll ? "bg-primary text-black" : "bg-white/5 text-slate-400 border border-white/5"
+            showAll ? "bg-primary text-black" : "bg-muted/50 text-muted-foreground border border-border"
           )}
         >
           <Filter size={14} />
@@ -124,14 +124,14 @@ export default function LotesPage() {
                   <Bird size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white">{item.nombreLote}</h3>
+                  <h3 className="text-xl font-black text-foreground">{item.nombreLote}</h3>
                   <p className="text-xs text-primary font-bold uppercase tracking-widest">{item.galponNombre}</p>
                 </div>
               </div>
               <span className={cn(
                 "text-[10px] font-black px-2 py-1 rounded border uppercase",
                 item.estado === 'Activo' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/10" : 
-                item.estado === 'Cerrado' ? "bg-slate-500/10 text-slate-500 border-white/5" :
+                item.estado === 'Cerrado' ? "bg-slate-500/10 text-muted-foreground border-border" :
                 "bg-red-500/10 text-red-500 border-red-500/10"
               )}>
                 {item.estado}
@@ -139,17 +139,17 @@ export default function LotesPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Aves Vivas</p>
-                <p className="text-white font-black text-lg">{(item.avesVivas ?? 0).toLocaleString()}</p>
+              <div className="p-3 bg-muted/50 rounded-xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Aves Vivas</p>
+                <p className="text-foreground font-black text-lg">{(item.avesVivas ?? 0).toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">FCR Actual</p>
+              <div className="p-3 bg-muted/50 rounded-xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">FCR Actual</p>
                 <p className="text-blue-400 font-black text-lg">{(item.fcrActual ?? 0).toFixed(2)}</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-widest pt-2">
+            <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase tracking-widest pt-2">
               <div className="flex items-center gap-2">
                 <Calendar size={14} />
                 <span>Inició: {new Date(item.fechaInicio).toLocaleDateString()}</span>
@@ -167,3 +167,5 @@ export default function LotesPage() {
     </>
   )
 }
+
+

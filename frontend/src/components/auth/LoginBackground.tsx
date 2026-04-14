@@ -20,7 +20,7 @@ export function LoginBackground() {
   }, [])
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden bg-slate-950">
+    <div className="fixed inset-0 z-0 overflow-hidden bg-muted/50">
       <AnimatePresence mode="wait">
         <motion.div
           key={backgrounds[index]}
@@ -42,3 +42,4 @@ export function LoginBackground() {
     </div>
   )
 }
+

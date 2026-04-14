@@ -265,15 +265,15 @@ export default function ChatPage() {
   if (loading) return null
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] glass-dark border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative">
+    <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] glass border border-border rounded-3xl overflow-hidden shadow-2xl relative">
       
       {/* Sidebar - Desktop List / Mobile Slide-over */}
       <aside className={cn(
-        "absolute inset-y-0 left-0 z-40 w-72 bg-slate-950/80 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 md:relative md:translate-x-0",
+        "absolute inset-y-0 left-0 z-40 w-72 bg-muted/50/80 backdrop-blur-xl border-r border-border transition-transform duration-300 md:relative md:translate-x-0",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-white/5">
+          <div className="p-4 border-b border-border">
             <button 
               onClick={startNewChat}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/20"
@@ -283,10 +283,10 @@ export default function ChatPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar">
-            <h3 className="px-3 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Historial</h3>
+            <h3 className="px-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Historial</h3>
             
             {isLoadingConversations ? (
-              <div className="flex justify-center p-8"><Loader2 className="animate-spin text-slate-500" /></div>
+              <div className="flex justify-center p-8"><Loader2 className="animate-spin text-muted-foreground" /></div>
             ) : conversaciones.length === 0 ? (
               <p className="px-3 text-xs text-slate-600 italic">No hay chats previos</p>
             ) : (
@@ -296,7 +296,7 @@ export default function ChatPage() {
                   onClick={() => loadConversacion(c.id)}
                   className={cn(
                     "group relative p-3 rounded-xl cursor-pointer transition-all flex items-start gap-3",
-                    conversacionId === c.id ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                    conversacionId === c.id ? "bg-muted/50 text-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-slate-200"
                   )}
                 >
                   <MessageSquare size={16} className="mt-1 flex-shrink-0" />
@@ -315,21 +315,21 @@ export default function ChatPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-white/5 text-[10px] text-slate-600 font-bold uppercase tracking-tighter text-center">
+          <div className="p-4 border-t border-border text-[10px] text-slate-600 font-bold uppercase tracking-tighter text-center">
             GalponERP Asistente IA v1.0
           </div>
         </div>
       </aside>
 
       {/* Main Chat View */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white/5 relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-muted/50 relative">
         
         {/* Header */}
-        <header className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+        <header className="px-6 py-4 border-b border-border bg-muted/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="md:hidden p-2 text-slate-400 hover:text-white"
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground"
             >
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -337,10 +337,10 @@ export default function ChatPage() {
               <Bot size={24} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white leading-tight">Asistente IA</h1>
+              <h1 className="text-lg font-bold text-foreground leading-tight">Asistente IA</h1>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">En Línea</span>
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">En Línea</span>
               </div>
             </div>
           </div>
@@ -350,7 +350,7 @@ export default function ChatPage() {
               onClick={() => setIsAudioEnabled(!isAudioEnabled)}
               className={cn(
                 "p-2.5 rounded-xl border transition-all",
-                isAudioEnabled ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : "bg-white/5 border-white/10 text-slate-500"
+                isAudioEnabled ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : "bg-muted/50 border-border text-muted-foreground"
               )}
               title="Voz a texto"
             >
@@ -365,12 +365,12 @@ export default function ChatPage() {
             <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>
           ) : messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-              <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center">
                 <Sparkles size={40} className="text-indigo-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">¿En qué puedo ayudarte hoy?</p>
-                <p className="text-sm text-slate-400 max-w-xs mx-auto">
+                <p className="text-xl font-bold text-foreground">¿En qué puedo ayudarte hoy?</p>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                   Soy tu asistente experto en avicultura. Pregúntame sobre tus lotes, inventario o finanzas.
                 </p>
               </div>
@@ -379,7 +379,7 @@ export default function ChatPage() {
                   <button 
                     key={i}
                     onClick={() => handleSend(hint)}
-                    className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-300 hover:bg-white/10 transition-all text-left"
+                    className="px-4 py-3 bg-muted/50 border border-border rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-300 hover:bg-muted/50 transition-all text-left"
                   >
                     {hint}
                   </button>
@@ -404,8 +404,8 @@ export default function ChatPage() {
                   <div className={cn(
                     "p-4 rounded-2xl shadow-xl",
                     msg.role === 'user' 
-                      ? "bg-slate-800 text-slate-200 rounded-tr-none border border-white/5" 
-                      : "bg-indigo-600/90 text-white rounded-tl-none border border-white/10"
+                      ? "bg-slate-800 text-slate-200 rounded-tr-none border border-border" 
+                      : "bg-indigo-600/90 text-white rounded-tl-none border border-border"
                   )}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                     <span className="text-[9px] opacity-40 mt-2 block text-right">
@@ -421,7 +421,7 @@ export default function ChatPage() {
             <div className="flex justify-start">
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center"><Bot size={16} /></div>
-                <div className="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none flex items-center gap-2">
+                <div className="bg-muted/50 border border-border p-4 rounded-2xl rounded-tl-none flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '-0.3s' }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '-0.15s' }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" />
@@ -433,7 +433,7 @@ export default function ChatPage() {
         </main>
 
         {/* Input */}
-        <footer className="p-6 bg-slate-950/20 border-t border-white/5">
+        <footer className="p-6 bg-muted/50/20 border-t border-border">
           <div className="max-w-4xl mx-auto flex gap-3 items-end">
             <div className="flex-1 relative">
               <input
@@ -443,7 +443,7 @@ export default function ChatPage() {
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder={isRecording ? "Grabando..." : "Escribe tu consulta aquí..."}
                 disabled={isRecording}
-                className="w-full bg-slate-900 border border-white/10 rounded-2xl pl-4 pr-12 py-4 text-sm text-white focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none"
+                className="w-full bg-muted/50 border border-border rounded-2xl pl-4 pr-12 py-4 text-sm text-foreground focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none"
               />
               <button 
                 onClick={() => handleSend()}
@@ -470,3 +470,6 @@ export default function ChatPage() {
     </div>
   )
 }
+
+
+

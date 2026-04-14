@@ -38,12 +38,17 @@ public class RegistrarVentaParcialCommandHandler : IRequestHandler<RegistrarVent
         // Regla de negocio encapsulada en la entidad Lote
         lote.RegistrarVenta(request.CantidadPollos);
 
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.Fecha.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.Fecha, DateTimeKind.Utc) 
+            : request.Fecha.ToUniversalTime();
+
         var ventaId = Guid.NewGuid();
         var venta = new Venta(
             ventaId,
             request.LoteId,
             request.ClienteId,
-            request.Fecha,
+            fechaUtc,
             request.CantidadPollos,
             request.PesoTotalVendido,
             new Moneda(request.PrecioPorKilo),

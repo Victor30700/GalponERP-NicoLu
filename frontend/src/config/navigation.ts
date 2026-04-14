@@ -19,6 +19,7 @@ import {
 export const navigationItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Lotes', href: '/lotes', icon: Bird },
+  { name: 'Planificación', href: '/planificacion', icon: ClipboardList },
   { name: 'Chat con IA', href: '/chat', icon: MessageSquare },
   { name: 'Galpones', href: '/galpones', icon: Warehouse },
   { name: 'Inventario', href: '/inventario', icon: Package },
@@ -33,5 +34,6 @@ export const navigationItems = [
   { name: 'Proveedores', href: '/proveedores', icon: Truck },
   { name: 'Clientes', href: '/clientes', icon: Users },
   { name: 'Auditoría', href: '/auditoria', icon: ClipboardList },
+  { name: 'Usuarios', href: '/usuarios', icon: Users },
   { name: 'Configuración', href: '/configuracion', icon: Settings },
 ]

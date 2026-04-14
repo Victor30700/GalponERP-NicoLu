@@ -150,8 +150,8 @@ export default function ProductosPage() {
             <Package size={14} />
           </div>
           <div>
-            <p className="font-medium text-white">{item.nombre}</p>
-            <p className="text-[10px] text-slate-500 uppercase font-bold">{item.categoriaNombre}</p>
+            <p className="font-medium text-foreground">{item.nombre}</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold">{item.categoriaNombre}</p>
           </div>
         </div>
       )
@@ -163,7 +163,7 @@ export default function ProductosPage() {
           <span className="text-xs text-slate-300">
             Min: {item.umbralMinimo} {item.unidadMedidaNombre}
           </span>
-          <span className="text-[10px] text-slate-500">
+          <span className="text-[10px] text-muted-foreground">
             Equiv: {item.equivalenciaEnKg}kg
           </span>
         </div>
@@ -197,16 +197,16 @@ export default function ProductosPage() {
         renderMobileCard={(item) => (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">{item.nombre}</h3>
+              <h3 className="text-lg font-bold text-foreground">{item.nombre}</h3>
               <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded border border-blue-500/10 uppercase">
                 {item.categoriaNombre}
               </span>
             </div>
             <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium uppercase tracking-tighter">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium uppercase tracking-tighter">
                 <Scale size={12} /> {item.unidadMedidaNombre}
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium uppercase tracking-tighter">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium uppercase tracking-tighter">
                 <Tag size={12} /> Mín: {item.umbralMinimo}
               </div>
             </div>
@@ -218,25 +218,25 @@ export default function ProductosPage() {
         {isFormOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeForm} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass-dark z-[70] shadow-2xl p-6 overflow-y-auto" >
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass z-[70] shadow-2xl p-6 overflow-y-auto" >
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">{editingProducto ? 'Editar Producto' : 'Nuevo Producto'}</h2>
-                <button onClick={closeForm} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                <h2 className="text-2xl font-bold text-foreground">{editingProducto ? 'Editar Producto' : 'Nuevo Producto'}</h2>
+                <button onClick={closeForm} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Nombre del Producto</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Nombre del Producto</label>
                   <div className="relative">
-                    <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                    <input {...register('nombre')} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="Ej. Alimento Iniciador" />
+                    <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <input {...register('nombre')} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="Ej. Alimento Iniciador" />
                   </div>
                   {errors.nombre && <p className="text-xs text-red-400 ml-1">{errors.nombre.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Categoría</label>
-                  <select {...register('categoriaProductoId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Categoría</label>
+                  <select {...register('categoriaProductoId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
                     <option value="">Selecciona una categoría</option>
                     {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
@@ -245,25 +245,25 @@ export default function ProductosPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Unidad de Medida</label>
-                    <select {...register('unidadMedidaId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Unidad de Medida</label>
+                    <select {...register('unidadMedidaId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
                       <option value="">Selecciona unidad</option>
                       {unidades.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
                     </select>
                     {errors.unidadMedidaId && <p className="text-xs text-red-400 ml-1">{errors.unidadMedidaId.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Stock Mínimo</label>
-                    <input type="number" step="0.01" {...register('umbralMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Stock Mínimo</label>
+                    <input type="number" step="0.01" {...register('umbralMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
                     {errors.umbralMinimo && <p className="text-xs text-red-400 ml-1">{errors.umbralMinimo.message}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Equivalencia en Kg (opcional)</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Equivalencia en Kg (opcional)</label>
                   <div className="relative">
-                    <Scale className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                    <input type="number" step="0.001" {...register('equivalenciaEnKg', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="0.000" />
+                    <Scale className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <input type="number" step="0.001" {...register('equivalenciaEnKg', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="0.000" />
                   </div>
                   {errors.equivalenciaEnKg && <p className="text-xs text-red-400 ml-1">{errors.equivalenciaEnKg.message}</p>}
                 </div>
@@ -280,3 +280,6 @@ export default function ProductosPage() {
     </div>
   )
 }
+
+
+

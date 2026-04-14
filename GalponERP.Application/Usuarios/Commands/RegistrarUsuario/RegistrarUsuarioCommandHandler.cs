@@ -73,13 +73,18 @@ public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCo
         }
 
         // 4. Crear usuario en la BD local
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.FechaNacimiento.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.FechaNacimiento, DateTimeKind.Utc) 
+            : request.FechaNacimiento.ToUniversalTime();
+
         var usuario = new Usuario(
             Guid.NewGuid(),
             firebaseUid,
             request.Email,
             request.Nombre,
             request.Apellidos,
-            request.FechaNacimiento,
+            fechaUtc,
             request.Direccion ?? string.Empty,
             request.Profesion ?? string.Empty,
             request.Telefono ?? string.Empty,

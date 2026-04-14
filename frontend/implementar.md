@@ -1,8 +1,8 @@
-Proveedores
+Ventas
 
 
 GET
-/api/Proveedores
+/api/Ventas
 
 
 Code	Details
@@ -11,43 +11,28 @@ Response body
 Download
 [
   {
-    "id": "e835386f-0ae6-4001-819e-7c139fb7d174",
-    "razonSocial": "gggfgfgfg",
-    "nitRuc": "fgef43",
-    "telefono": "5656565656",
-    "email": "prove@gmail.com",
-    "direccion": "streeeeeeing",
-    "isActive": true
+    "id": "f19310c1-d268-4ac9-aead-01403ec8ac5a",
+    "loteId": "d68785af-7f59-4e18-af4a-a172b66359bb",
+    "clienteId": "3954a7ae-3826-4c00-89e6-557b7d5dced3",
+    "clienteNombre": "test ppppppp",
+    "fecha": "2026-04-11T20:42:51.375Z",
+    "cantidadPollos": 1000,
+    "pesoTotalKg": 2500,
+    "precioPorKilo": 19.5,
+    "total": 48750,
+    "saldoPendiente": 48750,
+    "estadoPago": "Pagado"
   }
 ]
 
-POST
-/api/Proveedores
-
-{
-  "razonSocial": "gggfgfgfg",
-  "nitRuc": "fgef43",
-  "telefono": "5656565656",
-  "email": "prove@gmail.com",
-  "direccion": "streeeeeeing"
-}
-
-201
-Undocumented
-Response body
-Download
-{
-  "proveedorId": "e835386f-0ae6-4001-819e-7c139fb7d174"
-}
-
 GET
-/api/Proveedores/{id}
+/api/Ventas/{id}
 
 Name	Description
 id *
 string($uuid)
 (path)
-e835386f-0ae6-4001-819e-7c139fb7d174
+f19310c1-d268-4ac9-aead-01403ec8ac5a
 
 
 Code	Details
@@ -55,17 +40,21 @@ Code	Details
 Response body
 Download
 {
-  "id": "e835386f-0ae6-4001-819e-7c139fb7d174",
-  "razonSocial": "gggfgfgfg",
-  "nitRuc": "fgef43",
-  "telefono": "5656565656",
-  "email": "prove@gmail.com",
-  "direccion": "streeeeeeing",
-  "isActive": true
+  "id": "f19310c1-d268-4ac9-aead-01403ec8ac5a",
+  "loteId": "d68785af-7f59-4e18-af4a-a172b66359bb",
+  "clienteId": "3954a7ae-3826-4c00-89e6-557b7d5dced3",
+  "clienteNombre": "test ppppppp",
+  "fecha": "2026-04-11T20:42:51.375Z",
+  "cantidadPollos": 1000,
+  "pesoTotalKg": 2500,
+  "precioPorKilo": 19.5,
+  "total": 48750,
+  "saldoPendiente": 48750,
+  "estadoPago": "Pagado"
 }
 
 PUT
-/api/Proveedores/{id}
+/api/Ventas/{id}
 
 Name	Description
 id *
@@ -74,139 +63,87 @@ string($uuid)
 id
 
 {
-  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "razonSocial": "string",
-  "nitRuc": "string",
-  "telefono": "string",
-  "email": "string",
-  "direccion": "string"
+  "ventaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "cantidadPollos": 0,
+  "pesoTotalVendido": 0,
+  "precioPorKilo": 0
 }
 
-DELETE
-/api/Proveedores/{id}
+GET
+/api/Ventas/lote/{loteId}
 
 Name	Description
-id *
+loteId *
 string($uuid)
 (path)
-id
+d68785af-7f59-4e18-af4a-a172b66359bb
+
+200	
+Response body
+Download
+[
+  {
+    "id": "f19310c1-d268-4ac9-aead-01403ec8ac5a",
+    "loteId": "d68785af-7f59-4e18-af4a-a172b66359bb",
+    "clienteId": "3954a7ae-3826-4c00-89e6-557b7d5dced3",
+    "clienteNombre": "test ppppppp",
+    "fecha": "2026-04-11T20:42:51.375Z",
+    "cantidadPollos": 1000,
+    "pesoTotalKg": 2500,
+    "precioPorKilo": 19.5,
+    "total": 48750,
+    "saldoPendiente": 48750,
+    "estadoPago": "Pagado"
+  }
+]
+
 
 GET
-/api/Proveedores/{id}/historial
+/api/Ventas/{id}/pagos
 
 Name	Description
 id *
 string($uuid)
 (path)
-e835386f-0ae6-4001-819e-7c139fb7d174
+3fa85f64-5717-4562-b3fc-2c963f66afa6
 
 
+Code	Details
 200	
 Response body
 Download
 []
 
 
+POST
+/api/Ventas/{id}/pagos
 
-Sanidad
+Name	Description
+id *
+string($uuid)
+(path)
+id
 
+{
+  "monto": 0,
+  "fechaPago": "2026-04-14T19:29:02.548Z",
+  "metodoPago": 1
+}
 
 POST
-/api/Sanidad/bienestar
+/api/Ventas/parcial
 
 {
   "loteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "fecha": "2026-04-14T05:48:16.939Z",
-  "temperatura": 0,
-  "humedad": 0,
-  "consumoAgua": 0,
-  "observaciones": "string"
+  "clienteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "fecha": "2026-04-14T19:29:17.221Z",
+  "cantidadPollos": 0,
+  "pesoTotalVendido": 0,
+  "precioPorKilo": 0
 }
-
-
-Code	Details
-200	
-Response body
-Download
-{
-  "registroId": "3ad65e93-f439-4d75-96fb-ccc44885cc46"
-}
-
-UnidadesMedida
-
-
-GET
-/api/UnidadesMedida
-
-200	
-Response body
-Download
-[
-  {
-    "id": "bbad2736-6abd-439d-85ee-8f24e6c50006",
-    "nombre": "Kilogramo",
-    "abreviatura": "Kg"
-  },
-  {
-    "id": "28feb567-5e7d-44a3-9784-6079cc086eff",
-    "nombre": "Unidad",
-    "abreviatura": "Und"
-  },
-  {
-    "id": "41a833d0-b6d6-44b7-8b0b-fe013381ffff",
-    "nombre": "Litro",
-    "abreviatura": "L"
-  },
-  {
-    "id": "f8be3169-fde2-419d-ba4a-39b3c9f37faa",
-    "nombre": "Saco",
-    "abreviatura": "Sc"
-  },
-  {
-    "id": "22372a07-1f5e-45a0-bc2f-cd93cfc16116",
-    "nombre": "testUpdate",
-    "abreviatura": "test"
-  }
-]
 
 POST
-/api/UnidadesMedida
-
-{
-  "nombre": "string",
-  "abreviatura": "string"
-}
-
-
-Code	Details
-201
-Undocumented
-Response body
-Download
-"86ac5e87-02ff-4d6f-8250-c5f3b0932ab0"
-
-GET
-/api/UnidadesMedida/{id}
-
-Name	Description
-id *
-string($uuid)
-(path)
-86ac5e87-02ff-4d6f-8250-c5f3b0932ab0
-
-
-Code	Details
-200	
-Response body
-Download
-{
-  "id": "86ac5e87-02ff-4d6f-8250-c5f3b0932ab0",
-  "nombre": "string",
-  "abreviatura": "string"
-}
-
-PUT
-/api/UnidadesMedida/{id}
+/api/Ventas/{id}/anular
 
 Name	Description
 id *
@@ -214,17 +151,16 @@ string($uuid)
 (path)
 id
 
-{
-  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "nombre": "string",
-  "abreviatura": "string"
-}
 
 DELETE
-/api/UnidadesMedida/{id}
+/api/Ventas/{id}/pagos/{pagoId}
 
 Name	Description
 id *
 string($uuid)
 (path)
 id
+pagoId *
+string($uuid)
+(path)
+pagoId

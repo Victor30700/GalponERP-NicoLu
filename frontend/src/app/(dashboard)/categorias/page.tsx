@@ -128,9 +128,9 @@ export default function CategoriasPage() {
         renderMobileCard={(item) => (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">{(item as Categoria).nombre}</h3>
+              <h3 className="text-lg font-bold text-foreground">{(item as Categoria).nombre}</h3>
             </div>
-            <p className="text-sm text-slate-400">{(item as Categoria).descripcion}</p>
+            <p className="text-sm text-muted-foreground">{(item as Categoria).descripcion}</p>
           </div>
         )}
       />
@@ -150,11 +150,11 @@ export default function CategoriasPage() {
               animate={{ x: 0 }} 
               exit={{ x: '100%' }} 
               transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-              className="fixed top-0 right-0 bottom-0 w-full max-w-md glass-dark z-[70] shadow-2xl p-6 overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-md glass z-[70] shadow-2xl p-6 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">{editingCategoria ? 'Editar Categoría' : 'Nueva Categoría'}</h2>
-                <button onClick={closeForm} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                <h2 className="text-2xl font-bold text-foreground">{editingCategoria ? 'Editar Categoría' : 'Nueva Categoría'}</h2>
+                <button onClick={closeForm} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -164,7 +164,7 @@ export default function CategoriasPage() {
                   </label>
                   <input
                     {...register('nombre')}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     placeholder="Ej. Alimento, Medicamento..."
                   />
                   {errors.nombre && <p className="text-xs text-red-400 mt-1">{errors.nombre.message}</p>}
@@ -177,7 +177,7 @@ export default function CategoriasPage() {
                   <textarea
                     {...register('descripcion')}
                     rows={4}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+                    className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
                     placeholder="Opcional: Breve descripción de la categoría"
                   />
                 </div>
@@ -186,7 +186,7 @@ export default function CategoriasPage() {
                   <button
                     type="button"
                     onClick={closeForm}
-                    className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-white font-medium hover:bg-white/5 transition-all"
+                    className="flex-1 px-4 py-3 rounded-xl border border-border text-foreground font-medium hover:bg-muted/50 transition-all"
                   >
                     Cancelar
                   </button>
@@ -207,3 +207,5 @@ export default function CategoriasPage() {
     </div>
   )
 }
+
+

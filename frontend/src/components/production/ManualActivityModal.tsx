@@ -56,16 +56,16 @@ export function ManualActivityModal({ isOpen, onClose, loteId }: ManualActivityM
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 m-auto w-full max-w-lg h-fit glass-dark z-[130] p-8 rounded-[2.5rem] border border-white/10"
+            className="fixed inset-0 m-auto w-full max-w-lg h-fit glass z-[130] p-8 rounded-[2.5rem] border border-border"
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-black text-white uppercase tracking-widest">Actividad Manual</h2>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter mt-1">Programar tarea extraordinaria</p>
+                <h2 className="text-2xl font-black text-foreground uppercase tracking-widest">Actividad Manual</h2>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter mt-1">Programar tarea extraordinaria</p>
               </div>
               <button
                 onClick={onClose}
-                className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-slate-500 transition-all"
+                className="p-3 bg-muted/50 hover:bg-muted/80 rounded-2xl text-muted-foreground transition-all"
               >
                 <X size={24} />
               </button>
@@ -73,70 +73,71 @@ export function ManualActivityModal({ isOpen, onClose, loteId }: ManualActivityM
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descripción de la Tarea</label>
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Descripción de la Tarea</label>
                 <div className="relative">
-                  <ClipboardCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <ClipboardCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                   <input
                     required
                     type="text"
                     value={formData.descripcion}
                     onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                     placeholder="Ej: Vacunación extra, Limpieza profunda..."
-                    className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    className="w-full pl-12 pr-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tipo</label>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Tipo</label>
                   <select
                     value={formData.tipo}
                     onChange={(e) => setFormData({ ...formData, tipo: Number(e.target.value) })}
-                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+                    className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
                   >
-                    <option value={TipoActividad.Sanidad} className="bg-slate-900">Sanidad</option>
-                    <option value={TipoActividad.Vacuna} className="bg-slate-900">Vacuna</option>
-                    <option value={TipoActividad.Tratamiento} className="bg-slate-900">Tratamiento</option>
-                    <option value={TipoActividad.Control} className="bg-slate-900">Control</option>
-                    <option value={TipoActividad.Limpieza} className="bg-slate-900">Limpieza</option>
-                    <option value={TipoActividad.Otro} className="bg-slate-900">Otro</option>
+                    <option value={TipoActividad.Sanidad} className="bg-background">Sanidad</option>
+                    <option value={TipoActividad.Vacuna} className="bg-background">Vacuna</option>
+                    <option value={TipoActividad.Tratamiento} className="bg-background">Tratamiento</option>
+                    <option value={TipoActividad.Control} className="bg-background">Control</option>
+                    <option value={TipoActividad.Limpieza} className="bg-background">Limpieza</option>
+                    <option value={TipoActividad.Otro} className="bg-background">Otro</option>
                   </select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha Programada</label>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Fecha Programada</label>
                   <div className="relative">
-                    <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
                       required
                       type="date"
                       value={formData.fechaProgramada}
                       onChange={(e) => setFormData({ ...formData, fechaProgramada: e.target.value })}
-                      className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      className="w-full pl-12 pr-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Producto Relacionado (Opcional)</label>
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Producto Relacionado (Opcional)</label>
                 <div className="relative">
-                  <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                   <select
                     value={formData.productoId}
                     onChange={(e) => setFormData({ ...formData, productoId: e.target.value })}
-                    className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+                    className="w-full pl-12 pr-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
                   >
-                    <option value="" className="bg-slate-900">Ningún producto</option>
+                    <option value="" className="bg-background">Ningún producto</option>
                     {productos.map((p) => (
-                      <option key={p.id} value={p.id} className="bg-slate-900">
+                      <option key={p.id} value={p.id} className="bg-background">
                         {p.nombre} ({p.categoriaNombre})
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
+
 
               <button
                 type="submit"
@@ -152,3 +153,4 @@ export function ManualActivityModal({ isOpen, onClose, loteId }: ManualActivityM
     </AnimatePresence>
   );
 }
+

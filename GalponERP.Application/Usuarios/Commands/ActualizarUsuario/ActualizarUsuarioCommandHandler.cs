@@ -24,11 +24,16 @@ public class ActualizarUsuarioCommandHandler : IRequestHandler<ActualizarUsuario
             throw new Exception("Usuario no encontrado.");
         }
 
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.FechaNacimiento.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.FechaNacimiento, DateTimeKind.Utc) 
+            : request.FechaNacimiento.ToUniversalTime();
+
         usuario.ActualizarPerfil(
             request.Email,
             request.Nombre,
             request.Apellidos,
-            request.FechaNacimiento,
+            fechaUtc,
             request.Direccion,
             request.Profesion,
             request.Telefono,

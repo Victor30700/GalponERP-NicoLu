@@ -25,10 +25,16 @@ public class RegistrarPagoVentaCommandHandler : IRequestHandler<RegistrarPagoVen
             throw new Exception($"Venta con ID {request.VentaId} no encontrada.");
 
         var pagoId = Guid.NewGuid();
+        
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaPagoUtc = request.FechaPago.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.FechaPago, DateTimeKind.Utc) 
+            : request.FechaPago.ToUniversalTime();
+
         venta.RegistrarPago(
             pagoId,
             new Moneda(request.Monto),
-            request.FechaPago,
+            fechaPagoUtc,
             request.MetodoPago,
             request.UsuarioId);
 

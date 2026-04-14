@@ -29,10 +29,14 @@ public class RegistrarPesajeCommandHandler : IRequestHandler<RegistrarPesajeComm
             throw new Exception("El lote no existe.");
         }
 
+        var fechaUtc = request.Fecha.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.Fecha, DateTimeKind.Utc) 
+            : request.Fecha.ToUniversalTime();
+
         var pesaje = new PesajeLote(
             Guid.NewGuid(),
             request.LoteId,
-            request.Fecha,
+            fechaUtc,
             request.PesoPromedioGramos,
             request.CantidadMuestreada,
             request.UsuarioId);

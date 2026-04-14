@@ -23,13 +23,18 @@ public class RegistrarGastoOperativoCommandHandler : IRequestHandler<RegistrarGa
     {
         var monto = new Moneda(request.Monto);
         
+        // Asegurar que la fecha sea UTC para PostgreSQL
+        var fechaUtc = request.Fecha.Kind == DateTimeKind.Unspecified 
+            ? DateTime.SpecifyKind(request.Fecha, DateTimeKind.Utc) 
+            : request.Fecha.ToUniversalTime();
+
         var gasto = new GastoOperativo(
             Guid.NewGuid(),
             request.GalponId,
             request.LoteId,
             request.Descripcion,
             monto,
-            request.Fecha,
+            fechaUtc,
             request.TipoGasto,
             request.UsuarioId
         );

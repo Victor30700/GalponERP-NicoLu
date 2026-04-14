@@ -153,17 +153,17 @@ export default function LoteDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/lotes" className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400">
+          <Link href="/lotes" className="p-2 hover:bg-muted/50 rounded-xl transition-colors text-muted-foreground">
             <ChevronLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-2xl font-black text-white">{lote?.nombreLote}</h1>
+            <h1 className="text-2xl font-black text-foreground">{lote?.nombreLote}</h1>
             <div className="flex items-center gap-2">
               <p className="text-xs font-bold text-primary uppercase tracking-widest">{lote?.galponNombre}</p>
               <span className={cn(
                 "px-2 py-0.5 rounded text-[10px] font-black uppercase",
                 lote?.estado === 'Activo' ? "bg-emerald-500/10 text-emerald-500" : 
-                lote?.estado === 'Cerrado' ? "bg-slate-500/10 text-slate-500" : "bg-red-500/10 text-red-500"
+                lote?.estado === 'Cerrado' ? "bg-slate-500/10 text-muted-foreground" : "bg-red-500/10 text-red-500"
               )}>
                 {lote?.estado}
               </span>
@@ -173,7 +173,7 @@ export default function LoteDashboard() {
         <div className="flex gap-2">
           <button 
             onClick={() => setIsEditModalOpen(true)}
-            className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 transition-colors"
+            className="p-2 bg-muted/50 hover:bg-muted/50 rounded-xl text-muted-foreground transition-colors"
           >
             <Edit size={20} />
           </button>
@@ -187,7 +187,7 @@ export default function LoteDashboard() {
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex p-1 bg-slate-900/50 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
+      <div className="flex p-1 bg-muted/50 rounded-2xl border border-border overflow-x-auto no-scrollbar">
         {[
           { id: 'overview', label: 'Resumen', icon: PieChartIcon },
           { id: 'daily', label: 'Operación', icon: ClipboardCheck },
@@ -198,7 +198,7 @@ export default function LoteDashboard() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-              activeTab === tab.id ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-400'
+              activeTab === tab.id ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-muted-foreground'
             }`}
           >
             <tab.icon size={16} />
@@ -212,13 +212,13 @@ export default function LoteDashboard() {
           {/* KPI Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map((kpi, idx) => (
-              <div key={idx} className="p-4 glass-dark rounded-2xl border border-white/5 flex flex-col justify-between">
+              <div key={idx} className="p-4 glass rounded-2xl border border-border flex flex-col justify-between">
                 <div className={`p-2 w-fit rounded-lg ${kpi.bg} ${kpi.color} mb-4`}>
                   <kpi.icon size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-white">{kpi.value}</p>
-                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{kpi.label}</p>
+                  <p className="text-2xl font-black text-foreground">{kpi.value}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{kpi.label}</p>
                   <p className={`text-[10px] mt-1 font-medium ${kpi.label === 'Pollos Vivos' ? 'text-red-400/80' : 'text-slate-600'}`}>{kpi.sub}</p>
                 </div>
               </div>
@@ -228,22 +228,22 @@ export default function LoteDashboard() {
           {/* Rendimiento Vivo Grid */}
           {rendimiento && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-               <div className="p-4 glass-dark rounded-2xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Biomasa Total</p>
+               <div className="p-4 glass rounded-2xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Biomasa Total</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-black text-white">{rendimiento.biomasaTotalKg?.toLocaleString()} kg</p>
+                  <p className="text-xl font-black text-foreground">{rendimiento.biomasaTotalKg?.toLocaleString()} kg</p>
                   <p className="text-[10px] text-emerald-500 font-bold uppercase">Estimado</p>
                 </div>
               </div>
-              <div className="p-4 glass-dark rounded-2xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Costo por Kilo Vivo</p>
+              <div className="p-4 glass rounded-2xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Costo por Kilo Vivo</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-xl font-black text-primary">${rendimiento.costoPorKiloVivo?.toFixed(2)}</p>
                   <p className="text-[10px] text-slate-600 font-bold uppercase">Actual</p>
                 </div>
               </div>
-              <div className="p-4 glass-dark rounded-2xl border border-white/5">
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Alimento Consumido</p>
+              <div className="p-4 glass rounded-2xl border border-border">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Alimento Consumido</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-xl font-black text-blue-400">{rendimiento.alimentoConsumidoKg?.toLocaleString()} kg</p>
                 </div>
@@ -253,9 +253,9 @@ export default function LoteDashboard() {
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-6 glass-dark rounded-3xl border border-white/5">
+            <div className="p-6 glass rounded-3xl border border-border">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-black text-white uppercase tracking-widest">Curva de Mortalidad</h3>
+                <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Curva de Mortalidad</h3>
                 <span className="text-[10px] text-emerald-500 font-bold px-2 py-1 bg-emerald-500/10 rounded uppercase">Semanal</span>
               </div>
               <div className="h-64 w-full">
@@ -280,9 +280,9 @@ export default function LoteDashboard() {
               </div>
             </div>
 
-            <div className="p-6 glass-dark rounded-3xl border border-white/5">
+            <div className="p-6 glass rounded-3xl border border-border">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-black text-white uppercase tracking-widest">Conversión Alimenticia</h3>
+                <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Conversión Alimenticia</h3>
                 <span className="text-[10px] text-blue-500 font-bold px-2 py-1 bg-blue-500/10 rounded uppercase">Histórico</span>
               </div>
               <div className="h-64 w-full">
@@ -318,23 +318,23 @@ export default function LoteDashboard() {
                   <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
                     <Calendar size={20} />
                   </div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest">Proyección de Sacrificio</h3>
+                  <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Proyección de Sacrificio</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Fecha Estimada</p>
-                    <p className="text-lg font-black text-white">{new Date(proyeccion.fechaEstimada).toLocaleDateString()}</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Fecha Estimada</p>
+                    <p className="text-lg font-black text-foreground">{new Date(proyeccion.fechaEstimada).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Días Restantes</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Días Restantes</p>
                     <p className="text-lg font-black text-indigo-400">{proyeccion.diasRestantes} días</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Peso Proyectado</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Peso Proyectado</p>
                     <p className="text-lg font-black text-emerald-400">{proyeccion.pesoEstimado?.toFixed(2)} kg</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase mb-1">FCR Proyectado</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">FCR Proyectado</p>
                     <p className="text-lg font-black text-blue-400">{proyeccion.fcrEstimado?.toFixed(2)}</p>
                   </div>
                 </div>
@@ -342,69 +342,69 @@ export default function LoteDashboard() {
             </div>
           )}
 
-          <h2 className="text-lg font-black text-white uppercase tracking-widest mb-4">Registro Operativo de Campo</h2>
+          <h2 className="text-lg font-black text-foreground uppercase tracking-widest mb-4">Registro Operativo de Campo</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button 
               onClick={() => setRecordType('mortality')}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-6 hover:border-red-500/50 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-red-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <AlertCircle size={28} />
               </div>
               <div>
-                <h4 className="text-white font-black text-lg">Bajas</h4>
-                <p className="text-slate-500 text-xs">Mortalidad del día</p>
+                <h4 className="text-foreground font-black text-lg">Bajas</h4>
+                <p className="text-muted-foreground text-xs">Mortalidad del día</p>
               </div>
             </button>
             <button 
               onClick={() => setRecordType('feed')}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-6 hover:border-blue-500/50 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-blue-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Scale size={28} />
               </div>
               <div>
-                <h4 className="text-white font-black text-lg">Alimento</h4>
-                <p className="text-slate-500 text-xs">Kilos servidos</p>
+                <h4 className="text-foreground font-black text-lg">Alimento</h4>
+                <p className="text-muted-foreground text-xs">Kilos servidos</p>
               </div>
             </button>
             <button 
               onClick={() => setRecordType('water')}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-6 hover:border-amber-500/50 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-amber-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Droplets size={28} />
               </div>
               <div>
-                <h4 className="text-white font-black text-lg">Agua</h4>
-                <p className="text-slate-500 text-xs">Litros consumidos</p>
+                <h4 className="text-foreground font-black text-lg">Agua</h4>
+                <p className="text-muted-foreground text-xs">Litros consumidos</p>
               </div>
             </button>
             <button 
               onClick={() => setRecordType('weight')}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-6 hover:border-indigo-500/50 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-indigo-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Ruler size={28} />
               </div>
               <div>
-                <h4 className="text-white font-black text-lg">Pesaje</h4>
-                <p className="text-slate-500 text-xs">Muestreo de peso</p>
+                <h4 className="text-foreground font-black text-lg">Pesaje</h4>
+                <p className="text-muted-foreground text-xs">Muestreo de peso</p>
               </div>
             </button>
           </div>
 
           {/* Historial de Pesajes */}
           <div className="mt-8">
-            <h3 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
               <History size={18} className="text-indigo-400" /> Historial de Pesajes
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {pesajes.map((p) => (
-                <div key={p.id} className="p-4 glass-dark rounded-2xl border border-white/5 flex items-center justify-between group">
+                <div key={p.id} className="p-4 glass rounded-2xl border border-border flex items-center justify-between group">
                   <div>
-                    <p className="text-xl font-black text-white">{p.pesoPromedioGramos} g</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase">
+                    <p className="text-xl font-black text-foreground">{p.pesoPromedioGramos} g</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase">
                       {new Date(p.fecha).toLocaleDateString()} • {p.cantidadMuestreada} aves
                     </p>
                   </div>
@@ -420,7 +420,7 @@ export default function LoteDashboard() {
                 </div>
               ))}
               {pesajes.length === 0 && (
-                <p className="col-span-full py-8 text-center text-slate-500 italic text-xs uppercase font-bold tracking-widest border border-dashed border-white/5 rounded-2xl">
+                <p className="col-span-full py-8 text-center text-muted-foreground italic text-xs uppercase font-bold tracking-widest border border-dashed border-border rounded-2xl">
                   Sin registros de pesaje
                 </p>
               )}
@@ -432,7 +432,7 @@ export default function LoteDashboard() {
       {activeTab === 'sanitary' && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-black text-white uppercase tracking-widest">Calendario Sanitario</h2>
+            <h2 className="text-lg font-black text-foreground uppercase tracking-widest">Calendario Sanitario</h2>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setIsManualModalOpen(true)}
@@ -441,30 +441,30 @@ export default function LoteDashboard() {
               >
                 <Plus size={20} />
               </button>
-              <Link href={`/lotes/${id}/sanidad`} className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest ml-2">Ver Todo</Link>
+              <Link href={`/lotes/${id}/sanidad`} className="text-xs font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest ml-2">Ver Todo</Link>
             </div>
           </div>
           
           <div className="space-y-3">
             {calendario.length === 0 ? (
-              <div className="p-12 text-center glass-dark rounded-3xl border border-white/5">
-                <p className="text-slate-500 font-bold italic">No hay actividades programadas.</p>
+              <div className="p-12 text-center glass rounded-3xl border border-border">
+                <p className="text-muted-foreground font-bold italic">No hay actividades programadas.</p>
               </div>
             ) : (
               calendario.map((item: any) => {
                 const esAplicado = item.estado === EstadoCalendario.Aplicado;
                 return (
                   <div key={item.id} className={`p-5 rounded-2xl border transition-all ${
-                    esAplicado ? 'bg-emerald-500/5 border-emerald-500/10 opacity-60' : 'glass-dark border-white/5'
+                    esAplicado ? 'bg-emerald-500/5 border-emerald-500/10 opacity-60' : 'glass border-border'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl ${esAplicado ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-800 text-slate-400'}`}>
+                        <div className={`p-3 rounded-xl ${esAplicado ? 'bg-emerald-500/20 text-emerald-500' : 'bg-slate-800 text-muted-foreground'}`}>
                           {item.tipo === TipoActividad.Vacuna ? <Droplets size={20} /> : <ClipboardCheck size={20} />}
                         </div>
                         <div>
                           <h4 className={`font-bold ${esAplicado ? 'text-emerald-500' : 'text-white'}`}>{item.descripcionTratamiento}</h4>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             Día {item.diaDeAplicacion} 
                             {item.fechaProgramada && ` • ${new Date(item.fechaProgramada).toLocaleDateString()}`}
                           </p>
@@ -474,7 +474,7 @@ export default function LoteDashboard() {
                         <button 
                           onClick={() => aplicarActividad.mutate({ id: item.id, data: { cantidadConsumida: 0 } })}
                           disabled={aplicarActividad.isPending}
-                          className="px-4 py-2 bg-white/5 hover:bg-emerald-500 hover:text-black rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                          className="px-4 py-2 bg-muted/50 hover:bg-emerald-500 hover:text-black rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                           Aplicar
                         </button>
@@ -490,7 +490,7 @@ export default function LoteDashboard() {
 
       {activeTab === 'actions' && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <h2 className="text-lg font-black text-white uppercase tracking-widest mb-4">Gestión Avanzada</h2>
+          <h2 className="text-lg font-black text-foreground uppercase tracking-widest mb-4">Gestión Avanzada</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {lote?.estado === 'Activo' && (
@@ -502,14 +502,14 @@ export default function LoteDashboard() {
                   }
                 }}
                 disabled={cerrarLote.isPending}
-                className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-4 hover:border-emerald-500/50 transition-all text-left group"
+                className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-emerald-500/50 transition-all text-left group"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Lock size={24} />
                 </div>
                 <div>
-                  <h4 className="text-white font-black text-sm uppercase">Cerrar Lote</h4>
-                  <p className="text-slate-500 text-[10px] uppercase font-bold">Finalizar ciclo productivo</p>
+                  <h4 className="text-foreground font-black text-sm uppercase">Cerrar Lote</h4>
+                  <p className="text-muted-foreground text-[10px] uppercase font-bold">Finalizar ciclo productivo</p>
                 </div>
               </button>
             )}
@@ -523,14 +523,14 @@ export default function LoteDashboard() {
                   }
                 }}
                 disabled={reabrirLote.isPending}
-                className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-4 hover:border-blue-500/50 transition-all text-left group"
+                className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-blue-500/50 transition-all text-left group"
               >
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Unlock size={24} />
                 </div>
                 <div>
-                  <h4 className="text-white font-black text-sm uppercase">Reabrir Lote</h4>
-                  <p className="text-slate-500 text-[10px] uppercase font-bold">Volver a estado activo</p>
+                  <h4 className="text-foreground font-black text-sm uppercase">Reabrir Lote</h4>
+                  <p className="text-muted-foreground text-[10px] uppercase font-bold">Volver a estado activo</p>
                 </div>
               </button>
             )}
@@ -544,41 +544,41 @@ export default function LoteDashboard() {
                   }
                 }}
                 disabled={cancelarLote.isPending}
-                className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-4 hover:border-red-500/50 transition-all text-left group"
+                className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-red-500/50 transition-all text-left group"
               >
                 <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <XCircle size={24} />
                 </div>
                 <div>
-                  <h4 className="text-white font-black text-sm uppercase">Cancelar Lote</h4>
-                  <p className="text-slate-500 text-[10px] uppercase font-bold">Anular lote actual</p>
+                  <h4 className="text-foreground font-black text-sm uppercase">Cancelar Lote</h4>
+                  <p className="text-muted-foreground text-[10px] uppercase font-bold">Anular lote actual</p>
                 </div>
               </button>
             )}
 
             <button 
               onClick={descargarReporte}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-4 hover:border-primary/50 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-primary/50 transition-all text-left group"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                 <FileText size={24} />
               </div>
               <div>
-                <h4 className="text-white font-black text-sm uppercase">Reporte PDF</h4>
-                <p className="text-slate-500 text-[10px] uppercase font-bold">Descargar informe de cierre</p>
+                <h4 className="text-foreground font-black text-sm uppercase">Reporte PDF</h4>
+                <p className="text-muted-foreground text-[10px] uppercase font-bold">Descargar informe de cierre</p>
               </div>
             </button>
 
             <button 
               onClick={() => setIsTransferModalOpen(true)}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-4 hover:border-amber-500/50 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-amber-500/50 transition-all text-left group"
             >
               <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <ArrowLeftRight size={24} />
               </div>
               <div>
-                <h4 className="text-white font-black text-sm uppercase">Trasladar</h4>
-                <p className="text-slate-500 text-[10px] uppercase font-bold">Mover a otro galpón</p>
+                <h4 className="text-foreground font-black text-sm uppercase">Trasladar</h4>
+                <p className="text-muted-foreground text-[10px] uppercase font-bold">Mover a otro galpón</p>
               </div>
             </button>
 
@@ -590,14 +590,14 @@ export default function LoteDashboard() {
                 }
               }}
               disabled={eliminarLote.isPending}
-              className="p-6 glass-dark rounded-2xl border border-white/5 flex items-center gap-4 hover:border-red-500/80 transition-all text-left group"
+              className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-red-500/80 transition-all text-left group"
             >
               <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Trash2 size={24} />
               </div>
               <div>
-                <h4 className="text-white font-black text-sm uppercase">Eliminar</h4>
-                <p className="text-slate-500 text-[10px] uppercase font-bold text-red-400">Acción destructiva</p>
+                <h4 className="text-foreground font-black text-sm uppercase">Eliminar</h4>
+                <p className="text-muted-foreground text-[10px] uppercase font-bold text-red-400">Acción destructiva</p>
               </div>
             </button>
           </div>
@@ -626,21 +626,21 @@ export default function LoteDashboard() {
         {isTransferModalOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsTransferModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[120]" />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 m-auto w-full max-w-md h-fit glass-dark z-[130] p-8 rounded-[2rem] border border-white/10" >
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 m-auto w-full max-w-md h-fit glass z-[130] p-8 rounded-[2rem] border border-border" >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black text-white uppercase tracking-widest">Trasladar Lote</h2>
-                <button onClick={() => setIsTransferModalOpen(false)} className="text-slate-500 hover:text-white"><XCircle size={24} /></button>
+                <h2 className="text-xl font-black text-foreground uppercase tracking-widest">Trasladar Lote</h2>
+                <button onClick={() => setIsTransferModalOpen(false)} className="text-muted-foreground hover:text-foreground"><XCircle size={24} /></button>
               </div>
               <div className="space-y-4">
-                <p className="text-sm text-slate-400 font-medium">Seleccione el galpón de destino para el lote <b>{lote?.nombreLote}</b>.</p>
+                <p className="text-sm text-muted-foreground font-medium">Seleccione el galpón de destino para el lote <b>{lote?.nombreLote}</b>.</p>
                 <select 
                   value={newGalponId}
                   onChange={(e) => setNewGalponId(e.target.value)}
-                  className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                  className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
                 >
-                  <option value="" className="bg-slate-900">Seleccionar Galpón</option>
+                  <option value="" className="bg-muted/50">Seleccionar Galpón</option>
                   {galpones.filter((g: any) => g.id !== lote?.galponId).map((g: any) => (
-                    <option key={g.id} value={g.id} className="bg-slate-900">{g.nombre}</option>
+                    <option key={g.id} value={g.id} className="bg-muted/50">{g.nombre}</option>
                   ))}
                 </select>
                 <button
@@ -664,3 +664,6 @@ export default function LoteDashboard() {
     </div>
   )
 }
+
+
+

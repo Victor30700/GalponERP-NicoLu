@@ -17,27 +17,27 @@ export function Sidebar() {
   return (
     <motion.aside
       animate={{ width: isCollapsed ? 80 : 260 }}
-      className="hidden md:flex flex-col h-screen glass-dark sticky top-0 left-0 z-40 border-r border-white/5"
+      className="hidden md:flex flex-col h-screen glass sticky top-0 left-0 z-40 border-r border-border"
     >
       <div className="p-6 flex items-center justify-between">
         {!isCollapsed && (
           <motion.h1 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-xl font-bold text-white tracking-tight"
+            className="text-xl font-bold text-foreground tracking-tight"
           >
             Galpon<span className="text-primary">ERP</span>
           </motion.h1>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors"
+          className="p-2 hover:bg-muted/50 rounded-lg text-muted-foreground transition-colors"
         >
           {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {navigationItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -48,7 +48,7 @@ export function Sidebar() {
                 "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
                 isActive 
                   ? "bg-primary text-primary-foreground font-medium" 
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
             >
               <item.icon size={22} className={cn(isActive ? "" : "group-hover:text-primary transition-colors")} />
@@ -65,11 +65,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-border">
         <button
           onClick={logout}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-all",
+            "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all",
             isCollapsed && "justify-center"
           )}
         >
@@ -80,3 +80,4 @@ export function Sidebar() {
     </motion.aside>
   )
 }
+

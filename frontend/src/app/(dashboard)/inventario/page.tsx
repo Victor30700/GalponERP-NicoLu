@@ -198,35 +198,35 @@ export default function InventarioPage() {
     <div className="space-y-6">
       {/* Header with Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 glass-dark rounded-2xl border border-white/5 flex items-center gap-4">
+        <div className="p-4 glass rounded-2xl border border-border flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
             <DollarSign size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Valorización Total</p>
-            <p className="text-xl font-black text-white">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Valorización Total</p>
+            <p className="text-xl font-black text-foreground">
               {isLoadingValoracion ? '...' : `$${valoracion?.valorTotalEmpresa.toLocaleString() || 0}`}
             </p>
           </div>
         </div>
-        <div className="p-4 glass-dark rounded-2xl border border-white/5 flex items-center gap-4">
+        <div className="p-4 glass rounded-2xl border border-border flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
             <Scale size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Stock Alimento</p>
-            <p className="text-xl font-black text-white">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Stock Alimento</p>
+            <p className="text-xl font-black text-foreground">
               {isLoadingNiveles ? '...' : `${nivelesAlimento?.stockActualAlimento.toLocaleString() || 0} kg`}
             </p>
           </div>
         </div>
-        <div className="p-4 glass-dark rounded-2xl border border-white/5 flex items-center gap-4">
+        <div className="p-4 glass rounded-2xl border border-border flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
             <Clock size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Autonomía estimada</p>
-            <p className="text-xl font-black text-white">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Autonomía estimada</p>
+            <p className="text-xl font-black text-foreground">
               {isLoadingNiveles ? '...' : `${nivelesAlimento?.diasRestantes || 0} días`}
             </p>
           </div>
@@ -234,12 +234,12 @@ export default function InventarioPage() {
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex flex-wrap gap-1 p-1 bg-slate-900/50 border border-white/5 rounded-2xl w-full md:w-fit">
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 border border-border rounded-2xl w-full md:w-fit">
         <button
           onClick={() => setActiveTab('stock')}
           className={cn(
             "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all",
-            activeTab === 'stock' ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            activeTab === 'stock' ? "bg-blue-500 text-white shadow-lg" : "text-muted-foreground hover:text-slate-200"
           )}
         >
           <Package size={18} />
@@ -249,7 +249,7 @@ export default function InventarioPage() {
           onClick={() => setActiveTab('movimientos')}
           className={cn(
             "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all",
-            activeTab === 'movimientos' ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            activeTab === 'movimientos' ? "bg-blue-500 text-white shadow-lg" : "text-muted-foreground hover:text-slate-200"
           )}
         >
           <ArrowLeftRight size={18} />
@@ -259,7 +259,7 @@ export default function InventarioPage() {
           onClick={() => setActiveTab('compras')}
           className={cn(
             "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all",
-            activeTab === 'compras' ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            activeTab === 'compras' ? "bg-blue-500 text-white shadow-lg" : "text-muted-foreground hover:text-slate-200"
           )}
         >
           <ShoppingCart size={18} />
@@ -269,7 +269,7 @@ export default function InventarioPage() {
           onClick={() => setActiveTab('reportes')}
           className={cn(
             "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all",
-            activeTab === 'reportes' ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            activeTab === 'reportes' ? "bg-blue-500 text-white shadow-lg" : "text-muted-foreground hover:text-slate-200"
           )}
         >
           <BarChart3 size={18} />
@@ -283,7 +283,7 @@ export default function InventarioPage() {
             <div className="flex justify-end mb-4 gap-2">
                 <button 
                     onClick={() => setIsConciliacionModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-white/10"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-border"
                 >
                     <CheckCircle2 size={16} /> Conciliación
                 </button>
@@ -308,8 +308,8 @@ export default function InventarioPage() {
                         <Package size={20} />
                       </div>
                       <div>
-                        <p className="font-bold text-white">{item.nombreProducto}</p>
-                        <p className="text-xs text-slate-500 uppercase tracking-tighter font-semibold">{item.tipoProducto}</p>
+                        <p className="font-bold text-foreground">{item.nombreProducto}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-tighter font-semibold">{item.tipoProducto}</p>
                       </div>
                     </div>
                   )
@@ -321,7 +321,7 @@ export default function InventarioPage() {
                       <span className={cn("text-lg font-bold", item.stockActual > 0 ? "text-emerald-400" : "text-red-400")}>
                         {item.stockActual.toLocaleString()} {item.unidadMedida}
                       </span>
-                      <span className="text-xs text-slate-500">{item.stockActualKg.toLocaleString()} Kg equiv.</span>
+                      <span className="text-xs text-muted-foreground">{item.stockActualKg.toLocaleString()} Kg equiv.</span>
                     </div>
                   )
                 },
@@ -348,7 +348,7 @@ export default function InventarioPage() {
                     accessor: (item) => (
                         <button 
                             onClick={() => setSelectedProductoId(item.productoId)}
-                            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 transition-colors"
+                            className="p-2 bg-muted/50 hover:bg-muted/50 rounded-lg text-muted-foreground transition-colors"
                         >
                             <Info size={16} />
                         </button>
@@ -363,26 +363,26 @@ export default function InventarioPage() {
                         <Package size={24} />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-white">{item.nombreProducto}</h3>
-                        <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">{item.tipoProducto}</p>
+                        <h3 className="text-lg font-bold text-foreground">{item.nombreProducto}</h3>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">{item.tipoProducto}</p>
                       </div>
                     </div>
                     <button 
                         onClick={() => setSelectedProductoId(item.productoId)}
-                        className="p-3 bg-white/5 rounded-xl text-blue-400"
+                        className="p-3 bg-muted/50 rounded-xl text-blue-400"
                     >
                         <Info size={20} />
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Unidades</p>
+                    <div className="p-3 rounded-xl bg-muted/50 border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Unidades</p>
                       <p className={cn("text-lg font-black", item.stockActual > 0 ? "text-emerald-400" : "text-red-400")}>
                         {item.stockActual} <span className="text-xs font-normal opacity-60">{item.unidadMedida}</span>
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Equivalente</p>
+                    <div className="p-3 rounded-xl bg-muted/50 border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Equivalente</p>
                       <p className="text-lg font-black text-slate-300">
                         {item.stockActualKg} <span className="text-xs font-normal opacity-60">Kg</span>
                       </p>
@@ -406,8 +406,8 @@ export default function InventarioPage() {
                   header: 'Fecha',
                   accessor: (item) => (
                     <div className="flex flex-col">
-                      <span className="text-white font-medium">{new Date(item.fecha).toLocaleDateString()}</span>
-                      <span className="text-[10px] text-slate-500">{new Date(item.fecha).toLocaleTimeString()}</span>
+                      <span className="text-foreground font-medium">{new Date(item.fecha).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(item.fecha).toLocaleTimeString()}</span>
                     </div>
                   )
                 },
@@ -430,7 +430,7 @@ export default function InventarioPage() {
                 { 
                   header: 'Cantidad', 
                   accessor: (item) => (
-                    <span className="font-mono font-bold text-white">
+                    <span className="font-mono font-bold text-foreground">
                       {item.cantidad.toLocaleString()}
                     </span>
                   ) 
@@ -441,8 +441,8 @@ export default function InventarioPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-slate-500" />
-                      <span className="text-xs font-bold text-slate-400">{new Date(item.fecha).toLocaleString()}</span>
+                      <Calendar size={14} className="text-muted-foreground" />
+                      <span className="text-xs font-bold text-muted-foreground">{new Date(item.fecha).toLocaleString()}</span>
                     </div>
                     <span className={cn(
                         "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest",
@@ -451,13 +451,13 @@ export default function InventarioPage() {
                         {item.tipo}
                     </span>
                   </div>
-                  <h3 className="font-bold text-white text-lg">{item.nombreProducto}</h3>
-                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                    <div className="text-xs text-slate-500 uppercase font-bold">Cantidad</div>
-                    <div className="text-xl font-black text-white">{item.cantidad.toLocaleString()}</div>
+                  <h3 className="font-bold text-foreground text-lg">{item.nombreProducto}</h3>
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border">
+                    <div className="text-xs text-muted-foreground uppercase font-bold">Cantidad</div>
+                    <div className="text-xl font-black text-foreground">{item.cantidad.toLocaleString()}</div>
                   </div>
                   {item.justificacion && (
-                    <p className="text-xs text-slate-400 italic">"{item.justificacion}"</p>
+                    <p className="text-xs text-muted-foreground italic">"{item.justificacion}"</p>
                   )}
                 </div>
               )}
@@ -480,7 +480,7 @@ export default function InventarioPage() {
                       <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                         <User size={18} />
                       </div>
-                      <span className="font-bold text-white">{item.proveedorNombre}</span>
+                      <span className="font-bold text-foreground">{item.proveedorNombre}</span>
                     </div>
                   ) 
                 },
@@ -488,7 +488,7 @@ export default function InventarioPage() {
                 { 
                   header: 'Total', 
                   accessor: (item) => (
-                    <span className="font-mono font-bold text-white">
+                    <span className="font-mono font-bold text-foreground">
                       ${item.total.toLocaleString()}
                     </span>
                   )
@@ -527,7 +527,7 @@ export default function InventarioPage() {
               renderMobileCard={(item) => (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-500 uppercase">{new Date(item.fecha).toLocaleDateString()}</span>
+                    <span className="text-xs font-bold text-muted-foreground uppercase">{new Date(item.fecha).toLocaleDateString()}</span>
                     <span className={cn(
                       "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest",
                       item.estadoPago === 'Pagado' ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
@@ -536,7 +536,7 @@ export default function InventarioPage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-black text-white">{item.proveedorNombre}</h3>
+                    <h3 className="text-xl font-black text-foreground">{item.proveedorNombre}</h3>
                     <button 
                         onClick={() => setSelectedCompraId(item.id)}
                         className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500"
@@ -545,12 +545,12 @@ export default function InventarioPage() {
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Compra</p>
-                      <p className="text-lg font-black text-white">${item.total.toLocaleString()}</p>
+                    <div className="p-3 bg-muted/50 rounded-xl border border-border">
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Total Compra</p>
+                      <p className="text-lg font-black text-foreground">${item.total.toLocaleString()}</p>
                     </div>
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Saldo Pendiente</p>
+                    <div className="p-3 bg-muted/50 rounded-xl border border-border">
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Saldo Pendiente</p>
                       <p className={cn("text-lg font-black", item.saldoPendiente > 0 ? "text-red-400" : "text-emerald-400")}>
                         ${item.saldoPendiente.toLocaleString()}
                       </p>
@@ -566,41 +566,41 @@ export default function InventarioPage() {
           <motion.div key="reportes" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Valoración por Categoría */}
-                <div className="glass-dark rounded-[2.5rem] border border-white/5 p-8">
-                    <h3 className="text-lg font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <div className="glass rounded-[2.5rem] border border-border p-8">
+                    <h3 className="text-lg font-black text-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
                         <BarChart3 className="text-blue-400" /> Valoración por Categoría
                     </h3>
                     <div className="space-y-4">
                         {valoracion?.detalles.map((det, i) => (
                             <div key={i} className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400 font-bold uppercase">{det.categoria}</span>
-                                    <span className="text-white font-black">${det.valor.toLocaleString()}</span>
+                                    <span className="text-muted-foreground font-bold uppercase">{det.categoria}</span>
+                                    <span className="text-foreground font-black">${det.valor.toLocaleString()}</span>
                                 </div>
-                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
                                     <motion.div 
                                         initial={{ width: 0 }}
                                         animate={{ width: `${det.porcentaje}%` }}
                                         className="h-full bg-blue-500"
                                     />
                                 </div>
-                                <p className="text-[10px] text-slate-500 text-right font-bold">{det.porcentaje.toFixed(1)}% del total</p>
+                                <p className="text-[10px] text-muted-foreground text-right font-bold">{det.porcentaje.toFixed(1)}% del total</p>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Proyecciones de Agotamiento */}
-                <div className="glass-dark rounded-[2.5rem] border border-white/5 p-8">
-                    <h3 className="text-lg font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                <div className="glass rounded-[2.5rem] border border-border p-8">
+                    <h3 className="text-lg font-black text-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
                         <Clock className="text-amber-400" /> Proyecciones de Agotamiento
                     </h3>
                     <div className="space-y-4">
                         {proyecciones.map((proy, i) => (
-                            <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                            <div key={i} className="p-4 bg-muted/50 rounded-2xl border border-border flex items-center justify-between">
                                 <div>
-                                    <p className="font-bold text-white">{proy.nombreProducto}</p>
-                                    <p className="text-xs text-slate-500 uppercase font-bold tracking-tighter">Consumo: {proy.consumoDiarioEstimado.toLocaleString()} / día</p>
+                                    <p className="font-bold text-foreground">{proy.nombreProducto}</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Consumo: {proy.consumoDiarioEstimado.toLocaleString()} / día</p>
                                 </div>
                                 <div className="text-right">
                                     <p className={cn(
@@ -609,11 +609,11 @@ export default function InventarioPage() {
                                     )}>
                                         {proy.diasRestantes} días
                                     </p>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold">Agotamiento: {new Date(proy.fechaAgotamientoEstimada).toLocaleDateString()}</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Agotamiento: {new Date(proy.fechaAgotamientoEstimada).toLocaleDateString()}</p>
                                 </div>
                             </div>
                         ))}
-                        {proyecciones.length === 0 && <p className="text-slate-500 text-center py-8 italic uppercase text-xs font-bold tracking-widest">No hay proyecciones disponibles</p>}
+                        {proyecciones.length === 0 && <p className="text-muted-foreground text-center py-8 italic uppercase text-xs font-bold tracking-widest">No hay proyecciones disponibles</p>}
                     </div>
                 </div>
             </div>
@@ -640,16 +640,16 @@ export default function InventarioPage() {
         {isCompraModalOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCompraModalOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass-dark z-[110] shadow-2xl p-6 overflow-y-auto">
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass z-[110] shadow-2xl p-6 overflow-y-auto">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">Registrar Compra</h2>
-                <button onClick={() => setIsCompraModalOpen(false)} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                <h2 className="text-2xl font-bold text-foreground">Registrar Compra</h2>
+                <button onClick={() => setIsCompraModalOpen(false)} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
               </div>
 
               <form onSubmit={compraForm.handleSubmit(onCompraSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Producto</label>
-                  <select {...compraForm.register('productoId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white appearance-none">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Producto</label>
+                  <select {...compraForm.register('productoId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                     <option value="">Seleccionar producto</option>
                     {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </select>
@@ -657,8 +657,8 @@ export default function InventarioPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Proveedor</label>
-                  <select {...compraForm.register('proveedorId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white appearance-none">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Proveedor</label>
+                  <select {...compraForm.register('proveedorId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                     <option value="">Seleccionar proveedor</option>
                     {proveedores.map(p => <option key={p.id} value={p.id}>{p.razonSocial}</option>)}
                   </select>
@@ -667,29 +667,29 @@ export default function InventarioPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Cantidad</label>
-                    <input type="number" step="0.01" {...compraForm.register('cantidad', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Cantidad</label>
+                    <input type="number" step="0.01" {...compraForm.register('cantidad', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                     {compraForm.formState.errors.cantidad && <p className="text-xs text-red-400">{compraForm.formState.errors.cantidad.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Costo Total ($)</label>
-                    <input type="number" step="0.01" {...compraForm.register('costoTotalCompra', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Costo Total ($)</label>
+                    <input type="number" step="0.01" {...compraForm.register('costoTotalCompra', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                     {compraForm.formState.errors.costoTotalCompra && <p className="text-xs text-red-400">{compraForm.formState.errors.costoTotalCompra.message}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Monto Pagado Hoy ($)</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Monto Pagado Hoy ($)</label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                    <input type="number" step="0.01" {...compraForm.register('montoPagado', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <input type="number" step="0.01" {...compraForm.register('montoPagado', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                   </div>
                   {compraForm.formState.errors.montoPagado && <p className="text-xs text-red-400">{compraForm.formState.errors.montoPagado.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Nota (Opcional)</label>
-                  <textarea {...compraForm.register('nota')} rows={2} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" placeholder="Ej. Factura #1234..." />
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Nota (Opcional)</label>
+                  <textarea {...compraForm.register('nota')} rows={2} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" placeholder="Ej. Factura #1234..." />
                 </div>
 
                 <button type="submit" disabled={registrarCompra.isPending} className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4">
@@ -706,16 +706,16 @@ export default function InventarioPage() {
         {isAjusteModalOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAjusteModalOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass-dark z-[110] shadow-2xl p-6 overflow-y-auto">
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 bottom-0 w-full max-w-md glass z-[110] shadow-2xl p-6 overflow-y-auto">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">Ajuste de Stock</h2>
-                <button onClick={() => setIsAjusteModalOpen(false)} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                <h2 className="text-2xl font-bold text-foreground">Ajuste de Stock</h2>
+                <button onClick={() => setIsAjusteModalOpen(false)} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
               </div>
 
               <form onSubmit={ajusteForm.handleSubmit(onAjusteSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Producto</label>
-                  <select {...ajusteForm.register('productoId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white appearance-none">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Producto</label>
+                  <select {...ajusteForm.register('productoId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                     <option value="">Seleccionar producto</option>
                     {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </select>
@@ -723,21 +723,21 @@ export default function InventarioPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Tipo Ajuste</label>
-                    <select {...ajusteForm.register('tipo')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white appearance-none">
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Tipo Ajuste</label>
+                    <select {...ajusteForm.register('tipo')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                       <option value="Entrada">Entrada (+)</option>
                       <option value="Salida">Salida (-)</option>
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-400 ml-1">Cantidad</label>
-                    <input type="number" step="0.01" {...ajusteForm.register('cantidad', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Cantidad</label>
+                    <input type="number" step="0.01" {...ajusteForm.register('cantidad', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Justificación</label>
-                  <textarea {...ajusteForm.register('justificacion')} rows={3} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" placeholder="¿Por qué se realiza este ajuste?" />
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Justificación</label>
+                  <textarea {...ajusteForm.register('justificacion')} rows={3} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" placeholder="¿Por qué se realiza este ajuste?" />
                   {ajusteForm.formState.errors.justificacion && <p className="text-xs text-red-400">{ajusteForm.formState.errors.justificacion.message}</p>}
                 </div>
 
@@ -755,29 +755,29 @@ export default function InventarioPage() {
         {isConciliacionModalOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsConciliacionModalOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed bottom-0 left-0 right-0 glass-dark z-[110] shadow-2xl p-8 rounded-t-[3rem] border-t border-white/10 max-h-[90vh] overflow-y-auto">
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed bottom-0 left-0 right-0 glass z-[110] shadow-2xl p-8 rounded-t-[3rem] border-t border-border max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Conciliación de Inventario</h2>
-                    <p className="text-xs text-slate-500 uppercase font-black tracking-widest mt-1">Sincroniza el stock físico con el sistema</p>
+                    <h2 className="text-2xl font-bold text-foreground">Conciliación de Inventario</h2>
+                    <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mt-1">Sincroniza el stock físico con el sistema</p>
                 </div>
-                <button onClick={() => setIsConciliacionModalOpen(false)} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                <button onClick={() => setIsConciliacionModalOpen(false)} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
               </div>
 
               <form onSubmit={conciliacionForm.handleSubmit(onConciliacionSubmit)} className="space-y-6">
                 <div className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 relative group">
+                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-2xl border border-border relative group">
                             <div className="md:col-span-2 space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Producto</label>
-                                <select {...conciliacionForm.register(`items.${index}.productoId`)} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white appearance-none">
+                                <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">Producto</label>
+                                <select {...conciliacionForm.register(`items.${index}.productoId`)} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                                     <option value="">Seleccionar</option>
                                     {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Cantidad Física</label>
-                                <input type="number" step="0.01" {...conciliacionForm.register(`items.${index}.cantidadFisica`, { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
+                                <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">Cantidad Física</label>
+                                <input type="number" step="0.01" {...conciliacionForm.register(`items.${index}.cantidadFisica`, { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                             </div>
                             <div className="space-y-2 flex items-end">
                                 <button type="button" onClick={() => remove(index)} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all flex items-center justify-center">
@@ -789,7 +789,7 @@ export default function InventarioPage() {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-4">
-                    <button type="button" onClick={() => append({ productoId: '', cantidadFisica: 0, nota: '' })} className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl transition-all border border-white/10 flex items-center justify-center gap-2">
+                    <button type="button" onClick={() => append({ productoId: '', cantidadFisica: 0, nota: '' })} className="flex-1 py-4 bg-muted/50 hover:bg-muted/50 text-foreground font-bold rounded-2xl transition-all border border-border flex items-center justify-center gap-2">
                         <Plus size={20} /> Agregar Producto
                     </button>
                     <button type="submit" disabled={realizarConciliacion.isPending} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-black font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50">
@@ -816,13 +816,13 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
             {productoId && (
                 <>
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[150]" />
-                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 top-10 md:inset-y-0 md:right-0 md:left-auto md:w-full md:max-w-2xl glass-dark z-[160] shadow-2xl p-8 rounded-t-[3rem] md:rounded-none overflow-y-auto">
+                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 top-10 md:inset-y-0 md:right-0 md:left-auto md:w-full md:max-w-2xl glass z-[160] shadow-2xl p-8 rounded-t-[3rem] md:rounded-none overflow-y-auto">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h2 className="text-2xl font-bold text-white">{stock?.nombreProducto || 'Cargando...'}</h2>
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-widest mt-1">Kardex y Movimientos</p>
+                                <h2 className="text-2xl font-bold text-foreground">{stock?.nombreProducto || 'Cargando...'}</h2>
+                                <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mt-1">Kardex y Movimientos</p>
                             </div>
-                            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                            <button onClick={onClose} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
                         </div>
 
                         {isLoadingKardex ? (
@@ -833,23 +833,23 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
                             <div className="space-y-8">
                                 {/* Stock Summary */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                        <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Stock Actual</p>
+                                    <div className="p-4 bg-muted/50 rounded-2xl border border-border">
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Stock Actual</p>
                                         <p className="text-2xl font-black text-emerald-400">{stock?.stockActual.toLocaleString()} <span className="text-xs font-normal opacity-60">{stock?.unidadMedida}</span></p>
                                     </div>
-                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                        <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Equivalente</p>
-                                        <p className="text-2xl font-black text-white">{stock?.stockActualKg.toLocaleString()} <span className="text-xs font-normal opacity-60">kg</span></p>
+                                    <div className="p-4 bg-muted/50 rounded-2xl border border-border">
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Equivalente</p>
+                                        <p className="text-2xl font-black text-foreground">{stock?.stockActualKg.toLocaleString()} <span className="text-xs font-normal opacity-60">kg</span></p>
                                     </div>
                                 </div>
 
                                 {/* Kardex Table */}
                                 <div>
-                                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Kardex de Inventario</h3>
+                                    <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-4 border-b border-border pb-2">Kardex de Inventario</h3>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left text-sm">
                                             <thead>
-                                                <tr className="text-[10px] text-slate-500 uppercase font-black">
+                                                <tr className="text-[10px] text-muted-foreground uppercase font-black">
                                                     <th className="pb-4 pr-4">Fecha</th>
                                                     <th className="pb-4 pr-4">Tipo</th>
                                                     <th className="pb-4 pr-4">Entrada</th>
@@ -864,7 +864,7 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
                                                             {new Date(item.fecha).toLocaleDateString()}
                                                         </td>
                                                         <td className="py-3 pr-4">
-                                                            <span className="text-[10px] font-bold text-white uppercase">{item.tipo}</span>
+                                                            <span className="text-[10px] font-bold text-foreground uppercase">{item.tipo}</span>
                                                         </td>
                                                         <td className="py-3 pr-4 text-emerald-400 font-mono font-bold">
                                                             {item.entrada > 0 ? `+${item.entrada}` : '-'}
@@ -872,14 +872,14 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
                                                         <td className="py-3 pr-4 text-red-400 font-mono font-bold">
                                                             {item.salida > 0 ? `-${item.salida}` : '-'}
                                                         </td>
-                                                        <td className="py-3 font-mono font-black text-white">
+                                                        <td className="py-3 font-mono font-black text-foreground">
                                                             {item.saldo.toLocaleString()}
                                                         </td>
                                                     </tr>
                                                 ))}
                                                 {kardex.length === 0 && (
                                                     <tr>
-                                                        <td colSpan={5} className="py-8 text-center text-slate-500 italic text-xs uppercase font-bold tracking-widest">Sin registros en el kardex</td>
+                                                        <td colSpan={5} className="py-8 text-center text-muted-foreground italic text-xs uppercase font-bold tracking-widest">Sin registros en el kardex</td>
                                                     </tr>
                                                 )}
                                             </tbody>
@@ -924,13 +924,13 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
             {compraId && (
                 <>
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[150]" />
-                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 glass-dark z-[160] shadow-2xl p-8 rounded-t-[3rem] border-t border-white/10 max-h-[80vh] overflow-y-auto">
+                    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 glass z-[160] shadow-2xl p-8 rounded-t-[3rem] border-t border-border max-h-[80vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h2 className="text-2xl font-bold text-white">Gestión de Pagos</h2>
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-widest mt-1">Detalle de abonos a la compra</p>
+                                <h2 className="text-2xl font-bold text-foreground">Gestión de Pagos</h2>
+                                <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mt-1">Detalle de abonos a la compra</p>
                             </div>
-                            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-slate-400"><X size={20} /></button>
+                            <button onClick={onClose} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={20} /></button>
                         </div>
 
                         <div className="space-y-6">
@@ -942,53 +942,53 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
                                     <Plus size={20} /> Registrar Nuevo Abono
                                 </button>
                             ) : (
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 bg-white/5 rounded-2xl border border-white/10 space-y-4">
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 bg-muted/50 rounded-2xl border border-border space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase">Monto</label>
-                                            <input type="number" step="0.01" {...form.register('monto', { valueAsNumber: true })} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white" />
+                                            <label className="text-[10px] font-black text-muted-foreground uppercase">Monto</label>
+                                            <input type="number" step="0.01" {...form.register('monto', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase">Método</label>
-                                            <select {...form.register('metodoPago', { valueAsNumber: true })} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white appearance-none">
+                                            <label className="text-[10px] font-black text-muted-foreground uppercase">Método</label>
+                                            <select {...form.register('metodoPago', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                                                 <option value={1}>Efectivo</option>
                                                 <option value={2}>Transferencia</option>
                                                 <option value={3}>Cheque</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase">Fecha</label>
-                                            <input type="date" {...form.register('fechaPago')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white" />
+                                            <label className="text-[10px] font-black text-muted-foreground uppercase">Fecha</label>
+                                            <input type="date" {...form.register('fechaPago')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                                         </div>
                                     </div>
                                     <div className="flex gap-3">
                                         <button type="submit" className="flex-1 py-3 bg-emerald-500 text-black font-bold rounded-xl hover:bg-emerald-600 transition-all">Guardar Pago</button>
-                                        <button type="button" onClick={() => setIsAddPagoOpen(false)} className="px-6 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all border border-white/10">Cancelar</button>
+                                        <button type="button" onClick={() => setIsAddPagoOpen(false)} className="px-6 py-3 bg-muted/50 text-foreground font-bold rounded-xl hover:bg-muted/50 transition-all border border-border">Cancelar</button>
                                     </div>
                                 </form>
                             )}
 
                             <div className="space-y-3">
                                 {pagos.map((pago) => (
-                                    <div key={pago.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between group">
+                                    <div key={pago.id} className="p-4 bg-muted/50 rounded-2xl border border-border flex items-center justify-between group">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                                 <DollarSign size={20} />
                                             </div>
                                             <div>
-                                                <p className="text-lg font-black text-white">${pago.monto.toLocaleString()}</p>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase">{new Date(pago.fechaPago).toLocaleDateString()} • {pago.metodoPago}</p>
+                                                <p className="text-lg font-black text-foreground">${pago.monto.toLocaleString()}</p>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase">{new Date(pago.fechaPago).toLocaleDateString()} • {pago.metodoPago}</p>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => eliminarPago.mutate(pago.id)}
-                                            className="p-3 text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                            className="p-3 text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                                         >
                                             <Trash2 size={18} />
                                         </button>
                                     </div>
                                 ))}
-                                {pagos.length === 0 && <p className="text-center py-8 text-slate-500 italic uppercase text-[10px] font-black tracking-widest">No se han registrado abonos</p>}
+                                {pagos.length === 0 && <p className="text-center py-8 text-muted-foreground italic uppercase text-[10px] font-black tracking-widest">No se han registrado abonos</p>}
                             </div>
                         </div>
                     </motion.div>
@@ -997,3 +997,6 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
         </AnimatePresence>
     )
 }
+
+
+

@@ -8,9 +8,10 @@ export default function LoginPage() {
       <LoginForm />
       
       {/* Footer minimalista */}
-      <div className="absolute bottom-6 text-slate-500 text-xs font-medium tracking-wider uppercase z-10">
+      <div className="absolute bottom-6 text-muted-foreground text-xs font-medium tracking-wider uppercase z-10">
         © 2026 Pollos NicoLu • Gestión Inteligente
       </div>
     </main>
   )
 }
+
