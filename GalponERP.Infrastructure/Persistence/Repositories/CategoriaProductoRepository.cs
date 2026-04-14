@@ -18,6 +18,13 @@ public class CategoriaProductoRepository : ICategoriaProductoRepository
         return await _context.Set<CategoriaProducto>().FindAsync(id);
     }
 
+    public async Task<CategoriaProducto?> ObtenerPorIdSinFiltroAsync(Guid id)
+    {
+        return await _context.Set<CategoriaProducto>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
     public async Task<IEnumerable<CategoriaProducto>> ObtenerTodasAsync()
     {
         return await _context.Set<CategoriaProducto>().ToListAsync();

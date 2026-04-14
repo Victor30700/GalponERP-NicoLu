@@ -8,8 +8,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, Warehouse, MapPin, Users } from 'lucide-react'
+import { Warehouse, MapPin, Users, X, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { confirmDestructiveAction } from '@/lib/swal'
 
 const galponSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
@@ -135,8 +136,9 @@ export default function GalponesPage() {
         isLoading={isLoading}
         onAdd={() => openForm()}
         onEdit={(item) => openForm(item)}
-        onDelete={(item) => {
-          if (confirm('¿Eliminar galpón? Los lotes asociados podrían verse afectados.')) {
+        onDelete={async (item) => {
+          const result = await confirmDestructiveAction('¿Eliminar galpón?', 'Los lotes asociados podrían verse afectados.')
+          if (result.isConfirmed) {
             deleteMutation.mutate(item.id)
           }
         }}

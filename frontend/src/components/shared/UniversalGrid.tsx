@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Plus, Filter, MoreVertical, Edit2, Trash2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface Column<T> {
+export interface Column<T> {
   header: string
   accessor: keyof T | ((item: T) => ReactNode)
   className?: string
 }
 
-interface UniversalGridProps<T> {
+export interface UniversalGridProps<T> {
   items: T[]
   columns: Column<T>[]
   title: string

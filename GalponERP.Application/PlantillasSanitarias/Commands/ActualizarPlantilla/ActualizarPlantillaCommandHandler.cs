@@ -25,17 +25,33 @@ public class ActualizarPlantillaCommandHandler : IRequestHandler<ActualizarPlant
     public async Task Handle(ActualizarPlantillaCommand request, CancellationToken cancellationToken)
     {
         var plantilla = await _plantillaRepository.ObtenerPorIdAsync(request.Id);
-        if (plantilla == null) throw new ArgumentException("Plantilla no encontrada.");
+        if (plantilla == null) throw new ArgumentException("Plantilla no encontrada o ya no está activa.");
 
+        // Actualizar datos básicos
         plantilla.Actualizar(request.Nombre, request.Descripcion);
+        
+        // Al limpiar y luego agregar con Guid.NewGuid(), EF Core maneja el reemplazo de la colección.
+        // Desactivamos las actividades existentes (Soft Delete)
         plantilla.LimpiarActividades();
 
-        foreach (var act in request.Actividades)
+        // Agregamos las nuevas actividades del comando
+        if (request.Actividades != null)
         {
-            plantilla.AgregarActividad(Guid.NewGuid(), act.Tipo, act.DiaDeAplicacion, act.Descripcion, act.ProductoIdRecomendado);
+            foreach (var act in request.Actividades)
+            {
+                plantilla.AgregarActividad(Guid.NewGuid(), act.Tipo, act.DiaDeAplicacion, act.Descripcion, act.ProductoIdRecomendado);
+            }
         }
 
-        _plantillaRepository.Actualizar(plantilla);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try 
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Capturar otros errores potenciales para facilitar la depuración
+            var innerMessage = ex.InnerException?.Message ?? "";
+            throw new Exception($"Error al actualizar la plantilla: {ex.Message}. {innerMessage}", ex);
+        }
     }
 }

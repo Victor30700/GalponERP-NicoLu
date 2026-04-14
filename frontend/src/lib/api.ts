@@ -43,6 +43,25 @@ export const api = {
     return response.json();
   },
 
+  async put<T>(endpoint: string, body: any): Promise<T> {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: await getHeaders(),
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(errorData.message || `API error: ${response.statusText}`);
+    }
+
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return response.json();
+  },
+
   async patch<T>(endpoint: string, body?: any): Promise<T> {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'PATCH',
@@ -53,6 +72,10 @@ export const api = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
       throw new Error(errorData.message || `API error: ${response.statusText}`);
+    }
+
+    if (response.status === 204) {
+      return {} as T;
     }
 
     return response.json();
@@ -66,6 +89,10 @@ export const api = {
 
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
+    }
+
+    if (response.status === 204) {
+      return {} as T;
     }
 
     return response.json();

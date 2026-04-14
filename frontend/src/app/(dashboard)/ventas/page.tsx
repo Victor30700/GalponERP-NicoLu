@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { UniversalGrid } from '@/components/shared/UniversalGrid'
+import { UniversalGrid, Column } from '@/components/shared/UniversalGrid'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   BadgeDollarSign, 
@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { useCatalogos } from '@/hooks/useCatalogos'
 
 // --- Interfaces ---
 
@@ -47,6 +48,7 @@ interface Venta {
 }
 
 interface CuentaPorCobrar {
+  id: string // Map from ventaId
   ventaId: string
   fecha: string
   clienteNombre: string
@@ -62,11 +64,6 @@ interface Lote {
   codigo: string
   nombreLote?: string
   avesVivas: number
-}
-
-interface Cliente {
-  id: string
-  nombre: string
 }
 
 // --- Schemas ---
@@ -85,7 +82,7 @@ type VentaFormValues = z.infer<typeof ventaSchema>
 const pagoSchema = z.object({
   monto: z.number().positive('El monto debe ser mayor a 0'),
   fechaPago: z.string(),
-  metodoPago: z.coerce.number().int().min(1).max(4),
+  metodoPago: z.number().int().min(1).max(4),
 })
 
 type PagoFormValues = z.infer<typeof pagoSchema>
@@ -102,7 +99,10 @@ export default function VentasPage() {
   // Queries
   const { data: cuentasPorCobrar = [], isLoading: isLoadingCuentas } = useQuery({
     queryKey: ['finanzas', 'cuentas-por-cobrar'],
-    queryFn: () => api.get<CuentaPorCobrar[]>('/api/Finanzas/cuentas-por-cobrar'),
+    queryFn: async () => {
+      const data = await api.get<CuentaPorCobrar[]>('/api/Finanzas/cuentas-por-cobrar');
+      return data.map(item => ({ ...item, id: item.id || item.ventaId }));
+    },
   })
 
   const { data: todasLasVentas = [], isLoading: isLoadingVentas } = useQuery({
@@ -110,14 +110,11 @@ export default function VentasPage() {
     queryFn: () => api.get<Venta[]>('/api/Ventas'),
   })
 
+  const { clientes, isLoadingClientes } = useCatalogos()
+
   const { data: lotes = [] } = useQuery({
     queryKey: ['lotes', 'activos'],
     queryFn: () => api.get<Lote[]>('/api/Lotes?soloActivos=true'),
-  })
-
-  const { data: clientes = [] } = useQuery({
-    queryKey: ['clientes'],
-    queryFn: () => api.get<Cliente[]>('/api/Clientes'),
   })
 
   // Mutations
@@ -250,7 +247,7 @@ export default function VentasPage() {
               columns={[
                 { 
                   header: 'Cliente', 
-                  accessor: (item) => (
+                  accessor: (item: CuentaPorCobrar) => (
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
                         <User size={16} />
@@ -260,10 +257,10 @@ export default function VentasPage() {
                   ) 
                 },
                 { header: 'Lote', accessor: 'loteCodigo' },
-                { header: 'Fecha', accessor: (item) => new Date(item.fecha).toLocaleDateString() },
+                { header: 'Fecha', accessor: (item: CuentaPorCobrar) => new Date(item.fecha).toLocaleDateString() },
                 { 
                   header: 'Total', 
-                  accessor: (item) => (
+                  accessor: (item: CuentaPorCobrar) => (
                     <span className="font-mono font-bold text-white">
                       ${item.totalVenta.toLocaleString()}
                     </span>
@@ -271,7 +268,7 @@ export default function VentasPage() {
                 },
                 { 
                   header: 'Saldo', 
-                  accessor: (item) => (
+                  accessor: (item: CuentaPorCobrar) => (
                     <span className="font-mono font-bold text-red-400">
                       ${item.saldoPendiente.toLocaleString()}
                     </span>
@@ -279,7 +276,7 @@ export default function VentasPage() {
                 },
                 {
                   header: 'Acción',
-                  accessor: (item) => (
+                  accessor: (item: CuentaPorCobrar) => (
                     <button 
                       onClick={() => openPagoModal(item.ventaId, item.saldoPendiente)}
                       className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold uppercase rounded-lg transition-all"
@@ -288,7 +285,7 @@ export default function VentasPage() {
                     </button>
                   )
                 }
-              ]}
+              ] as Column<CuentaPorCobrar>[]}
               renderMobileCard={(item) => (
                 <div className="space-y-4">
                   <div className="flex justify-between items-start">

@@ -35,6 +35,9 @@ public class PlantillaSanitariaRepository : IPlantillaSanitariaRepository
 
     public void Actualizar(PlantillaSanitaria plantilla)
     {
-        _context.Set<PlantillaSanitaria>().Update(plantilla);
+        if (_context.Entry(plantilla).State == EntityState.Detached)
+        {
+            _context.Set<PlantillaSanitaria>().Update(plantilla);
+        }
     }
 }

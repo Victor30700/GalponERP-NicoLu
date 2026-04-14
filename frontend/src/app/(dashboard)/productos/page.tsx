@@ -10,21 +10,28 @@ import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Save, Package, Tag, Scale, Info } from 'lucide-react'
 import { toast } from 'sonner'
+import { confirmDestructiveAction } from '@/lib/swal'
 
 const productoSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
-  descripcion: z.string().optional(),
-  categoriaId: z.string().uuid('Categoría inválida'),
+  categoriaProductoId: z.string().uuid('Categoría inválida'),
   unidadMedidaId: z.string().uuid('Unidad de medida inválida'),
-  stockMinimo: z.number().min(0, 'No puede ser negativo'),
+  equivalenciaEnKg: z.number().min(0, 'No puede ser negativo'),
+  umbralMinimo: z.number().min(0, 'No puede ser negativo'),
 })
 
 type ProductoFormValues = z.infer<typeof productoSchema>
 
-interface Producto extends ProductoFormValues {
+interface Producto {
   id: string
+  nombre: string
+  categoriaId: string
   categoriaNombre: string
+  unidadMedidaId: string
   unidadMedidaNombre: string
+  equivalenciaEnKg: number
+  umbralMinimo: number
+  isActive: boolean
 }
 
 interface Categoria {
@@ -71,7 +78,7 @@ export default function ProductosPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data: { id: string; values: ProductoFormValues }) => 
-      api.patch(`/api/Productos/${data.id}`, data.values),
+      api.put(`/api/Productos/${data.id}`, { id: data.id, ...data.values }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] })
       toast.success('Producto actualizado')
@@ -99,7 +106,11 @@ export default function ProductosPage() {
   })
 
   const onSubmit = (data: ProductoFormValues) => {
-    const values = { ...data, stockMinimo: Number(data.stockMinimo) }
+    const values = { 
+      ...data, 
+      equivalenciaEnKg: Number(data.equivalenciaEnKg),
+      umbralMinimo: Number(data.umbralMinimo) 
+    }
     if (editingProducto) {
       updateMutation.mutate({ id: editingProducto.id, values })
     } else {
@@ -110,10 +121,16 @@ export default function ProductosPage() {
   const openForm = (prod?: Producto) => {
     if (prod) {
       setEditingProducto(prod)
-      reset(prod)
+      reset({
+        nombre: prod.nombre,
+        categoriaProductoId: prod.categoriaId,
+        unidadMedidaId: prod.unidadMedidaId,
+        equivalenciaEnKg: prod.equivalenciaEnKg,
+        umbralMinimo: prod.umbralMinimo
+      })
     } else {
       setEditingProducto(null)
-      reset({ nombre: '', descripcion: '', categoriaId: '', unidadMedidaId: '', stockMinimo: 0 })
+      reset({ nombre: '', categoriaProductoId: '', unidadMedidaId: '', equivalenciaEnKg: 0, umbralMinimo: 0 })
     }
     setIsFormOpen(true)
   }
@@ -134,21 +151,32 @@ export default function ProductosPage() {
           </div>
           <div>
             <p className="font-medium text-white">{item.nombre}</p>
-            <p className="text-xs text-slate-500">{item.descripcion || 'Sin descripción'}</p>
+            <p className="text-[10px] text-slate-500 uppercase font-bold">{item.categoriaNombre}</p>
           </div>
         </div>
       )
     },
     { 
-      header: 'Categoría', 
+      header: 'Inventario', 
       accessor: (item: Producto) => (
-        <span className="px-2 py-1 bg-white/5 rounded-md text-xs text-slate-300">
-          {item.categoriaNombre}
+        <div className="flex flex-col">
+          <span className="text-xs text-slate-300">
+            Min: {item.umbralMinimo} {item.unidadMedidaNombre}
+          </span>
+          <span className="text-[10px] text-slate-500">
+            Equiv: {item.equivalenciaEnKg}kg
+          </span>
+        </div>
+      )
+    },
+    { 
+      header: 'Estado', 
+      accessor: (item: Producto) => (
+        <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${item.isActive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+          {item.isActive ? 'ACTIVO' : 'INACTIVO'}
         </span>
       )
     },
-    { header: 'Unidad', accessor: 'unidadMedidaNombre' },
-    { header: 'Stock Mín.', accessor: 'stockMinimo' },
   ]
 
   return (
@@ -160,8 +188,9 @@ export default function ProductosPage() {
         isLoading={isLoading}
         onAdd={() => openForm()}
         onEdit={(item) => openForm(item)}
-        onDelete={(item) => {
-          if (confirm('¿Eliminar producto del catálogo?')) {
+        onDelete={async (item) => {
+          const result = await confirmDestructiveAction('¿Eliminar producto?', 'Esta acción no se puede deshacer y podría afectar el inventario.')
+          if (result.isConfirmed) {
             deleteMutation.mutate(item.id)
           }
         }}
@@ -173,13 +202,12 @@ export default function ProductosPage() {
                 {item.categoriaNombre}
               </span>
             </div>
-            <p className="text-sm text-slate-400">{item.descripcion}</p>
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium uppercase tracking-tighter">
                 <Scale size={12} /> {item.unidadMedidaNombre}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium uppercase tracking-tighter">
-                <Tag size={12} /> Mín: {item.stockMinimo}
+                <Tag size={12} /> Mín: {item.umbralMinimo}
               </div>
             </div>
           </div>
@@ -208,11 +236,11 @@ export default function ProductosPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-400 ml-1">Categoría</label>
-                  <select {...register('categoriaId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                  <select {...register('categoriaProductoId')} className="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
                     <option value="">Selecciona una categoría</option>
                     {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
-                  {errors.categoriaId && <p className="text-xs text-red-400 ml-1">{errors.categoriaId.message}</p>}
+                  {errors.categoriaProductoId && <p className="text-xs text-red-400 ml-1">{errors.categoriaProductoId.message}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -226,17 +254,18 @@ export default function ProductosPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-400 ml-1">Stock Mínimo</label>
-                    <input type="number" step="0.01" {...register('stockMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
-                    {errors.stockMinimo && <p className="text-xs text-red-400 ml-1">{errors.stockMinimo.message}</p>}
+                    <input type="number" step="0.01" {...register('umbralMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
+                    {errors.umbralMinimo && <p className="text-xs text-red-400 ml-1">{errors.umbralMinimo.message}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1">Descripción (Opcional)</label>
+                  <label className="text-sm font-medium text-slate-400 ml-1">Equivalencia en Kg (opcional)</label>
                   <div className="relative">
-                    <Info className="absolute left-3 top-3 text-slate-500" size={18} />
-                    <textarea {...register('descripcion')} rows={3} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="Detalles adicionales..." />
+                    <Scale className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input type="number" step="0.001" {...register('equivalenciaEnKg', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="0.000" />
                   </div>
+                  {errors.equivalenciaEnKg && <p className="text-xs text-red-400 ml-1">{errors.equivalenciaEnKg.message}</p>}
                 </div>
 
                 <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-8 shadow-lg shadow-blue-500/20" >

@@ -34,7 +34,10 @@ public class PlantillaSanitaria : Entity
         _actividades.Add(actividad);
     }
 
-    public void LimpiarActividades() => _actividades.Clear();
+    public void LimpiarActividades()
+    {
+        _actividades.Clear();
+    }
 
     public void Actualizar(string nombre, string? descripcion)
     {

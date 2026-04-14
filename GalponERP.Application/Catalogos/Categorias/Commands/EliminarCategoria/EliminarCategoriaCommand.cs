@@ -19,7 +19,7 @@ public class EliminarCategoriaCommandHandler : IRequestHandler<EliminarCategoria
 
     public async Task Handle(EliminarCategoriaCommand request, CancellationToken cancellationToken)
     {
-        var categoria = await _categoriaRepository.ObtenerPorIdAsync(request.Id);
+        var categoria = await _categoriaRepository.ObtenerPorIdSinFiltroAsync(request.Id);
         if (categoria == null)
             throw new Exception("Categoría no encontrada");
 

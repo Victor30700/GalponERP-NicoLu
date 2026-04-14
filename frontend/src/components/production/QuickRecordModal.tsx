@@ -4,32 +4,40 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, AlertCircle, Scale, Droplets } from 'lucide-react'
+import { X, Save, AlertCircle, Scale, Droplets, Ruler } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface QuickRecordProps {
   isOpen: boolean
   onClose: () => void
   loteId: string
-  type: 'mortality' | 'feed' | 'water'
+  type: 'mortality' | 'feed' | 'water' | 'weight'
+  lote?: any
 }
 
-export function QuickRecordModal({ isOpen, onClose, loteId, type }: QuickRecordProps) {
+export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickRecordProps) {
   const [value, setValue] = useState('')
+  const [secondaryValue, setSecondaryValue] = useState('') // Para cantidad muestreada en pesajes
   const [nota, setNota] = useState('')
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: (data: any) => {
-      const endpoint = type === 'mortality' ? '/api/Mortalidad' : '/api/inventario/consumo-diario'
+      let endpoint = '/api/Mortalidad'
+      if (type === 'feed') endpoint = '/api/inventario/consumo-diario'
+      if (type === 'water') endpoint = '/api/Sanidad/bienestar'
+      if (type === 'weight') endpoint = '/api/Pesajes'
+      
       return api.post(endpoint, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lote', loteId] })
       queryClient.invalidateQueries({ queryKey: ['lote-tendencias', loteId] })
+      queryClient.invalidateQueries({ queryKey: ['pesajes', 'lote', loteId] })
       toast.success('Registro guardado correctamente')
       onClose()
       setValue('')
+      setSecondaryValue('')
       setNota('')
     },
     onError: (err: any) => toast.error(err.message),
@@ -39,9 +47,36 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type }: QuickRecordP
     e.preventDefault()
     if (!value) return
     
-    const data = type === 'mortality' 
-      ? { loteId, cantidad: Number(value), causa: nota || 'Registro rutinario' }
-      : { loteId, cantidad: Number(value), nota }
+    let data: any = {}
+
+    if (type === 'mortality') {
+      data = { loteId, cantidad: Number(value), causa: nota || 'Registro rutinario', fecha: new Date().toISOString() }
+    } else if (type === 'feed') {
+      if (!lote?.productoId) {
+          toast.error('El lote no tiene un producto de alimento asignado.')
+          return
+      }
+      data = { 
+          loteId, 
+          productoId: lote.productoId,
+          cantidad: Number(value), 
+          justificacion: nota || 'Consumo diario' 
+      }
+    } else if (type === 'water') {
+      data = { 
+          loteId, 
+          fecha: new Date().toISOString(),
+          consumoAgua: Number(value), 
+          observaciones: nota 
+      }
+    } else if (type === 'weight') {
+      data = {
+        loteId,
+        fecha: new Date().toISOString(),
+        pesoPromedioGramos: Number(value),
+        cantidadMuestreada: Number(secondaryValue) || 10
+      }
+    }
 
     mutation.mutate(data)
   }
@@ -50,6 +85,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type }: QuickRecordP
     mortality: { title: 'Registrar Bajas', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Cantidad de aves', unit: 'und' },
     feed: { title: 'Consumo Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Cantidad servida', unit: 'kg' },
     water: { title: 'Consumo Agua', icon: Droplets, color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Litros consumidos', unit: 'L' },
+    weight: { title: 'Registro de Pesaje', icon: Ruler, color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'Peso Promedio', unit: 'g' },
   }[type]
 
   return (
@@ -83,6 +119,22 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type }: QuickRecordP
                   <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 font-black text-xl uppercase">{config.unit}</span>
                 </div>
               </div>
+
+              {type === 'weight' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Cantidad Muestreada</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={secondaryValue}
+                      onChange={(e) => setSecondaryValue(e.target.value)}
+                      className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-2xl font-black text-white focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
+                      placeholder="10"
+                    />
+                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 font-black text-sm uppercase">aves</span>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Notas / Observaciones</label>

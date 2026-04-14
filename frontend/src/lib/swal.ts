@@ -1,5 +1,47 @@
 import Swal from 'sweetalert2';
 
+export const confirmAction = async (title: string, text: string, icon: 'warning' | 'info' | 'question' = 'question') => {
+  return await Swal.fire({
+    title,
+    text,
+    icon,
+    showCancelButton: true,
+    confirmButtonColor: '#eafe00', // primary
+    cancelButtonColor: '#1e293b',  // slate-800
+    confirmButtonText: 'Confirmar',
+    cancelButtonText: 'Cancelar',
+    background: '#0f172a', // slate-950
+    color: '#f8fafc', // slate-50
+    customClass: {
+      popup: 'rounded-3xl border border-white/10 shadow-2xl',
+      title: 'font-bold text-white',
+      confirmButton: 'rounded-xl font-black px-6 py-2.5 text-black uppercase text-xs tracking-widest',
+      cancelButton: 'rounded-xl font-bold px-6 py-2.5 text-slate-400 uppercase text-xs tracking-widest'
+    }
+  });
+};
+
+export const promptAction = async (title: string, placeholder: string) => {
+  return await Swal.fire({
+    title,
+    input: 'textarea',
+    inputPlaceholder: placeholder,
+    showCancelButton: true,
+    confirmButtonColor: '#eafe00',
+    cancelButtonColor: '#1e293b',
+    confirmButtonText: 'Enviar',
+    cancelButtonText: 'Cancelar',
+    background: '#0f172a',
+    color: '#f8fafc',
+    customClass: {
+      popup: 'rounded-3xl border border-white/10 shadow-2xl',
+      input: 'bg-white/5 border-white/10 text-white rounded-xl focus:ring-primary/50',
+      confirmButton: 'rounded-xl font-black px-6 py-2.5 text-black uppercase text-xs tracking-widest',
+      cancelButton: 'rounded-xl font-bold px-6 py-2.5 text-slate-400 uppercase text-xs tracking-widest'
+    }
+  });
+};
+
 export const confirmDestructiveAction = async (title: string, text: string) => {
   return await Swal.fire({
     title,

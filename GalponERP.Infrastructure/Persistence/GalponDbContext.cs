@@ -67,6 +67,13 @@ public class GalponDbContext : DbContext, IGalponDbContext
             {
                 entry.Entity.SetAuditoriaModificacion(now, usuarioId);
             }
+            else if (entry.State == EntityState.Deleted)
+            {
+                // Soft Delete: Convertir Delete en Update de IsActive
+                entry.State = EntityState.Modified;
+                entry.Entity.Desactivar();
+                entry.Entity.SetAuditoriaModificacion(now, usuarioId);
+            }
         }
 
         return base.SaveChangesAsync(cancellationToken);
