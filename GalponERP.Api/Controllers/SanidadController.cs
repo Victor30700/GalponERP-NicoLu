@@ -1,4 +1,6 @@
 using GalponERP.Application.Sanidad.Commands.RegistrarBienestar;
+using GalponERP.Application.Sanidad.Commands.EliminarBienestar;
+using GalponERP.Application.Sanidad.Commands.ActualizarBienestar;
 using GalponERP.Application.Sanidad.Queries.ObtenerHistorialBienestar;
 using GalponERP.Application.Interfaces;
 using MediatR;
@@ -19,6 +21,31 @@ public class SanidadController : ControllerBase
     {
         _mediator = mediator;
         _currentUserContext = currentUserContext;
+    }
+
+    [HttpDelete("bienestar/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EliminarBienestar(Guid id)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        await _mediator.Send(new EliminarBienestarCommand(id, _currentUserContext.UsuarioId.Value));
+        return NoContent();
+    }
+
+    [HttpPut("bienestar/{id}")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> ActualizarBienestar(Guid id, [FromBody] ActualizarBienestarCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
+
+        command = command with { UsuarioId = _currentUserContext.UsuarioId.Value };
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpPost("bienestar")]

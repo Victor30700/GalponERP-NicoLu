@@ -71,4 +71,19 @@ public class MovimientoInventario : Entity
 
     // Constructor para EF Core
     private MovimientoInventario() : base() { }
+
+    public void Actualizar(Guid productoId, decimal cantidad, DateTime fecha, string? justificacion, Moneda? costoTotal = null)
+    {
+        if (productoId == Guid.Empty)
+            throw new InventarioDomainException("El ID del producto es obligatorio.");
+
+        if (cantidad <= 0)
+            throw new InventarioDomainException("La cantidad del movimiento debe ser mayor a cero.");
+
+        ProductoId = productoId;
+        Cantidad = cantidad;
+        Fecha = fecha;
+        Justificacion = justificacion;
+        CostoTotal = costoTotal;
+    }
 }

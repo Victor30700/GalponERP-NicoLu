@@ -21,6 +21,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using GalponERP.Application.Inventario.Commands.EliminarMovimiento;
+using GalponERP.Application.Inventario.Commands.ActualizarMovimiento;
+
 namespace GalponERP.Api.Controllers;
 
 [Authorize(Roles = "Admin,SubAdmin,Empleado")]
@@ -35,6 +38,31 @@ public class InventarioController : ControllerBase
     {
         _mediator = mediator;
         _currentUserContext = currentUserContext;
+    }
+
+    [HttpDelete("movimiento/{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EliminarMovimiento(Guid id)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        await _mediator.Send(new EliminarMovimientoCommand(id, _currentUserContext.UsuarioId.Value));
+        return NoContent();
+    }
+
+    [HttpPut("movimiento/{id}")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> ActualizarMovimiento(Guid id, [FromBody] ActualizarMovimientoCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
+
+        command = command with { UsuarioId = _currentUserContext.UsuarioId.Value };
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpGet("stock")]

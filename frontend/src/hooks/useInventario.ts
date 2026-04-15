@@ -165,6 +165,22 @@ export function useInventario() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
   });
 
+  const eliminarMovimiento = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/Inventario/movimiento/${id}`),
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['inventario'] });
+        queryClient.invalidateQueries({ queryKey: ['lote'] });
+    },
+  });
+
+  const actualizarMovimiento = useMutation({
+    mutationFn: (data: any) => api.put(`/api/Inventario/movimiento/${data.id}`, data),
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['inventario'] });
+        queryClient.invalidateQueries({ queryKey: ['lote'] });
+    },
+  });
+
   const realizarConciliacion = useMutation({
     mutationFn: (data: ConciliacionFormValues) => api.post('/api/Inventario/conciliacion', data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
@@ -186,6 +202,8 @@ export function useInventario() {
     registrarCompra,
     registrarAjuste,
     registrarConsumoDiario,
+    eliminarMovimiento,
+    actualizarMovimiento,
     realizarConciliacion,
   };
 }

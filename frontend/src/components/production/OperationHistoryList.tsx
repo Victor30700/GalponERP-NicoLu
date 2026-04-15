@@ -104,6 +104,11 @@ export function OperationHistoryList({ data, type, onEdit, onDelete, isLoading }
                       n={item.cantidadMuestreada}
                     </span>
                   )}
+                  {type === 'feed' && item.nombreProducto && (
+                    <span className="text-[10px] font-black text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                      {item.nombreProducto}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <span className="text-[10px] font-bold uppercase tracking-widest truncate max-w-[150px]">

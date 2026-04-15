@@ -53,6 +53,8 @@ export default function LoteDashboard() {
   
   // Estados para historial y filtros
   const [selectedDate, setSelectedDate] = useState('')
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [historyTab, setHistoryTab] = useState<'mortality' | 'feed' | 'water' | 'weight'>('mortality')
   const [editingItem, setEditingItem] = useState<any>(null)
 
@@ -64,8 +66,35 @@ export default function LoteDashboard() {
 
   const { pesajes, isLoading: isLoadingPesajes, eliminarPesaje } = usePesajes(id as string)
   const { mortalidad, isLoading: isLoadingMortalidad, eliminarMortalidad } = useMortalidad(id as string)
-  const { historialBienestar, isLoadingHistorial: isLoadingSanidad } = useSanidad(id as string)
+  const { historialBienestar, isLoadingHistorial: isLoadingSanidad, eliminarBienestar } = useSanidad(id as string)
   const { data: movimientos = [], isLoading: isLoadingMovimientosLote } = useMovimientosLote(id as string)
+  const { eliminarMovimiento } = useInventario()
+
+  // Función de filtrado avanzada
+  const filterByDate = (items: any[]) => {
+    return items.filter((item: any) => {
+      const itemDate = new Date(item.fecha);
+      
+      // Si hay fecha específica, manda sobre mes/año
+      if (selectedDate) {
+        return item.fecha.startsWith(selectedDate);
+      }
+      
+      // Filtrar por mes y año
+      return (itemDate.getMonth() + 1) === selectedMonth && 
+             itemDate.getFullYear() === selectedYear;
+    });
+  };
+
+  const getFilteredData = () => {
+    const rawData = 
+      historyTab === 'mortality' ? mortalidad :
+      historyTab === 'feed' ? movimientos.filter((m: any) => m.tipo === 'Salida' || m.tipo === 'AjusteSalida') :
+      historyTab === 'water' ? historialBienestar :
+      pesajes;
+    
+    return filterByDate(rawData);
+  };
 
   const { data: galpones = [] } = useQuery({
     queryKey: ['galpones'],
@@ -416,7 +445,15 @@ export default function LoteDashboard() {
               <OperationFilters 
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
-                onClear={() => setSelectedDate('')}
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+                selectedYear={selectedYear}
+                onYearChange={setSelectedYear}
+                onClear={() => {
+                  setSelectedDate('');
+                  setSelectedMonth(new Date().getMonth() + 1);
+                  setSelectedYear(new Date().getFullYear());
+                }}
               />
             </div>
 
@@ -451,12 +488,7 @@ export default function LoteDashboard() {
                   historyTab === 'water' ? isLoadingSanidad :
                   isLoadingPesajes
                 }
-                data={(
-                  historyTab === 'mortality' ? mortalidad :
-                  historyTab === 'feed' ? movimientos.filter((m: any) => m.tipo === 'Salida' || m.tipo === 'AjusteSalida') :
-                  historyTab === 'water' ? historialBienestar :
-                  pesajes
-                ).filter((item: any) => !selectedDate || item.fecha.startsWith(selectedDate))}
+                data={getFilteredData()}
                 onEdit={(item) => {
                   setEditingItem(item);
                   setRecordType(historyTab);
@@ -464,7 +496,8 @@ export default function LoteDashboard() {
                 onDelete={(id) => {
                   if (historyTab === 'mortality') eliminarMortalidad.mutate(id);
                   else if (historyTab === 'weight') eliminarPesaje.mutate(id);
-                  else toast.error('Eliminación no disponible para este tipo de registro');
+                  else if (historyTab === 'feed') eliminarMovimiento.mutate(id);
+                  else if (historyTab === 'water') eliminarBienestar.mutate(id);
                 }}
               />
             </div>

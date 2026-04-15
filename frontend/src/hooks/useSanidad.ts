@@ -40,9 +40,31 @@ export function useSanidad(loteId?: string) {
     },
   });
 
+  const eliminarBienestar = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/Sanidad/bienestar/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sanidad'] });
+      if (loteId) {
+        queryClient.invalidateQueries({ queryKey: ['sanidad', 'bienestar', 'lote', loteId] });
+      }
+    },
+  });
+
+  const actualizarBienestar = useMutation({
+    mutationFn: (data: any) => api.put(`/api/Sanidad/bienestar/${data.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sanidad'] });
+      if (loteId) {
+        queryClient.invalidateQueries({ queryKey: ['sanidad', 'bienestar', 'lote', loteId] });
+      }
+    },
+  });
+
   return {
     historialBienestar: historialBienestar.data || [],
     isLoadingHistorial: historialBienestar.isLoading,
     registrarBienestar,
+    eliminarBienestar,
+    actualizarBienestar,
   };
 }

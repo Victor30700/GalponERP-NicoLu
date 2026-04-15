@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, AlertCircle, Scale, Droplets, Ruler, Calendar } from 'lucide-react'
+import { X, Save, AlertCircle, Scale, Droplets, Ruler, Calendar, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { useCatalogos, ProductoCatalogo } from '@/hooks/useCatalogos'
 
 interface QuickRecordProps {
   isOpen: boolean
@@ -23,26 +24,54 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
   const [tertiaryValue, setTertiaryValue] = useState('') 
   const [nota, setNota] = useState('')
   const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [selectedProductId, setSelectedProductId] = useState('')
   
   const queryClient = useQueryClient()
+  const { productos } = useCatalogos()
   const isEditing = !!initialData
+
+  // Filtrar productos de alimento
+  const alimentos = useMemo(() => 
+    productos.filter(p => p.categoriaNombre === 'Alimento' && p.isActive),
+    [productos]
+  )
+
+  // Producto seleccionado actualmente
+  const selectedProduct = useMemo(() => 
+    alimentos.find(p => p.id === selectedProductId),
+    [alimentos, selectedProductId]
+  )
 
   // Cargar datos si es edición
   useEffect(() => {
     if (isEditing && isOpen) {
       const config = {
         mortality: { main: 'cantidadBajas', note: 'causa' },
-        feed: { main: 'cantidad', note: 'justificacion' },
+        feed: { main: 'cantidad', note: 'justificacion', prod: 'productoId' },
         water: { main: 'consumoAgua', note: 'observaciones', sec: 'temperatura', ter: 'humedad' },
         weight: { main: 'pesoPromedioGramos', sec: 'cantidadMuestreada' }
       }[type]
 
-      setValue(initialData[config.main]?.toString() || '')
+      // Para alimento, si estamos editando, el valor que viene es Kg. 
+      // Pero el usuario ahora ingresa Unidades.
+      if (type === 'feed' && initialData.productoId) {
+        setSelectedProductId(initialData.productoId)
+        const prod = productos.find(p => p.id === initialData.productoId)
+        if (prod && prod.equivalenciaEnKg > 0) {
+           setValue((initialData[config.main] / prod.equivalenciaEnKg).toString())
+        } else {
+           setValue(initialData[config.main]?.toString() || '')
+        }
+      } else {
+        setValue(initialData[config.main]?.toString() || '')
+      }
+
       setNota(initialData[config.note] || '')
       setFecha(format(new Date(initialData.fecha), 'yyyy-MM-dd'))
       
       if (config.sec) setSecondaryValue(initialData[config.sec]?.toString() || '')
       if (config.ter) setTertiaryValue(initialData[config.ter]?.toString() || '')
+      if (config.prod && !selectedProductId) setSelectedProductId(initialData[config.prod] || '')
     } else if (!isOpen) {
       // Limpiar al cerrar
       setValue('')
@@ -50,8 +79,9 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       setTertiaryValue('')
       setNota('')
       setFecha(format(new Date(), 'yyyy-MM-dd'))
+      setSelectedProductId('')
     }
-  }, [isEditing, initialData, isOpen, type])
+  }, [isEditing, initialData, isOpen, type, productos])
 
   const mutation = useMutation({
     mutationFn: (data: any) => {
@@ -61,13 +91,11 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       if (type === 'weight') endpoint = '/api/Pesajes'
       
       if (isEditing) {
-          // Nota: El backend de Inventario/Consumo y Sanidad/Bienestar 
-          // a veces no tienen PUT por ID explícito o funcionan por Upsert.
-          // Para Mortalidad y Pesajes usamos PUT /{id}.
           if (type === 'mortality' || type === 'weight') {
               return api.put(`${endpoint}/${initialData.id}`, data)
           }
-          // Para bienestar, el POST /bienestar ya hace upsert por fecha.
+          // Para alimento y agua, si no hay PUT explícito, el POST puede actuar como upsert
+          // o necesitaremos implementar el PUT en el backend.
           return api.post(endpoint, data)
       }
       
@@ -102,14 +130,19 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
     if (type === 'mortality') {
       data = { ...data, cantidad: Number(value), causa: nota || 'Registro rutinario' }
     } else if (type === 'feed') {
-      if (!lote?.productoId && !isEditing) {
-          toast.error('El lote no tiene un producto de alimento asignado.')
+      if (!selectedProductId) {
+          toast.error('Debe seleccionar un producto de alimento.')
           return
       }
+      
+      // Calcular cantidad total en Kg
+      const equivalencia = selectedProduct?.equivalenciaEnKg || 1
+      const cantidadCalculada = Number(value) * equivalencia
+
       data = { 
           ...data,
-          productoId: initialData?.productoId || lote?.productoId,
-          cantidad: Number(value), 
+          productoId: selectedProductId,
+          cantidad: cantidadCalculada, 
           justificacion: nota || 'Consumo diario' 
       }
     } else if (type === 'water') {
@@ -133,7 +166,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
 
   const config = {
     mortality: { title: 'Bajas', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Cantidad de aves', unit: 'und' },
-    feed: { title: 'Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Cantidad servida', unit: 'kg' },
+    feed: { title: 'Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Unidades servidas', unit: 'unidades' },
     water: { title: 'Agua', icon: Droplets, color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Litros consumidos', unit: 'L' },
     weight: { title: 'Pesaje', icon: Ruler, color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'Peso Promedio', unit: 'g' },
   }[type]
@@ -151,24 +184,48 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-foreground">{isEditing ? 'Editar' : 'Registrar'} {config.title}</h2>
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Lote: {lote?.nombre || 'Cargando...'}</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Lote: {lote?.nombre || lote?.nombreLote || 'Cargando...'}</p>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 bg-muted/50 rounded-full text-muted-foreground hover:bg-muted transition-colors"><X size={24} /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Selector de Fecha */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
-                  <Calendar size={12} /> Fecha del Registro
-                </label>
-                <input
-                  type="date"
-                  value={fecha}
-                  onChange={(e) => setFecha(e.target.value)}
-                  className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Selector de Fecha */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <Calendar size={12} /> Fecha del Registro
+                  </label>
+                  <input
+                    type="date"
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  />
+                </div>
+
+                {/* Selector de Producto para Alimento */}
+                {type === 'feed' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
+                      Producto de Alimento
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedProductId}
+                        onChange={(e) => setSelectedProductId(e.target.value)}
+                        className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                      >
+                        <option value="">Seleccionar...</option>
+                        {alimentos.map(p => (
+                          <option key={p.id} value={p.id}>{p.nombre}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -185,6 +242,12 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                   />
                   <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xl uppercase">{config.unit}</span>
                 </div>
+                {type === 'feed' && selectedProduct && (
+                  <p className="text-[10px] text-primary font-black uppercase tracking-widest text-center mt-2">
+                    Equivalencia: {selectedProduct.equivalenciaEnKg} kg por unidad
+                    {value && ` • Total: ${Number(value) * selectedProduct.equivalenciaEnKg} kg`}
+                  </p>
+                )}
               </div>
 
               {type === 'weight' && (
