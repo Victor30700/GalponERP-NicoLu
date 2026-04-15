@@ -49,6 +49,10 @@ public class ActividadPlantillaConfiguration : IEntityTypeConfiguration<Activida
         builder.Property(a => a.DiaDeAplicacion)
             .IsRequired();
 
+        builder.Property(a => a.CantidadRecomendada)
+            .HasPrecision(18, 4)
+            .HasDefaultValue(0);
+
         builder.HasOne<Producto>()
             .WithMany()
             .HasForeignKey(a => a.ProductoIdRecomendado)

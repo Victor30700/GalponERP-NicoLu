@@ -22,7 +22,7 @@ public class PlantillaSanitaria : Entity
         Descripcion = descripcion;
     }
 
-    public void AgregarActividad(Guid id, TipoActividad tipo, int dia, string descripcion, Guid? productoId = null)
+    public void AgregarActividad(Guid id, TipoActividad tipo, int dia, string descripcion, Guid? productoId = null, decimal cantidadRecomendada = 0)
     {
         if (dia <= 0)
             throw new ArgumentException("El día de aplicación debe ser mayor a cero.");
@@ -30,7 +30,7 @@ public class PlantillaSanitaria : Entity
         if (string.IsNullOrWhiteSpace(descripcion))
             throw new ArgumentException("La descripción de la actividad es obligatoria.");
 
-        var actividad = new ActividadPlantilla(id, Id, tipo, dia, descripcion, productoId);
+        var actividad = new ActividadPlantilla(id, Id, tipo, dia, descripcion, productoId, cantidadRecomendada);
         _actividades.Add(actividad);
     }
 
@@ -62,14 +62,23 @@ public class ActividadPlantilla : Entity
     public int DiaDeAplicacion { get; private set; }
     public string Descripcion { get; private set; } = null!;
     public Guid? ProductoIdRecomendado { get; private set; }
+    public decimal CantidadRecomendada { get; private set; }
 
-    public ActividadPlantilla(Guid id, Guid plantillaId, TipoActividad tipo, int dia, string descripcion, Guid? productoId = null) : base(id)
+    public ActividadPlantilla(
+        Guid id, 
+        Guid plantillaId, 
+        TipoActividad tipo, 
+        int dia, 
+        string descripcion, 
+        Guid? productoId = null,
+        decimal cantidadRecomendada = 0) : base(id)
     {
         PlantillaId = plantillaId;
         TipoActividad = tipo;
         DiaDeAplicacion = dia;
         Descripcion = descripcion;
         ProductoIdRecomendado = productoId;
+        CantidadRecomendada = cantidadRecomendada;
     }
 
     // Constructor para EF Core

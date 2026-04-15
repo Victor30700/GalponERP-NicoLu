@@ -321,7 +321,9 @@ export default function InventarioPage() {
                       <span className={cn("text-lg font-bold", item.stockActual > 0 ? "text-emerald-400" : "text-red-400")}>
                         {item.stockActual.toLocaleString()} {item.unidadMedida}
                       </span>
-                      <span className="text-xs text-muted-foreground">{item.stockActualKg.toLocaleString()} Kg equiv.</span>
+                      {item.stockActualKg > 0 && (
+                        <span className="text-xs text-muted-foreground">{item.stockActualKg.toLocaleString()} Kg equiv.</span>
+                      )}
                     </div>
                   )
                 },
@@ -381,12 +383,14 @@ export default function InventarioPage() {
                         {item.stockActual} <span className="text-xs font-normal opacity-60">{item.unidadMedida}</span>
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-muted/50 border border-border">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Equivalente</p>
-                      <p className="text-lg font-black text-slate-300">
-                        {item.stockActualKg} <span className="text-xs font-normal opacity-60">Kg</span>
-                      </p>
-                    </div>
+                    {item.stockActualKg > 0 && (
+                      <div className="p-3 rounded-xl bg-muted/50 border border-border">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Equivalente</p>
+                        <p className="text-lg font-black text-slate-300">
+                          {item.stockActualKg} <span className="text-xs font-normal opacity-60">Kg</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -832,15 +836,17 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
                         ) : (
                             <div className="space-y-8">
                                 {/* Stock Summary */}
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="p-4 bg-muted/50 rounded-2xl border border-border">
                                         <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Stock Actual</p>
                                         <p className="text-2xl font-black text-emerald-400">{stock?.stockActual.toLocaleString()} <span className="text-xs font-normal opacity-60">{stock?.unidadMedida}</span></p>
                                     </div>
-                                    <div className="p-4 bg-muted/50 rounded-2xl border border-border">
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Equivalente</p>
-                                        <p className="text-2xl font-black text-foreground">{stock?.stockActualKg.toLocaleString()} <span className="text-xs font-normal opacity-60">kg</span></p>
-                                    </div>
+                                    {(stock?.stockActualKg ?? 0) > 0 && (
+                                        <div className="p-4 bg-muted/50 rounded-2xl border border-border">
+                                            <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Equivalente</p>
+                                            <p className="text-2xl font-black text-foreground">{stock?.stockActualKg.toLocaleString()} <span className="text-xs font-normal opacity-60">kg</span></p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Kardex Table */}

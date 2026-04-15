@@ -22,6 +22,10 @@ public class CalendarioSanitarioConfiguration : IEntityTypeConfiguration<Calenda
             .IsRequired()
             .HasMaxLength(250);
 
+        builder.Property(c => c.CantidadRecomendada)
+            .HasPrecision(18, 4)
+            .HasDefaultValue(0);
+
         builder.Property(c => c.Estado)
             .HasConversion<string>()
             .HasMaxLength(20);

@@ -26,6 +26,7 @@ const actividadSchema = z.object({
   diaDeAplicacion: z.number().min(0, 'Día inválido'),
   descripcion: z.string().min(3, 'Descripción muy corta'),
   productoIdRecomendado: z.string().uuid('Producto inválido').nullable().optional(),
+  cantidadRecomendada: z.number().min(0, 'No puede ser negativa').default(0),
 })
 
 const plantillaSchema = z.object({
@@ -42,6 +43,7 @@ interface ActividadRead {
   diaDeAplicacion: number
   descripcion: string
   productoIdRecomendado: string | null
+  cantidadRecomendada: number
 }
 
 interface Plantilla {
@@ -138,12 +140,13 @@ export default function PlantillasPage() {
           tipo: TIPO_ACTIVIDAD.find(t => t.nombre === a.tipoActividad)?.id || 1,
           diaDeAplicacion: a.diaDeAplicacion,
           descripcion: a.descripcion,
-          productoIdRecomendado: a.productoIdRecomendado
+          productoIdRecomendado: a.productoIdRecomendado,
+          cantidadRecomendada: a.cantidadRecomendada
         }))
       })
     } else {
       setEditingPlantilla(null)
-      reset({ nombre: '', descripcion: '', actividades: [{ tipo: 1, diaDeAplicacion: 1, descripcion: '', productoIdRecomendado: null }] })
+      reset({ nombre: '', descripcion: '', actividades: [{ tipo: 1, diaDeAplicacion: 1, descripcion: '', productoIdRecomendado: null, cantidadRecomendada: 0 }] })
     }
     setIsFormOpen(true)
   }
@@ -233,7 +236,7 @@ export default function PlantillasPage() {
                       <Activity size={20} className="text-purple-500" />
                       Cronograma de Actividades
                     </h3>
-                    <button type="button" onClick={() => append({ tipo: 1, diaDeAplicacion: 1, descripcion: '', productoIdRecomendado: null })} className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded-xl text-xs font-bold transition-all" >
+                    <button type="button" onClick={() => append({ tipo: 1, diaDeAplicacion: 1, descripcion: '', productoIdRecomendado: null, cantidadRecomendada: 0 })} className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded-xl text-xs font-bold transition-all" >
                       <Plus size={16} /> AGREGAR DÍA
                     </button>
                   </div>
@@ -245,22 +248,22 @@ export default function PlantillasPage() {
                           <Trash2 size={14} />
                         </button>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Tipo de Actividad</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Tipo</label>
                             <select {...register(`actividades.${index}.tipo`, { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground text-sm font-bold focus:ring-2 focus:ring-purple-500/50 appearance-none">
                               {TIPO_ACTIVIDAD.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
                             </select>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Día de Aplicación</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Día</label>
                             <div className="relative">
                               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                               <input type="number" {...register(`actividades.${index}.diaDeAplicacion`, { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground text-sm font-bold focus:ring-2 focus:ring-purple-500/50" placeholder="Día" />
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Producto (Opcional)</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Producto</label>
                             <div className="relative">
                               <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                               <select {...register(`actividades.${index}.productoIdRecomendado`)} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground text-sm font-bold focus:ring-2 focus:ring-purple-500/50 appearance-none">
@@ -268,6 +271,10 @@ export default function PlantillasPage() {
                                 {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                               </select>
                             </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Cant. Sugerida</label>
+                            <input type="number" step="0.01" {...register(`actividades.${index}.cantidadRecomendada`, { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground text-sm font-bold focus:ring-2 focus:ring-purple-500/50" placeholder="Cant." />
                           </div>
                         </div>
 

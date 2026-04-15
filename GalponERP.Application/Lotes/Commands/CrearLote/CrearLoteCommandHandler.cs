@@ -73,7 +73,8 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
                         diaDeAplicacion: actividad.DiaDeAplicacion,
                         descripcionTratamiento: actividad.Descripcion,
                         tipo: actividad.TipoActividad,
-                        productoIdRecomendado: actividad.ProductoIdRecomendado
+                        productoIdRecomendado: actividad.ProductoIdRecomendado,
+                        cantidadRecomendada: actividad.CantidadRecomendada
                     );
                     _calendarioRepository.Agregar(item);
                 }

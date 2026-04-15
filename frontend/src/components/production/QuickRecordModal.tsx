@@ -15,7 +15,7 @@ interface QuickRecordProps {
   loteId: string
   type: 'mortality' | 'feed' | 'water' | 'weight'
   lote?: any
-  initialData?: any // Datos para ediciÃ³n
+  initialData?: any // Datos para edición
 }
 
 export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialData }: QuickRecordProps) {
@@ -54,7 +54,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
     [alimentos, selectedProductId]
   )
 
-  // Cargar datos si es ediciÃ³n
+  // Cargar datos si es edición
   useEffect(() => {
     if (isEditing && isOpen) {
       const config = {
@@ -106,7 +106,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
           if (type === 'mortality' || type === 'weight') {
               return api.put(`${endpoint}/${initialData.id}`, data)
           }
-          // Para alimento y agua, si no hay PUT explÃ­cito, el POST puede actuar como upsert
+          // Para alimento y agua, si no hay PUT explícito, el POST puede actuar como upsert
           // o necesitaremos implementar el PUT en el backend.
           return api.post(endpoint, data)
       }
@@ -136,7 +136,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
     e.preventDefault()
     if (!value) return
     
-    // Validar stock antes de enviar
+    // Validar stock antes de enviar (Se valida en unidades)
     if (type === 'feed' && stockActual !== null && Number(value) > stockActual) {
         toast.error(`Stock insuficiente. Solo quedan ${stockActual} unidades.`)
         return
@@ -154,13 +154,19 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
           return
       }
       
-      // Enviar la cantidad en UNIDADES (ej: sacos) para el inventario
-      const cantidadFinal = Number(value) || 0
+      // Enviar la cantidad en UNIDADES al backend
+      // El backend ahora espera unidades para descontar ambos stocks
+      const cantidadUnidades = Number(value) || 0
+
+      if (cantidadUnidades <= 0) {
+        toast.error('Debe ingresar una cantidad válida en unidades.')
+        return
+      }
 
       data = { 
           ...data,
           productoId: selectedProductId,
-          cantidad: cantidadFinal, 
+          cantidad: cantidadUnidades, 
           justificacion: nota || 'Consumo diario' 
       }
     } else if (type === 'water') {
@@ -184,7 +190,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
 
   const config = {
     mortality: { title: 'Bajas', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Cantidad de aves', unit: 'und' },
-    feed: { title: 'Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Unidades servidas', unit: 'unidades' },
+    feed: { title: 'Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Unidades Abiertas', unit: 'unidades' },
     water: { title: 'Agua', icon: Droplets, color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Litros consumidos', unit: 'L' },
     weight: { title: 'Pesaje', icon: Ruler, color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'Peso Promedio', unit: 'g' },
   }[type]
@@ -244,7 +250,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                     </div>
                     {selectedProduct && stockActual !== null && (
                         <p className={`text-[10px] font-black uppercase tracking-widest ml-1 mt-1 ${stockActual <= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                           Stock: {stockActual} {selectedProduct.unidadMedidaNombre}(s) â‰ˆ {(stockActual * selectedProduct.pesoUnitarioKg).toFixed(1)} Kg totales
+                           Stock Disponible: {stockActual} {selectedProduct.unidadMedidaNombre}(s) ≈ {(Number(stockActual) * Number(selectedProduct.pesoUnitarioKg)).toFixed(1)} Kg
                         </p>
                     )}
                   </div>
@@ -253,7 +259,9 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{type === 'feed' ? 'Cantidad de Unidades' : config.label}</label>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                    {type === 'feed' ? 'Cantidad de Unidades (Sacos/Bolsas)' : config.label}
+                  </label>
                   <div className="relative">
                     <input
                       autoFocus={type !== 'feed'}
@@ -263,10 +271,10 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                       onChange={(e) => {
                         const val = e.target.value;
                         setValue(val);
-                        // Sincronizar con Kg si hay producto seleccionado
+                        // Calcular Kg automáticamente si hay producto seleccionado
                         if (type === 'feed' && selectedProduct) {
-                          const equiv = selectedProduct.pesoUnitarioKg || 0;
-                          setSecondaryValue(val ? (Number(val) * equiv).toFixed(2) : '');
+                          const pesoUnit = Number(selectedProduct.pesoUnitarioKg) || 0;
+                          setSecondaryValue(val ? (Number(val) * pesoUnit).toFixed(2) : '');
                         }
                       }}
                       className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
@@ -280,7 +288,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
 
                 {type === 'feed' && (
                   <div className={`space-y-2 transition-all ${value && value !== '0' ? 'opacity-30 pointer-events-none' : ''}`}>
-                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Peso Total (Kg) - Opcional</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Equivalencia en Kilogramos (Kg)</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -291,8 +299,8 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                           setSecondaryValue(valKg);
                           // Recalcular unidades si hay producto
                           if (selectedProduct && !value) {
-                             const equiv = selectedProduct.pesoUnitarioKg || 1;
-                             setValue(valKg ? (Number(valKg) / equiv).toFixed(2) : '');
+                             const pesoUnit = Number(selectedProduct.pesoUnitarioKg) || 1;
+                             setValue(valKg ? (Number(valKg) / pesoUnit).toFixed(2) : '');
                           }
                         }}
                         className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
@@ -307,13 +315,13 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
               {type === 'feed' && selectedProduct && (
                   <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 space-y-1">
                     <p className="text-[10px] text-primary font-black uppercase tracking-widest text-center">
-                      ConfiguraciÃ³n: 1 Unidad = {selectedProduct.pesoUnitarioKg} kg
+                      Configuración: 1 {selectedProduct.unidadMedidaNombre} = {selectedProduct.pesoUnitarioKg} kg
                     </p>
                     <p className="text-sm text-muted-foreground font-bold text-center">
-                      CÃLCULO: <span className="text-foreground">{value || 0} Unid</span> Ã— <span className="text-foreground">{selectedProduct.pesoUnitarioKg} Kg</span> = <span className="text-primary font-black text-lg">{(Number(value || 0) * selectedProduct.pesoUnitarioKg).toFixed(2)} Kg reales</span>
+                      CONSUMO ESTIMADO: <span className="text-foreground">{value || 0} Unidades</span> × <span className="text-foreground">{selectedProduct.pesoUnitarioKg} Kg</span> = <span className="text-primary font-black text-lg">{(Number(value || 0) * Number(selectedProduct.pesoUnitarioKg)).toFixed(2)} Kg totales</span>
                     </p>
                     <p className="text-[10px] text-muted-foreground font-medium text-center italic">
-                      Estos {(Number(value || 0) * selectedProduct.pesoUnitarioKg).toFixed(2)} Kg se restarÃ¡n de los {(stockActual || 0) * selectedProduct.pesoUnitarioKg} Kg totales en stock.
+                      Se descontarán tanto unidades como Kg del inventario global.
                     </p>
                   </div>
               )}
@@ -347,7 +355,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                         className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-2xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
                         placeholder="0.0"
                       />
-                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-sm uppercase">Â°C</span>
+                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-sm uppercase">°C</span>
                     </div>
                   </div>
                   <div className="space-y-2">

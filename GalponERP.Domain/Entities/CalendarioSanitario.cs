@@ -19,6 +19,7 @@ public class CalendarioSanitario : Entity
     public int DiaDeAplicacion { get; private set; }
     public string DescripcionTratamiento { get; private set; } = null!;
     public Guid? ProductoIdRecomendado { get; private set; }
+    public decimal CantidadRecomendada { get; private set; }
     public EstadoCalendario Estado { get; private set; }
     public TipoActividad Tipo { get; private set; }
     public bool EsManual { get; private set; }
@@ -31,6 +32,7 @@ public class CalendarioSanitario : Entity
         string descripcionTratamiento, 
         TipoActividad tipo = TipoActividad.Otros,
         Guid? productoIdRecomendado = null,
+        decimal cantidadRecomendada = 0,
         bool esManual = false,
         string? justificacion = null) 
         : base(id)
@@ -48,6 +50,7 @@ public class CalendarioSanitario : Entity
         DiaDeAplicacion = diaDeAplicacion;
         DescripcionTratamiento = descripcionTratamiento;
         ProductoIdRecomendado = productoIdRecomendado;
+        CantidadRecomendada = cantidadRecomendada;
         Estado = EstadoCalendario.Pendiente;
         Tipo = tipo;
         EsManual = esManual;

@@ -11,8 +11,8 @@ public record ActualizarProductoCommand(
     string Nombre,
     Guid CategoriaProductoId,
     Guid UnidadMedidaId,
-    decimal PesoUnitarioKg,
-    decimal UmbralMinimo) : IRequest;
+    decimal PesoUnitarioKg = 0,
+    decimal UmbralMinimo = 0) : IRequest;
 
 public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarProductoCommand>
 {
@@ -31,7 +31,7 @@ public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarPr
             .NotEmpty().WithMessage("La unidad de medida es obligatoria.");
             
         RuleFor(x => x.PesoUnitarioKg)
-            .GreaterThan(0).WithMessage("El peso unitario en Kg debe ser mayor a cero.");
+            .GreaterThanOrEqualTo(0).WithMessage("El peso unitario en Kg no puede ser negativo.");
 
         RuleFor(x => x.UmbralMinimo)
             .GreaterThanOrEqualTo(0).WithMessage("El umbral mínimo no puede ser negativo.");

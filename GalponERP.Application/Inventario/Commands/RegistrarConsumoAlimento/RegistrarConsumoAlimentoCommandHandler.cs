@@ -40,36 +40,35 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
             throw new UnauthorizedAccessException("Usuario no identificado para realizar la operación.");
         }
 
-        // 1. Validar Stock Disponible
-        var stockActual = await _inventarioRepository.ObtenerStockPorProductoIdAsync(request.ProductoId);
-        if (stockActual < request.Cantidad)
+        // 1. Validar Stock Disponible (Se valida contra lo que devuelva el repositorio en unidades)
+        var stockActualUnidades = await _inventarioRepository.ObtenerStockPorProductoIdAsync(request.ProductoId);
+        
+        if (stockActualUnidades < request.Cantidad)
         {
-            throw new InventarioDomainException($"Stock insuficiente para el producto. Disponible: {stockActual}, Requerido: {request.Cantidad}");
+            throw new InventarioDomainException($"Stock insuficiente. Disponible: {stockActualUnidades} {producto.Unidad?.Nombre ?? "unidades"}, Requerido: {request.Cantidad}");
         }
 
-        // 2. Registrar el Movimiento de SALIDA
-        // El sistema internamente calcula los Kg reales usando la Equivalencia del Producto
-        // Aunque el Movimiento guarda la cantidad en su unidad (ej: bultos), 
-        // los KPIs se calculan posteriormente usando esta relación.
-        
+        // 2. Registrar el Movimiento de SALIDA en UNIDADES
         decimal costoTotalConsumo = request.Cantidad * producto.CostoUnitarioActual;
+        decimal kgConsumidos = request.Cantidad * producto.PesoUnitarioKg;
 
         var movimientoId = Guid.NewGuid();
         var movimiento = new MovimientoInventario(
             movimientoId,
             request.ProductoId,
             request.LoteId,
-            request.Cantidad,
+            request.Cantidad, // Se guardan Unidades (ej: 5 sacos)
             TipoMovimiento.Salida,
             DateTime.UtcNow,
             usuarioId.Value,
-            request.Justificacion ?? "Consumo diario de alimento",
+            request.Justificacion ?? $"Consumo de {request.Cantidad} {producto.Unidad?.Nombre ?? "unidades"} ({kgConsumidos} Kg)",
             new Moneda(costoTotalConsumo)
         );
 
         _inventarioRepository.RegistrarMovimiento(movimiento);
 
-        // 3. Actualizar el stock en Kg cacheado en el Producto (para Feed Inventory Tracking)
+        // 3. Actualizar el stock en Kg cacheado en el Producto
+        // ActualizarStock recibe unidades y multiplica internamente por PesoUnitarioKg
         producto.ActualizarStock(request.Cantidad, TipoMovimiento.Salida);
         _productoRepository.Actualizar(producto);
 

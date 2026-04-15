@@ -10,10 +10,9 @@ public record CrearProductoCommand(
     string Nombre,
     Guid CategoriaProductoId,
     Guid UnidadMedidaId,
-    decimal PesoUnitarioKg,
+    decimal PesoUnitarioKg = 0,
     decimal UmbralMinimo = 0,
-    decimal StockInicial = 0,
-    decimal? EquivalenciaEnKg = null) : IRequest<Guid>;
+    decimal StockInicial = 0) : IRequest<Guid>;
 
 public class CrearProductoCommandValidator : AbstractValidator<CrearProductoCommand>
 {
@@ -30,7 +29,7 @@ public class CrearProductoCommandValidator : AbstractValidator<CrearProductoComm
             .NotEmpty().WithMessage("La unidad de medida es obligatoria.");
             
         RuleFor(x => x.PesoUnitarioKg)
-            .GreaterThan(0).WithMessage("El peso unitario en Kg debe ser mayor a cero.");
+            .GreaterThanOrEqualTo(0).WithMessage("El peso unitario en Kg no puede ser negativo.");
 
         RuleFor(x => x.UmbralMinimo)
             .GreaterThanOrEqualTo(0).WithMessage("El umbral mínimo no puede ser negativo.");
@@ -61,10 +60,6 @@ public class CrearProductoCommandHandler : IRequestHandler<CrearProductoCommand,
 
     public async Task<Guid> Handle(CrearProductoCommand request, CancellationToken cancellationToken)
     {
-        // El peso total inicial puede venir del DTO (como EquivalenciaEnKg según el usuario)
-        // o calcularse como StockInicial * PesoUnitarioKg
-        decimal stockInicialKg = request.EquivalenciaEnKg ?? (request.StockInicial * request.PesoUnitarioKg);
-
         var producto = new Producto(
             Guid.NewGuid(),
             request.Nombre,
@@ -73,7 +68,7 @@ public class CrearProductoCommandHandler : IRequestHandler<CrearProductoCommand,
             request.PesoUnitarioKg,
             request.UmbralMinimo,
             0, // Costo inicial
-            stockInicialKg);
+            request.StockInicial);
 
         _productoRepository.Agregar(producto);
 
@@ -82,12 +77,12 @@ public class CrearProductoCommandHandler : IRequestHandler<CrearProductoCommand,
             var movimiento = new MovimientoInventario(
                 Guid.NewGuid(),
                 producto.Id,
-                null, // No asociado a lote
+                null, // No asociado a lote al crear el producto
                 request.StockInicial,
                 TipoMovimiento.Entrada,
                 DateTime.UtcNow,
                 _currentUserContext.UsuarioId ?? Guid.Empty,
-                "Carga inicial de stock al crear producto"
+                $"Carga inicial de stock al crear producto ({request.StockInicial} unidades)"
             );
             _inventarioRepository.RegistrarMovimiento(movimiento);
         }

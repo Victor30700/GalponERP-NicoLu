@@ -16,17 +16,22 @@ public class Producto : Entity
     /// <summary>
     /// Multiplicador para convertir la unidad de medida a Kilogramos.
     /// Crucial para cálculos de FCR (Food Conversion Ratio).
+    /// Puede ser cero para productos que no requieren pesaje (Medicamentos, Insumos).
     /// </summary>
     public decimal PesoUnitarioKg { get; private set; }
 
     /// <summary>
-    /// Stock total acumulado en Kilogramos.
-    /// Se actualiza con cada entrada/salida de stock.
+    /// Stock total acumulado en unidades (Bolsas, Frascos, etc.) según su UnidadMedida.
+    /// </summary>
+    public decimal StockActual { get; private set; }
+
+    /// <summary>
+    /// Stock total acumulado en Kilogramos (StockActual * PesoUnitarioKg).
     /// </summary>
     public decimal StockActualKg { get; private set; }
 
     /// <summary>
-    /// Cantidad mínima en stock antes de generar una alerta.
+    /// Cantidad mínima en stock (en unidades) antes de generar una alerta.
     /// </summary>
     public decimal UmbralMinimo { get; private set; }
 
@@ -44,13 +49,13 @@ public class Producto : Entity
         decimal pesoUnitarioKg,
         decimal umbralMinimo = 0,
         decimal costoUnitarioActual = 0,
-        decimal stockInicialKg = 0) : base(id)
+        decimal stockInicial = 0) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto es obligatorio.");
         
-        if (pesoUnitarioKg <= 0)
-            throw new ArgumentException("El peso unitario en Kg debe ser mayor a cero.");
+        if (pesoUnitarioKg < 0)
+            throw new ArgumentException("El peso unitario en Kg no puede ser negativo.");
 
         Nombre = nombre;
         CategoriaProductoId = categoriaProductoId;
@@ -58,7 +63,8 @@ public class Producto : Entity
         PesoUnitarioKg = pesoUnitarioKg;
         UmbralMinimo = umbralMinimo;
         CostoUnitarioActual = costoUnitarioActual;
-        StockActualKg = stockInicialKg;
+        StockActual = stockInicial;
+        StockActualKg = stockInicial * pesoUnitarioKg;
     }
 
     // Constructor para EF Core
@@ -74,25 +80,33 @@ public class Producto : Entity
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto no puede estar vacío.");
         
-        if (pesoUnitarioKg <= 0)
-            throw new ArgumentException("El peso unitario en Kg debe ser mayor a cero.");
+        if (pesoUnitarioKg < 0)
+            throw new ArgumentException("El peso unitario en Kg no puede ser negativo.");
         
         Nombre = nombre;
         CategoriaProductoId = categoriaProductoId;
         UnidadMedidaId = unidadMedidaId;
         PesoUnitarioKg = pesoUnitarioKg;
         UmbralMinimo = umbralMinimo;
+
+        // Al actualizar el peso unitario, sincronizamos el stock en Kg
+        SincronizarStockKg(StockActual);
     }
 
     /// <summary>
-    /// Actualiza el stock total en Kg según un movimiento.
+    /// Actualiza el stock total según un movimiento.
     /// </summary>
+    /// <param name="cantidad">Cantidad en unidades base del producto.</param>
+    /// <param name="tipo">Tipo de movimiento (Entrada/Salida).</param>
     public void ActualizarStock(decimal cantidad, TipoMovimiento tipo)
     {
         decimal factor = (tipo == TipoMovimiento.Entrada || tipo == TipoMovimiento.AjusteEntrada || tipo == TipoMovimiento.Compra) ? 1 : -1;
-        StockActualKg += (cantidad * PesoUnitarioKg) * factor;
+        
+        StockActual += cantidad * factor;
+        if (StockActual < 0) StockActual = 0;
 
-        if (StockActualKg < 0) StockActualKg = 0; // Evitar stock negativo en Kg por ajustes
+        StockActualKg = StockActual * PesoUnitarioKg;
+        if (StockActualKg < 0) StockActualKg = 0; 
     }
 
     /// <summary>
@@ -101,7 +115,10 @@ public class Producto : Entity
     /// </summary>
     public void SincronizarStockKg(decimal stockActualUnidades)
     {
+        StockActual = stockActualUnidades;
         StockActualKg = stockActualUnidades * PesoUnitarioKg;
+        
+        if (StockActual < 0) StockActual = 0;
         if (StockActualKg < 0) StockActualKg = 0;
     }
 

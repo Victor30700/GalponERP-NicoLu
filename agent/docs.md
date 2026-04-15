@@ -1,31 +1,30 @@
-# Documentación de Arquitectura y Estado del Proyecto - GalponERP
+# Documentación de Cambios: Refactorización de Productos e Inventario (Control en Kg)
 
-## Resumen del Proyecto
-GalponERP es un sistema de gestión para la producción avícola, diseñado con una arquitectura SaaS multitenant. Permite el control total del ciclo de vida de los pollos, desde el ingreso del lote hasta la venta final, integrando módulos de inventario, finanzas, sanidad y análisis inteligente mediante IA.
+## 1. Resumen de Cambios
+Se ha modificado la lógica de gestión de productos y consumo de alimento para permitir un control preciso en Kilogramos, manteniendo la integridad del inventario en unidades físicas (sacos/bolsas).
 
-## Tecnologías Principales
-- **Backend**: .NET 10, ASP.NET Core API.
-- **Frontend**: Next.js 14, Tailwind CSS, TypeScript.
-- **Base de Datos**: PostgreSQL (Persistencia relacional), Firebase Firestore (Metadatos de usuario).
-- **IA**: Semantic Kernel, Ollama (Gemma), OpenAI Whisper/TTS.
-- **Seguridad**: Firebase Auth (JWT).
+## 2. Backend (API & Application)
+- **`RegistrarConsumoAlimentoCommandHandler.cs`**: 
+    - Ahora recibe la cantidad en **Kilogramos**.
+    - Realiza la conversión automática a unidades: `unidades = kg / pesoUnitarioKg`.
+    - Registra el `MovimientoInventario` en unidades físicas para el Kardex.
+    - Actualiza el `StockActualKg` del producto basándose en las unidades resultantes.
+- **`CrearProductoCommandHandler.cs`**:
+    - Permite recibir `EquivalenciaEnKg` (Peso Total Inicial) directamente.
+    - Si no se proporciona, se calcula como `StockInicial * PesoUnitarioKg`.
 
-## Arquitectura
-El sistema sigue los principios de **Clean Architecture** y **Domain-Driven Design (DDD)**:
-1. **Domain Layer**: Entidades de negocio, Value Objects (`Moneda`), interfaces de repositorio y lógica pura.
-2. **Application Layer**: Casos de uso (Commands/Queries con MediatR), Validaciones (FluentValidation) y Orquestación de IA.
-3. **Infrastructure Layer**: Implementación de repositorios (EF Core), servicios externos (Firebase, OpenAI, WhatsApp) y persistencia.
-4. **API Layer**: Controladores REST, Middleware de excepciones y configuración de Swagger.
+## 3. Frontend (Web Interface)
+- **Módulo de Productos**:
+    - El formulario de "Nuevo Producto" ahora calcula reactivamente el **Peso Total Inicial (Kg)** en tiempo real al ingresar el Stock Inicial y el Peso por Unidad.
+- **Módulo de Lotes (Consumo de Alimento)**:
+    - El modal de registro rápido de alimento ahora prioriza la entrada en **Kilogramos**.
+    - Muestra el stock disponible tanto en unidades como en Kg totales para mayor claridad del operario.
+    - Realiza el cálculo reactivo inverso (Kg -> Unidades) para que el operario sepa cuántos sacos/bolsas se están descontando.
 
-## Estado Actual: Maestría Operativa
-El proyecto ha completado todas las fases de desarrollo planificadas, alcanzando un estado de "Maestría Operativa":
-- **Backend Blindado**: Consistencia total de datos, auditoría completa y precisión matemática.
-- **IA Omnicanal**: Operador inteligente capaz de ejecutar flujos complejos vía Web, WhatsApp y Voz.
-- **Control Financiero**: Ciclo de caja 100% cubierto (Compras/Pagos, Ventas/Cobros, Costeo PPP).
-- **UX Inteligente**: Resolución de entidades por búsqueda difusa y proactividad basada en snapshots de datos.
+## 4. Validación Realizada
+- Se verificó la conversión matemática en el Backend: Consumir 25 Kg de un producto con 50 Kg/unidad resulta en un descuento de 0.5 unidades en el inventario.
+- Se validó la reactividad del frontend en la creación de productos.
+- Se aseguró que el stock no pueda ser negativo en kilogramos.
 
-## Documentación Relevante
-- `docs/contextProject.md`: Historial completo de Sprints y decisiones de arquitectura.
-- `docs/endpoints.md`: Contrato completo de la API REST.
-- `agent/instrucciones.md`: Instrucciones técnicas para el mantenimiento del sistema.
-- `agent/plan.md`: Hoja de ruta (Fase 4 completada).
+---
+**Tarea finalizada exitosamente.**

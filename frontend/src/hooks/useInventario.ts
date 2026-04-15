@@ -9,6 +9,7 @@ export interface StockProducto {
   stockActual: number;
   stockActualKg: number;
   unidadMedida: string;
+  pesoUnitarioKg: number;
 }
 
 export interface ValoracionInventario {

@@ -8,15 +8,16 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, Package, Tag, Scale, Info } from 'lucide-react'
+import { X, Save, Package, Tag, Scale, Info, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { confirmDestructiveAction } from '@/lib/swal'
 
 const productoSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
-  categoriaProductoId: z.string().uuid('CategorÃ­a invÃ¡lida'),
-  unidadMedidaId: z.string().uuid('Unidad de medida invÃ¡lida'),
-  pesoUnitarioKg: z.number().positive('La equivalencia debe ser mayor a cero'),
+  categoriaProductoId: z.string().uuid('Categoría inválida'),
+  unidadMedidaId: z.string().uuid('Unidad de medida inválida'),
+  pesoUnitarioKg: z.number().min(0, 'El peso unitario no puede ser negativo'),
+  equivalenciaEnKg: z.number().min(0, 'No puede ser negativo').optional(),
   umbralMinimo: z.number().min(0, 'No puede ser negativo'),
   stockInicial: z.number().min(0, 'No puede ser negativo').optional().default(0),
 })
@@ -31,6 +32,7 @@ interface Producto {
   unidadMedidaId: string
   unidadMedidaNombre: string
   pesoUnitarioKg: number
+  equivalenciaEnKg?: number
   umbralMinimo: number
   stockActual: number
   stockActualKg: number
@@ -103,6 +105,8 @@ export default function ProductosPage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue: setFormValue,
     formState: { errors },
   } = useForm<ProductoFormValues>({
     resolver: zodResolver(productoSchema),
@@ -111,15 +115,24 @@ export default function ProductosPage() {
       categoriaProductoId: '',
       unidadMedidaId: '',
       pesoUnitarioKg: 1,
-      umbralMinimo: 0
+      umbralMinimo: 0,
+      stockInicial: 0,
+      equivalenciaEnKg: 0
     }
   })
+
+  // Cálculo reactivo de equivalencia en Kg
+  const watchStockInicial = watch('stockInicial')
+  const watchPesoUnitario = watch('pesoUnitarioKg')
+
+  const equivalenciaCalculada = (watchStockInicial || 0) * (watchPesoUnitario || 0)
 
   const onSubmit = (data: ProductoFormValues) => {
     const values = { 
       ...data, 
       pesoUnitarioKg: Number(data.pesoUnitarioKg),
-      umbralMinimo: Number(data.umbralMinimo) 
+      umbralMinimo: Number(data.umbralMinimo),
+      equivalenciaEnKg: !editingProducto ? equivalenciaCalculada : undefined
     }
     if (editingProducto) {
       updateMutation.mutate({ id: editingProducto.id, values })
@@ -167,17 +180,34 @@ export default function ProductosPage() {
       )
     },
     { 
-      header: 'Inventario', 
-      accessor: (item: Producto) => (
-        <div className="flex flex-col">
-          <span className="text-xs font-bold text-emerald-500">
-            Total: {Number(item.stockActualKg || 0).toFixed(2)} Kg
-          </span>
-          <span className="text-[10px] text-muted-foreground">
-            {item.stockActual || 0} {item.unidadMedidaNombre}(s) de {item.pesoUnitarioKg}kg
-          </span>
-        </div>
-      )
+      header: 'Inventario Disponible', 
+      accessor: (item: Producto) => {
+        const esBajoStock = (item.stockActual || 0) <= (item.umbralMinimo || 0);
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-black ${esBajoStock ? 'text-red-500 animate-pulse' : 'text-emerald-500'}`}>
+                {Number(item.stockActual || 0).toFixed(1)} {item.unidadMedidaNombre}(s)
+              </span>
+              {esBajoStock && (
+                <div className="p-1 bg-red-500/10 text-red-500 rounded-full" title="Stock por debajo del mínimo">
+                  <AlertCircle size={12} />
+                </div>
+              )}
+            </div>
+            {item.pesoUnitarioKg > 0 && (
+              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold bg-muted/30 w-fit px-2 py-0.5 rounded-lg border border-border/50">
+                <Scale size={10} /> {Number(item.stockActualKg || 0).toFixed(2)} Kg Totales
+              </div>
+            )}
+            {esBajoStock && (
+               <p className="text-[9px] text-red-400 font-bold uppercase tracking-tighter">
+                 Reordenar (Mín: {item.umbralMinimo})
+               </p>
+            )}
+          </div>
+        );
+      }
     },
     { 
       header: 'Estado', 
@@ -192,14 +222,14 @@ export default function ProductosPage() {
   return (
     <div className="relative">
       <UniversalGrid
-        title="CatÃ¡logo de Productos"
+        title="Catálogo de Productos"
         items={productos}
         columns={columns}
         isLoading={isLoading}
         onAdd={() => openForm()}
         onEdit={(item) => openForm(item)}
         onDelete={async (item) => {
-          const result = await confirmDestructiveAction('Â¿Eliminar producto?', 'Esta acciÃ³n no se puede deshacer y podrÃ­a afectar el inventario.')
+          const result = await confirmDestructiveAction('¿Eliminar producto?', 'Esta acción no se puede deshacer y podría afectar el inventario.')
           if (result.isConfirmed) {
             deleteMutation.mutate(item.id)
           }
@@ -217,7 +247,7 @@ export default function ProductosPage() {
                 <Scale size={12} /> {item.unidadMedidaNombre}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium uppercase tracking-tighter">
-                <Tag size={12} /> MÃ­n: {item.umbralMinimo}
+                <Tag size={12} /> Mín: {item.umbralMinimo}
               </div>
             </div>
           </div>
@@ -245,9 +275,9 @@ export default function ProductosPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">CategorÃ­a</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Categoría</label>
                   <select {...register('categoriaProductoId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
-                    <option value="">Selecciona una categorÃ­a</option>
+                    <option value="">Selecciona una categoría</option>
                     {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
                   {errors.categoriaProductoId && <p className="text-xs text-red-400 ml-1">{errors.categoriaProductoId.message}</p>}
@@ -264,16 +294,26 @@ export default function ProductosPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground ml-1">Stock MÃ­nimo</label>
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Stock Mínimo</label>
                     <input type="number" step="0.01" {...register('umbralMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
                     {errors.umbralMinimo && <p className="text-xs text-red-400 ml-1">{errors.umbralMinimo.message}</p>}
                   </div>
                   {!editingProducto && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground ml-1 font-bold text-emerald-500">Stock Inicial (Unidades)</label>
-                      <input type="number" step="0.01" {...register('stockInicial', { valueAsNumber: true })} className="w-full px-4 py-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-bold" />
-                      {errors.stockInicial && <p className="text-xs text-red-400 ml-1">{errors.stockInicial.message}</p>}
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1 font-bold text-emerald-500">Stock Inicial (Unidades)</label>
+                        <input type="number" step="0.01" {...register('stockInicial', { valueAsNumber: true })} className="w-full px-4 py-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-bold" />
+                        {errors.stockInicial && <p className="text-xs text-red-400 ml-1">{errors.stockInicial.message}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1 font-bold text-blue-500">Peso Total Inicial (Kg)</label>
+                        <div className="relative">
+                          <Info className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500/50" size={18} />
+                          <input type="number" value={equivalenciaCalculada.toFixed(2)} disabled className="w-full pl-10 pr-4 py-3 bg-blue-500/5 border border-blue-500/20 rounded-xl text-blue-500 font-bold focus:outline-none cursor-not-allowed" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground ml-1">Cálculo: Unidades × Peso Unitario</p>
+                      </div>
+                    </>
                   )}
                 </div>
 

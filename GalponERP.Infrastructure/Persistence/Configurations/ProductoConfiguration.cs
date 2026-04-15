@@ -19,6 +19,10 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(p => p.PesoUnitarioKg)
             .HasPrecision(18, 4);
 
+        builder.Property(p => p.StockActual)
+            .HasPrecision(18, 4)
+            .HasDefaultValue(0);
+
         builder.Property(p => p.StockActualKg)
             .HasPrecision(18, 4)
             .HasDefaultValue(0);
