@@ -21,6 +21,8 @@ export interface UniversalGridProps<T> {
   isLoading?: boolean
   searchPlaceholder?: string
   renderMobileCard: (item: T) => ReactNode
+  hideHeaderSearch?: boolean
+  hideHeaderTitle?: boolean
 }
 
 export function UniversalGrid<T extends { id: string | number }>({
@@ -33,29 +35,37 @@ export function UniversalGrid<T extends { id: string | number }>({
   isLoading,
   searchPlaceholder = "Buscar...",
   renderMobileCard,
+  hideHeaderSearch = false,
+  hideHeaderTitle = false,
 }: UniversalGridProps<T>) {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          <p className="text-muted-foreground text-sm">Gestiona tus {title.toLowerCase()} de forma eficiente.</p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
-            />
+        {!hideHeaderTitle && (
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+            <p className="text-muted-foreground text-sm">Gestiona tus {title.toLowerCase()} de forma eficiente.</p>
           </div>
+        )}
+        
+        <div className="flex items-center gap-2 ml-auto">
+          {!hideHeaderSearch && (
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
+              />
+            </div>
+          )}
           
-          <button className="p-2 bg-muted/50 border border-border rounded-xl text-muted-foreground hover:text-foreground transition-all">
-            <Filter size={20} />
-          </button>
+          {!hideHeaderSearch && (
+            <button className="p-2 bg-muted/50 border border-border rounded-xl text-muted-foreground hover:text-foreground transition-all">
+              <Filter size={20} />
+            </button>
+          )}
 
           {onAdd && (
             <button

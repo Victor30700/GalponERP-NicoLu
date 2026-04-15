@@ -1,4 +1,6 @@
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
+using FluentValidation.Results;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
@@ -9,17 +11,20 @@ namespace GalponERP.Application.Lotes.Commands.CrearLote;
 public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
 {
     private readonly ILoteRepository _loteRepository;
+    private readonly IGalponRepository _galponRepository;
     private readonly ICalendarioSanitarioRepository _calendarioRepository;
     private readonly IPlantillaSanitariaRepository _plantillaRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CrearLoteCommandHandler(
         ILoteRepository loteRepository,
+        IGalponRepository galponRepository,
         ICalendarioSanitarioRepository calendarioRepository,
         IPlantillaSanitariaRepository plantillaRepository,
         IUnitOfWork unitOfWork)
     {
         _loteRepository = loteRepository;
+        _galponRepository = galponRepository;
         _calendarioRepository = calendarioRepository;
         _plantillaRepository = plantillaRepository;
         _unitOfWork = unitOfWork;
@@ -27,6 +32,16 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
 
     public async Task<Guid> Handle(CrearLoteCommand request, CancellationToken cancellationToken)
     {
+        // Validar que el galpón exista
+        var galpon = await _galponRepository.ObtenerPorIdAsync(request.GalponId);
+        if (galpon == null)
+        {
+            throw new ValidationException(new List<ValidationFailure> 
+            { 
+                new ValidationFailure("GalponId", $"El galpón con ID {request.GalponId} no existe.") 
+            });
+        }
+
         // Asegurar que la fecha sea UTC para PostgreSQL
         var fechaUtc = request.FechaIngreso.Kind == DateTimeKind.Unspecified 
             ? DateTime.SpecifyKind(request.FechaIngreso, DateTimeKind.Utc) 
@@ -35,6 +50,7 @@ public class CrearLoteCommandHandler : IRequestHandler<CrearLoteCommand, Guid>
         var loteId = Guid.NewGuid();
         var lote = new Lote(
             loteId,
+            request.Nombre,
             request.GalponId,
             fechaUtc,
             request.CantidadInicial,

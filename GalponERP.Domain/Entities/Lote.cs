@@ -17,6 +17,7 @@ public enum EstadoLote
 /// </summary>
 public class Lote : Entity
 {
+    public string Nombre { get; private set; } = null!;
     public Guid GalponId { get; private set; }
     public Galpon Galpon { get; private set; } = null!;
     public DateTime FechaIngreso { get; private set; }
@@ -40,15 +41,19 @@ public class Lote : Entity
     private readonly List<PesajeLote> _pesajes = new();
     public IReadOnlyCollection<PesajeLote> Pesajes => _pesajes.AsReadOnly();
 
-    public Lote(Guid id, Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitarioPollito) 
+    public Lote(Guid id, string nombre, Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitarioPollito) 
         : base(id)
     {
+        if (string.IsNullOrWhiteSpace(nombre))
+            throw new LoteDomainException("El nombre del lote es obligatorio.");
+
         if (galponId == Guid.Empty)
             throw new LoteDomainException("El ID del galpón es obligatorio.");
 
         if (cantidadInicial <= 0)
             throw new LoteDomainException("La cantidad inicial del lote debe ser mayor a cero.");
 
+        Nombre = nombre;
         GalponId = galponId;
         FechaIngreso = fechaIngreso;
         CantidadInicial = cantidadInicial;
@@ -226,10 +231,13 @@ public class Lote : Entity
         CantidadActual += cantidad;
     }
 
-    public void ActualizarDatosIniciales(Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitario)
+    public void ActualizarDatosIniciales(string nombre, Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitario)
     {
         if (Estado != EstadoLote.Activo)
             throw new LoteDomainException("Solo se pueden actualizar datos iniciales en lotes activos.");
+
+        if (string.IsNullOrWhiteSpace(nombre))
+            throw new LoteDomainException("El nombre del lote es obligatorio.");
 
         if (galponId == Guid.Empty)
             throw new LoteDomainException("El ID del galpón es obligatorio.");
@@ -243,6 +251,7 @@ public class Lote : Entity
         if (nuevaCantidadActual < 0)
             throw new LoteDomainException("La nueva cantidad inicial es insuficiente para cubrir la mortalidad y ventas ya registradas.");
 
+        Nombre = nombre;
         GalponId = galponId;
         FechaIngreso = fechaIngreso;
         CantidadInicial = cantidadInicial;

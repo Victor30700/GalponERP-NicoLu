@@ -18,6 +18,7 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
   const isEditing = !!lote
 
   const [formData, setFormData] = useState({
+    nombre: '',
     galponId: '',
     fechaIngreso: new Date().toISOString().split('T')[0],
     cantidadInicial: '',
@@ -28,6 +29,7 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
   useEffect(() => {
     if (lote) {
       setFormData({
+        nombre: lote.nombre || lote.nombreLote || '',
         galponId: lote.galponId || '',
         fechaIngreso: lote.fechaIngreso ? lote.fechaIngreso.split('T')[0] : new Date().toISOString().split('T')[0],
         cantidadInicial: lote.cantidadInicial?.toString() || '',
@@ -36,6 +38,7 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
       })
     } else {
       setFormData({
+        nombre: '',
         galponId: '',
         fechaIngreso: new Date().toISOString().split('T')[0],
         cantidadInicial: '',
@@ -127,6 +130,20 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Identificador del Lote (Nombre)</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      placeholder="Ej: Lote Verano 2026 - A1"
+                      className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                    <Bird size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Galpón</label>
                   <div className="relative">

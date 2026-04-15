@@ -52,6 +52,7 @@ interface CuentaPorCobrar {
 interface Lote {
   id: string
   codigo: string
+  nombre?: string
   nombreLote?: string
   avesVivas: number
 }
@@ -489,7 +490,7 @@ export default function VentasPage() {
                   <select {...ventaForm.register('loteId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                     <option value="">Seleccionar lote activo</option>
                     {lotes.map(l => (
-                      <option key={l.id} value={l.id}>{l.codigo} ({l.avesVivas} aves)</option>
+                      <option key={l.id} value={l.id}>{l.nombre || l.nombreLote || l.codigo} ({l.avesVivas} aves)</option>
                     ))}
                   </select>
                   {ventaForm.formState.errors.loteId && <p className="text-xs text-red-400">{ventaForm.formState.errors.loteId.message}</p>}

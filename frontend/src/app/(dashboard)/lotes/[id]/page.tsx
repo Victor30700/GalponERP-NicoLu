@@ -16,11 +16,16 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { LoteFormModal } from '@/components/production/LoteFormModal'
 import { ManualActivityModal } from '@/components/production/ManualActivityModal'
+import { OperationFilters } from '@/components/production/OperationFilters'
+import { OperationHistoryList } from '@/components/production/OperationHistoryList'
 import { cn } from '@/lib/utils'
 import { confirmAction, confirmDestructiveAction, promptAction } from '@/lib/swal'
 import { useCalendarioSanitario, EstadoCalendario, TipoActividad } from '@/hooks/useCalendarioSanitario'
 import { useProyeccionSacrificio } from '@/hooks/useDashboard'
 import { usePesajes } from '@/hooks/usePesajes'
+import { useMortalidad } from '@/hooks/useMortalidad'
+import { useSanidad } from '@/hooks/useSanidad'
+import { useInventario, useMovimientosLote } from '@/hooks/useInventario'
 
 // Optimización: Lazy Loading de componentes pesados
 const QuickRecordModal = dynamic(() => import('@/components/production/QuickRecordModal').then(mod => mod.QuickRecordModal), { ssr: false })
@@ -45,6 +50,11 @@ export default function LoteDashboard() {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
   const [isManualModalOpen, setIsManualModalOpen] = useState(false)
   const [newGalponId, setNewGalponId] = useState('')
+  
+  // Estados para historial y filtros
+  const [selectedDate, setSelectedDate] = useState('')
+  const [historyTab, setHistoryTab] = useState<'mortality' | 'feed' | 'water' | 'weight'>('mortality')
+  const [editingItem, setEditingItem] = useState<any>(null)
 
   const { data: lote, isLoading: isLoadingLote } = useQuery({
     queryKey: ['lote', id],
@@ -53,6 +63,9 @@ export default function LoteDashboard() {
   })
 
   const { pesajes, isLoading: isLoadingPesajes, eliminarPesaje } = usePesajes(id as string)
+  const { mortalidad, isLoading: isLoadingMortalidad, eliminarMortalidad } = useMortalidad(id as string)
+  const { historialBienestar, isLoadingHistorial: isLoadingSanidad } = useSanidad(id as string)
+  const { data: movimientos = [], isLoading: isLoadingMovimientosLote } = useMovimientosLote(id as string)
 
   const { data: galpones = [] } = useQuery({
     queryKey: ['galpones'],
@@ -157,7 +170,7 @@ export default function LoteDashboard() {
             <ChevronLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-2xl font-black text-foreground">{lote?.nombreLote}</h1>
+            <h1 className="text-2xl font-black text-foreground">{lote?.nombre || lote?.nombreLote}</h1>
             <div className="flex items-center gap-2">
               <p className="text-xs font-bold text-primary uppercase tracking-widest">{lote?.galponNombre}</p>
               <span className={cn(
@@ -345,7 +358,7 @@ export default function LoteDashboard() {
           <h2 className="text-lg font-black text-foreground uppercase tracking-widest mb-4">Registro Operativo de Campo</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button 
-              onClick={() => setRecordType('mortality')}
+              onClick={() => { setEditingItem(null); setRecordType('mortality'); }}
               className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-red-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -357,7 +370,7 @@ export default function LoteDashboard() {
               </div>
             </button>
             <button 
-              onClick={() => setRecordType('feed')}
+              onClick={() => { setEditingItem(null); setRecordType('feed'); }}
               className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-blue-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -369,7 +382,7 @@ export default function LoteDashboard() {
               </div>
             </button>
             <button 
-              onClick={() => setRecordType('water')}
+              onClick={() => { setEditingItem(null); setRecordType('water'); }}
               className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-amber-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -381,7 +394,7 @@ export default function LoteDashboard() {
               </div>
             </button>
             <button 
-              onClick={() => setRecordType('weight')}
+              onClick={() => { setEditingItem(null); setRecordType('weight'); }}
               className="p-6 glass rounded-2xl border border-border flex items-center gap-6 hover:border-indigo-500/50 transition-all text-left group"
             >
               <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -394,36 +407,66 @@ export default function LoteDashboard() {
             </button>
           </div>
 
-          {/* Historial de Pesajes */}
-          <div className="mt-8">
-            <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-              <History size={18} className="text-indigo-400" /> Historial de Pesajes
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pesajes.map((p) => (
-                <div key={p.id} className="p-4 glass rounded-2xl border border-border flex items-center justify-between group">
-                  <div>
-                    <p className="text-xl font-black text-foreground">{p.pesoPromedioGramos} g</p>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase">
-                      {new Date(p.fecha).toLocaleDateString()} • {p.cantidadMuestreada} aves
-                    </p>
-                  </div>
-                  <button 
-                    onClick={async () => {
-                      const result = await confirmDestructiveAction('¿Eliminar pesaje?', 'Esta acción no se puede deshacer.')
-                      if (result.isConfirmed) eliminarPesaje.mutate(p.id)
-                    }}
-                    className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+          {/* Sección de Historial con Filtros */}
+          <div className="mt-12 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h3 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                <History size={18} className="text-primary" /> Historial de Operaciones
+              </h3>
+              <OperationFilters 
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                onClear={() => setSelectedDate('')}
+              />
+            </div>
+
+            {/* Pestañas de Historial */}
+            <div className="flex p-1 bg-muted/30 rounded-xl border border-border/50 w-fit">
+              {[
+                { id: 'mortality', label: 'Bajas', icon: AlertCircle },
+                { id: 'feed', label: 'Alimento', icon: Scale },
+                { id: 'water', label: 'Agua', icon: Droplets },
+                { id: 'weight', label: 'Pesajes', icon: Ruler },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setHistoryTab(tab.id as any)}
+                  className={`flex items-center gap-2 py-2 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    historyTab === tab.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <tab.icon size={14} />
+                  {tab.label}
+                </button>
               ))}
-              {pesajes.length === 0 && (
-                <p className="col-span-full py-8 text-center text-muted-foreground italic text-xs uppercase font-bold tracking-widest border border-dashed border-border rounded-2xl">
-                  Sin registros de pesaje
-                </p>
-              )}
+            </div>
+
+            {/* Lista de Historial Filtrada */}
+            <div className="min-h-[300px]">
+              <OperationHistoryList 
+                type={historyTab}
+                isLoading={
+                  historyTab === 'mortality' ? isLoadingMortalidad :
+                  historyTab === 'feed' ? isLoadingMovimientosLote :
+                  historyTab === 'water' ? isLoadingSanidad :
+                  isLoadingPesajes
+                }
+                data={(
+                  historyTab === 'mortality' ? mortalidad :
+                  historyTab === 'feed' ? movimientos.filter((m: any) => m.tipo === 'Salida' || m.tipo === 'AjusteSalida') :
+                  historyTab === 'water' ? historialBienestar :
+                  pesajes
+                ).filter((item: any) => !selectedDate || item.fecha.startsWith(selectedDate))}
+                onEdit={(item) => {
+                  setEditingItem(item);
+                  setRecordType(historyTab);
+                }}
+                onDelete={(id) => {
+                  if (historyTab === 'mortality') eliminarMortalidad.mutate(id);
+                  else if (historyTab === 'weight') eliminarPesaje.mutate(id);
+                  else toast.error('Eliminación no disponible para este tipo de registro');
+                }}
+              />
             </div>
           </div>
         </motion.div>
@@ -538,9 +581,22 @@ export default function LoteDashboard() {
             {lote?.estado === 'Activo' && (
               <button 
                 onClick={async () => {
-                  const result = await promptAction('Cancelar Lote', 'Ingrese la justificación para cancelar este lote:')
+                  const result = await promptAction(
+                    'Cancelar Lote', 
+                    'Ingrese la justificación para cancelar este lote:'
+                  )
+                  
+                  // Agregamos una confirmación extra con la explicación detallada
                   if (result.isConfirmed && result.value) {
-                    cancelarLote.mutate(result.value)
+                    const confirmCancel = await confirmAction(
+                      '¿Confirmar Cancelación?',
+                      'Al cancelar el lote, este pasará a un estado inactivo permanente. Se conservarán los registros para auditoría, pero no se podrán registrar más actividades ni ventas. Esta acción no se puede deshacer.',
+                      'warning'
+                    )
+                    
+                    if (confirmCancel.isConfirmed) {
+                      cancelarLote.mutate(result.value)
+                    }
                   }
                 }}
                 disabled={cancelarLote.isPending}
@@ -614,10 +670,14 @@ export default function LoteDashboard() {
       {recordType && (
         <QuickRecordModal 
           isOpen={!!recordType} 
-          onClose={() => setRecordType(null)} 
+          onClose={() => {
+            setRecordType(null);
+            setEditingItem(null);
+          }} 
           loteId={id as string} 
           type={recordType}
           lote={lote}
+          initialData={editingItem}
         />
       )}
 

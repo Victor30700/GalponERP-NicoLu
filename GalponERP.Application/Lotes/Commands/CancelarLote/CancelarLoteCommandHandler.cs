@@ -25,7 +25,7 @@ public class CancelarLoteCommandHandler : IRequestHandler<CancelarLoteCommand>
     public async Task Handle(CancelarLoteCommand request, CancellationToken cancellationToken)
     {
         var lote = await _loteRepository.ObtenerPorIdAsync(request.Id);
-        if (lote == null) throw new ArgumentException("Lote no encontrado.");
+        if (lote == null) throw new KeyNotFoundException("Lote no encontrado.");
 
         lote.Cancelar(request.Justificacion);
 

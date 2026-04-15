@@ -43,17 +43,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (retryCount = 0) => {
     try {
+      console.log("Intentando obtener perfil del usuario...");
       const userProfile = await api.get<UserProfile>('/api/Usuarios/me');
       setProfile(userProfile);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      // Si falla el perfil es probable que el token haya expirado
-      if (localStorage.getItem("refreshToken")) {
-        await refreshSession();
-      } else {
-        setProfile(null);
+      console.log("Perfil obtenido con éxito:", userProfile.email);
+    } catch (error: any) {
+      console.error(`Error fetching profile (intento ${retryCount + 1}):`, error.message);
+      
+      // Si falla con 401 y tenemos un refresh token, intentamos refrescar la sesión una vez
+      if (error.message?.includes('401') && localStorage.getItem("refreshToken") && retryCount === 0) {
+        console.log("Token probablemente expirado (401), intentando refrescar sesión...");
+        const newToken = await refreshSession();
+        if (newToken) {
+          // Si el refresh fue exitoso, reintentamos UNA vez
+          return fetchProfile(1);
+        }
+      }
+      
+      // Si llegamos aquí es que falló definitivamente o no era un 401
+      setProfile(null);
+      
+      // Si no es un 401 (ej: 404), es probable que el usuario no exista en DB local
+      if (error.message?.includes('404')) {
+        console.warn("Usuario no encontrado en base de datos local.");
       }
     }
   };
@@ -117,29 +131,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
         if (!isMounted) return;
 
-        if (fbUser) {
-          console.log("Firebase: Usuario detectado");
-          setUser(fbUser);
-          const t = await fbUser.getIdToken();
-          setToken(t);
-          localStorage.setItem("idToken", t);
-          await fetchProfile();
-        } else {
-          console.log("Firebase: No hay sesión activa en SDK");
-          setUser(null);
-          
-          // CRÍTICO: Si no hay usuario en Firebase pero SÍ hay un token manual, 
-          // NO limpiamos el perfil ni el token. Esto permite el acceso manual.
-          const hasManualToken = !!localStorage.getItem("idToken");
-          if (!hasManualToken) {
-            setProfile(null);
-            setToken(null);
-          } else if (!profile) {
-            // Si hay token pero no hay perfil cargado aún, lo intentamos cargar
+        try {
+          if (fbUser) {
+            console.log("Firebase: Usuario detectado");
+            setUser(fbUser);
+            const t = await fbUser.getIdToken();
+            setToken(t);
+            localStorage.setItem("idToken", t);
             await fetchProfile();
+          } else {
+            console.log("Firebase: No hay sesión activa en SDK");
+            setUser(null);
+            
+            // CRÍTICO: Si no hay usuario en Firebase pero SÍ hay un token manual, 
+            // NO limpiamos el perfil ni el token. Esto permite el acceso manual.
+            const hasManualToken = !!localStorage.getItem("idToken");
+            if (!hasManualToken) {
+              setProfile(null);
+              setToken(null);
+            } else if (!profile) {
+              // Si hay token pero no hay perfil cargado aún, lo intentamos cargar
+              await fetchProfile();
+            }
           }
+        } catch (error) {
+          console.error("Error en onAuthStateChanged:", error);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       });
     } else {
       // Si no hay Firebase, dependemos totalmente de initAuth que ya se ejecutó

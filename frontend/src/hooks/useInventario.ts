@@ -251,3 +251,11 @@ export function useCompraPagos(compraId: string) {
     eliminarPago,
   };
 }
+
+export function useMovimientosLote(loteId: string) {
+  return useQuery({
+    queryKey: ['inventario', 'lote', loteId, 'movimientos'],
+    queryFn: () => api.get<Movimiento[]>(`/api/Inventario/lote/${loteId}/movimientos`),
+    enabled: !!loteId,
+  });
+}

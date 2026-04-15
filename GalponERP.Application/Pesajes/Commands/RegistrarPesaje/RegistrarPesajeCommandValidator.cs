@@ -7,7 +7,8 @@ public class RegistrarPesajeCommandValidator : AbstractValidator<RegistrarPesaje
     public RegistrarPesajeCommandValidator()
     {
         RuleFor(x => x.LoteId).NotEmpty();
-        RuleFor(x => x.Fecha).NotEmpty().LessThanOrEqualTo(DateTime.Now);
+        RuleFor(x => x.Fecha).NotEmpty()
+            .LessThanOrEqualTo(x => DateTime.UtcNow.AddMinutes(5)).WithMessage("La fecha no puede ser futura.");
         RuleFor(x => x.PesoPromedioGramos).GreaterThan(0);
         RuleFor(x => x.CantidadMuestreada).GreaterThan(0);
     }

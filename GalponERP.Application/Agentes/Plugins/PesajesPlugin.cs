@@ -31,7 +31,7 @@ public class PesajesPlugin
         {
             var command = new RegistrarPesajeCommand(lote.Id, DateTime.UtcNow, pesoGramos, cantidadMuestreada);
             var result = await _mediator.Send(command);
-            return $"Pesaje registrado exitosamente para el lote en '{lote.NombreGalpon}'. Peso promedio: {pesoGramos}g. ID: {result}";
+            return $"Pesaje registrado exitosamente para el lote en '{lote.GalponNombre}'. Peso promedio: {pesoGramos}g. ID: {result}";
         }
         catch (Exception ex)
         {
@@ -48,7 +48,7 @@ public class PesajesPlugin
         if (lote == null) return "No hay un lote activo para consultar crecimiento.";
 
         var pesajes = await _mediator.Send(new ObtenerPesajesPorLoteQuery(lote.Id));
-        if (!pesajes.Any()) return $"Aún no se han registrado pesajes para el lote en '{lote.NombreGalpon}'.";
+        if (!pesajes.Any()) return $"Aún no se han registrado pesajes para el lote en '{lote.GalponNombre}'.";
 
         var ultimoPesaje = pesajes.OrderByDescending(p => p.Fecha).First();
         
@@ -62,7 +62,7 @@ public class PesajesPlugin
         decimal porcentajeDesviacion = (desviacion / pesoEstandar) * 100;
 
         var sb = new StringBuilder();
-        sb.AppendLine($"Estado de Crecimiento - Lote en '{lote.NombreGalpon}':");
+        sb.AppendLine($"Estado de Crecimiento - Lote en '{lote.GalponNombre}':");
         sb.AppendLine($"- Último Pesaje: {ultimoPesaje.PesoPromedioGramos}g (Fecha: {ultimoPesaje.Fecha:dd/MM/yyyy})");
         sb.AppendLine($"- Peso Estándar Esperado (Día {diasVida}): {pesoEstandar}g");
         sb.AppendLine($"- Desviación: {desviacion:F2}g ({porcentajeDesviacion:F1}%)");
@@ -101,7 +101,7 @@ public class PesajesPlugin
         if (!lotesActivos.Any()) return null;
         if (lotesActivos.Count == 1) return lotesActivos.First();
         if (!string.IsNullOrWhiteSpace(nombreGalpon))
-            return lotesActivos.FirstOrDefault(l => l.NombreGalpon.Contains(nombreGalpon, StringComparison.OrdinalIgnoreCase));
+            return lotesActivos.FirstOrDefault(l => l.GalponNombre.Contains(nombreGalpon, StringComparison.OrdinalIgnoreCase));
         return null;
     }
 }

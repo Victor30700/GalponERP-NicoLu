@@ -25,6 +25,7 @@ public class GestionLotesPlugin
     [KernelFunction]
     [Description("Inicia un nuevo lote de producción en un galpón específico. Requiere confirmación.")]
     public async Task<string> AbrirNuevoLote(
+        [Description("Nombre del lote (ej. 'Lote-01-Enero')")] string nombre,
         [Description("Cantidad inicial de pollitos")] int cantidadInicial,
         [Description("Costo unitario por cada pollito")] decimal costoUnitario,
         [Description("ID de la conversación actual")] Guid conversacionId,
@@ -55,6 +56,7 @@ public class GestionLotesPlugin
         {
             var parametros = new
             {
+                nombre,
                 cantidadInicial,
                 costoUnitario,
                 conversacionId,
@@ -65,15 +67,15 @@ public class GestionLotesPlugin
             var json = JsonSerializer.Serialize(parametros);
             await _mediator.Send(new RegistrarIntencionCommand(conversacionId, nameof(GestionLotesPlugin), nameof(AbrirNuevoLote), json));
 
-            return $"¿Confirmas que deseas abrir un nuevo lote en '{galponSeleccionado.Nombre}' con {cantidadInicial} pollitos a S/ {costoUnitario} c/u?";
+            return $"¿Confirmas que deseas abrir el lote '{nombre}' en '{galponSeleccionado.Nombre}' con {cantidadInicial} pollitos a S/ {costoUnitario} c/u?";
         }
 
         // 4. Ejecutar Comando
         try
         {
-            var command = new CrearLoteCommand(galponSeleccionado.Id, DateTime.UtcNow, cantidadInicial, costoUnitario, plantillaId);
+            var command = new CrearLoteCommand(nombre, galponSeleccionado.Id, DateTime.UtcNow, cantidadInicial, costoUnitario, plantillaId);
             var result = await _mediator.Send(command);
-            return $"Lote abierto exitosamente en el '{galponSeleccionado.Nombre}' con {cantidadInicial} pollitos. ID: {result}";
+            return $"Lote '{nombre}' abierto exitosamente en el '{galponSeleccionado.Nombre}' con {cantidadInicial} pollitos. ID: {result}";
         }
         catch (Exception ex)
         {

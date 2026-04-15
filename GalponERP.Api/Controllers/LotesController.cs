@@ -31,9 +31,13 @@ public class LotesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listar([FromQuery] bool soloActivos = true)
+    public async Task<IActionResult> Listar(
+        [FromQuery] bool soloActivos = true,
+        [FromQuery] string? busqueda = null,
+        [FromQuery] int? mes = null,
+        [FromQuery] int? anio = null)
     {
-        var lotes = await _mediator.Send(new ListarLotesQuery(soloActivos));
+        var lotes = await _mediator.Send(new ListarLotesQuery(soloActivos, busqueda, mes, anio));
         return Ok(lotes);
     }
 
@@ -60,16 +64,9 @@ public class LotesController : ControllerBase
 
         if (!_currentUserContext.UsuarioId.HasValue) return Unauthorized("Usuario no identificado.");
 
-        try
-        {
-            command.UsuarioId = _currentUserContext.UsuarioId.Value;
-            await _mediator.Send(command);
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
@@ -78,15 +75,8 @@ public class LotesController : ControllerBase
     {
         if (!_currentUserContext.UsuarioId.HasValue) return Unauthorized("Usuario no identificado.");
 
-        try
-        {
-            await _mediator.Send(new EliminarLoteCommand(id) { UsuarioId = _currentUserContext.UsuarioId.Value });
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _mediator.Send(new EliminarLoteCommand(id) { UsuarioId = _currentUserContext.UsuarioId.Value });
+        return NoContent();
     }
 
     [HttpPost("{id}/cerrar")]
@@ -105,30 +95,16 @@ public class LotesController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Reabrir(Guid id)
     {
-        try
-        {
-            await _mediator.Send(new ReabrirLoteCommand(id));
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _mediator.Send(new ReabrirLoteCommand(id));
+        return NoContent();
     }
 
     [HttpPost("{id}/cancelar")]
     [Authorize(Roles = "Admin,SubAdmin")]
     public async Task<IActionResult> Cancelar(Guid id, [FromBody] string justificacion)
     {
-        try
-        {
-            await _mediator.Send(new CancelarLoteCommand(id, justificacion));
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _mediator.Send(new CancelarLoteCommand(id, justificacion));
+        return NoContent();
     }
 
     [HttpGet("{id}/rendimiento-vivo")]
@@ -150,14 +126,7 @@ public class LotesController : ControllerBase
     [Authorize(Roles = "Admin,SubAdmin")]
     public async Task<IActionResult> Trasladar(Guid id, [FromBody] Guid nuevoGalponId)
     {
-        try
-        {
-            await _mediator.Send(new TrasladarLoteCommand(id, nuevoGalponId));
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _mediator.Send(new TrasladarLoteCommand(id, nuevoGalponId));
+        return NoContent();
     }
 }

@@ -12,6 +12,10 @@ public class LoteConfiguration : IEntityTypeConfiguration<Lote>
 
         builder.HasKey(l => l.Id);
 
+        builder.Property(l => l.Nombre)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.HasOne(l => l.Galpon)
             .WithMany()
             .HasForeignKey(l => l.GalponId)

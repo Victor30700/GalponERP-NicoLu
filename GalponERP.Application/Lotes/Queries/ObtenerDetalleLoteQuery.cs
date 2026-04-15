@@ -8,15 +8,17 @@ public record ObtenerDetalleLoteQuery(Guid LoteId) : IRequest<LoteDetalleRespons
 
 public record LoteDetalleResponse(
     Guid Id,
+    string Nombre,
+    string NombreLote, // Compatibilidad frontend
     Guid GalponId,
     string NombreGalpon,
     string GalponNombre,
     DateTime FechaInicio,
     DateTime FechaIngreso,
     int CantidadInicial,
-    int AvesVivas,
+    int AvesVivas, // Compatibilidad frontend
     int CantidadActual,
-    int MortalidadTotal,
+    int MortalidadTotal, // Compatibilidad frontend
     int MortalidadAcumulada,
     decimal MortalidadPorcentaje,
     int PollosVendidos,
@@ -114,15 +116,17 @@ public class ObtenerDetalleLoteQueryHandler : IRequestHandler<ObtenerDetalleLote
 
         return new LoteDetalleResponse(
             lote.Id,
+            lote.Nombre,
+            lote.Nombre, // NombreLote
             lote.GalponId,
-            lote.Galpon?.Nombre ?? "N/A",
-            lote.Galpon?.Nombre ?? "N/A",
+            lote.Galpon?.Nombre ?? "N/A", // NombreGalpon
+            lote.Galpon?.Nombre ?? "N/A", // GalponNombre
             lote.FechaIngreso,
             lote.FechaIngreso,
             lote.CantidadInicial,
+            lote.CantidadActual, // AvesVivas
             lote.CantidadActual,
-            lote.CantidadActual,
-            lote.MortalidadAcumulada,
+            lote.MortalidadAcumulada, // MortalidadTotal
             lote.MortalidadAcumulada,
             lote.CantidadInicial > 0 ? Math.Round((decimal)lote.MortalidadAcumulada / lote.CantidadInicial * 100, 1) : 0,
             lote.PollosVendidos,

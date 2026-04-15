@@ -232,7 +232,7 @@ export default function SanidadPage() {
                           </div>
                           <div className="flex items-center gap-1.5 text-muted-foreground">
                             <Bird size={12} />
-                            <span className="text-[10px] font-bold">Lote: {baja.loteId.split('-')[0]}</span>
+                            <span className="text-[10px] font-bold">Lote: {baja.loteNombre || baja.loteId.split('-')[0]}</span>
                           </div>
                         </div>
                       </div>
@@ -294,7 +294,7 @@ export default function SanidadPage() {
                     onClick={() => window.location.href = `/lotes/${lote.id}`}
                  >
                     <div>
-                      <p className="text-xs font-black text-foreground uppercase">{lote.nombreLote}</p>
+                      <p className="text-xs font-black text-foreground uppercase">{lote.nombre || lote.nombreLote}</p>
                       <p className="text-[10px] text-muted-foreground font-bold uppercase">{lote.galponNombre}</p>
                     </div>
                     <div className="p-2 bg-slate-800 rounded-lg text-muted-foreground group-hover:text-primary transition-colors">

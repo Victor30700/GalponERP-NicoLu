@@ -1,16 +1,18 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { UniversalGrid } from '@/components/shared/UniversalGrid'
-import { Bird, Calendar, Hash, ArrowRight, Filter } from 'lucide-react'
+import { Bird, Calendar, Hash, ArrowRight, Filter, RefreshCw, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { LoteFormModal } from '@/components/production/LoteFormModal'
 
 interface Lote {
-  id: string
+// ... (rest of interface)
+
+  nombre: string
   nombreLote: string
   galponNombre: string
   fechaInicio: string
@@ -22,13 +24,30 @@ interface Lote {
 }
 
 export default function LotesPage() {
-  const [showAll, setShowAll] = useState(false)
+  const queryClient = useQueryClient()
+  const [soloActivos, setSoloActivos] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
+  const [mes, setMes] = useState<number | ''>('')
+  const [anio, setAnio] = useState<number | ''>('')
 
-  const { data: lotes = [], isLoading } = useQuery({
-    queryKey: ['lotes', showAll],
-    queryFn: () => api.get<Lote[]>(`/api/Lotes${!showAll ? '?soloActivos=true' : ''}`),
+  const { data: lotes = [], isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['lotes', soloActivos, busqueda, mes, anio],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      params.append('soloActivos', soloActivos.toString())
+      if (busqueda) params.append('busqueda', busqueda)
+      if (mes) params.append('mes', mes.toString())
+      if (anio) params.append('anio', anio.toString())
+      
+      return api.get<Lote[]>(`/api/Lotes?${params.toString()}`)
+    },
   })
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['lotes'] })
+    refetch()
+  }
 
   const columns = [
     { 
@@ -39,7 +58,7 @@ export default function LotesPage() {
             <Bird size={20} />
           </div>
           <div>
-            <p className="font-bold text-foreground">{item.nombreLote}</p>
+            <p className="font-bold text-foreground">{item.nombre || item.nombreLote}</p>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">{item.galponNombre}</p>
           </div>
         </div>
@@ -97,17 +116,98 @@ export default function LotesPage() {
 
   return (
     <>
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-            showAll ? "bg-primary text-black" : "bg-muted/50 text-muted-foreground border border-border"
-          )}
-        >
-          <Filter size={14} />
-          {showAll ? 'Mostrando Todos' : 'Solo Activos'}
-        </button>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Gestión de Lotes</h1>
+          <p className="text-muted-foreground text-sm">Seguimiento y control de la producción avícola.</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isFetching}
+            className="p-2 bg-muted/50 text-muted-foreground border border-border rounded-xl hover:text-primary transition-all disabled:opacity-50"
+            title="Actualizar lista"
+          >
+            <RefreshCw size={20} className={cn(isFetching && "animate-spin")} />
+          </button>
+          
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-xl transition-all shadow-lg shadow-primary/20"
+          >
+            <Plus size={20} />
+            <span className="hidden sm:inline">Nuevo Lote</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 bg-muted/30 p-4 rounded-2xl border border-border/50">
+        <div className="flex flex-wrap items-center gap-4 justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+              <input
+                type="text"
+                placeholder="Buscar lote o galpón..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="bg-background border border-border rounded-xl pl-9 pr-4 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 w-64 transition-all"
+              />
+            </div>
+            
+            <div className="flex bg-muted/50 p-1 rounded-xl border border-border">
+              <button 
+                onClick={() => setSoloActivos(true)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                  soloActivos 
+                    ? "bg-background text-primary shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Activos
+              </button>
+              <button 
+                onClick={() => setSoloActivos(false)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                  !soloActivos 
+                    ? "bg-background text-primary shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Todos
+              </button>
+            </div>
+
+            <div className="h-8 w-[1px] bg-border mx-1 hidden md:block" />
+
+            <select
+              value={mes}
+              onChange={(e) => setMes(e.target.value ? Number(e.target.value) : '')}
+              className="bg-background border border-border rounded-xl px-4 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+            >
+              <option value="">Todos los Meses</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(2000, i).toLocaleString('default', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={anio}
+              onChange={(e) => setAnio(e.target.value ? Number(e.target.value) : '')}
+              className="bg-background border border-border rounded-xl px-4 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+            >
+              <option value="">Cualquier Año</option>
+              {[2024, 2025, 2026, 2027, 2028].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <UniversalGrid
@@ -115,6 +215,8 @@ export default function LotesPage() {
         items={lotes}
         columns={columns}
         isLoading={isLoading}
+        hideHeaderSearch
+        hideHeaderTitle
         onAdd={() => setIsModalOpen(true)}
         renderMobileCard={(item) => (
           <Link href={`/lotes/${item.id}`} className="block space-y-4">
@@ -124,7 +226,7 @@ export default function LotesPage() {
                   <Bird size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-foreground">{item.nombreLote}</h3>
+                  <h3 className="text-xl font-black text-foreground">{item.nombre || item.nombreLote}</h3>
                   <p className="text-xs text-primary font-bold uppercase tracking-widest">{item.galponNombre}</p>
                 </div>
               </div>

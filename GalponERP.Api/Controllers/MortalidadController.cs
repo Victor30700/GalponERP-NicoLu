@@ -107,4 +107,22 @@ public class MortalidadController : ControllerBase
         var result = await _mediator.Send(new ObtenerTendenciasMortalidadQuery(loteId));
         return result != null ? Ok(result) : NotFound();
     }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Eliminar(Guid id)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        try
+        {
+            await _mediator.Send(new EliminarMortalidadCommand(id) { UsuarioId = _currentUserContext.UsuarioId.Value });
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

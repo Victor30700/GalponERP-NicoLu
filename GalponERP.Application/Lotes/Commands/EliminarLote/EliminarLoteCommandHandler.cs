@@ -21,7 +21,7 @@ public class EliminarLoteCommandHandler : IRequestHandler<EliminarLoteCommand, U
 
         if (lote == null)
         {
-            throw new Exception("Lote no encontrado.");
+            throw new KeyNotFoundException("Lote no encontrado.");
         }
 
         // Soft Delete

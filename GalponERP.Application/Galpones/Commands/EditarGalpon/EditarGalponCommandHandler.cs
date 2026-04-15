@@ -21,7 +21,7 @@ public class EditarGalponCommandHandler : IRequestHandler<EditarGalponCommand>
 
         if (galpon == null)
         {
-            throw new Exception($"Galpón con ID {request.Id} no encontrado.");
+            throw new KeyNotFoundException($"Galpón con ID {request.Id} no encontrado.");
         }
 
         galpon.Actualizar(request.Nombre, request.Capacidad, request.Ubicacion);

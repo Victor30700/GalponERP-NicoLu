@@ -67,7 +67,7 @@ export function SanitaryEventModal({ isOpen, onClose }: SanitaryEventModalProps)
                     <option value="" className="bg-background">Elegir un lote...</option>
                     {lotes.map((l) => (
                       <option key={l.id} value={l.id} className="bg-background">
-                        {l.nombreLote} - {l.galponNombre} ({l.cantidadAves} aves)
+                        {l.nombre || l.nombreLote} - {l.galponNombre} ({l.cantidadAves || l.avesVivas} aves)
                       </option>
                     ))}
                   </select>

@@ -6,12 +6,16 @@ public class CrearLoteCommandValidator : AbstractValidator<CrearLoteCommand>
 {
     public CrearLoteCommandValidator()
     {
+        RuleFor(x => x.Nombre)
+            .NotEmpty().WithMessage("El nombre del lote es obligatorio.")
+            .MaximumLength(100).WithMessage("El nombre no puede exceder los 100 caracteres.");
+
         RuleFor(x => x.GalponId)
             .NotEmpty().WithMessage("El ID del galpón es obligatorio.");
 
         RuleFor(x => x.FechaIngreso)
             .NotEmpty().WithMessage("La fecha de ingreso es obligatoria.")
-            .LessThanOrEqualTo(x => DateTime.UtcNow.AddMinutes(5)).WithMessage("La fecha de ingreso no puede ser futura.");
+            .LessThanOrEqualTo(x => DateTime.UtcNow.AddDays(1)).WithMessage("La fecha de ingreso no puede ser una fecha futura lejana.");
 
         RuleFor(x => x.CantidadInicial)
             .GreaterThan(0).WithMessage("La cantidad inicial del lote debe ser mayor a cero.");

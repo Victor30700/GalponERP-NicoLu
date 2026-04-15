@@ -21,7 +21,9 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -36,8 +38,9 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(errorData.message || `API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -51,8 +54,9 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(errorData.message || `API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     if (response.status === 204) {
@@ -70,8 +74,9 @@ export const api = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(errorData.message || `API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     if (response.status === 204) {
@@ -88,7 +93,9 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     if (response.status === 204) {

@@ -139,7 +139,7 @@ export default function GastosPage() {
             accessor: (item) => (
               <div className="flex flex-col text-[10px] uppercase font-bold text-muted-foreground">
                 <span>Galpón: {galpones.find((g: any) => g.id === item.galponId)?.nombre || 'N/A'}</span>
-                <span>Lote: {item.loteId?.split('-')[0] || 'Gral.'}</span>
+                <span>Lote: {lotes.find((l: any) => l.id === item.loteId)?.nombre || lotes.find((l: any) => l.id === item.loteId)?.nombreLote || 'Gral.'}</span>
               </div>
             )
           }
@@ -254,7 +254,7 @@ export default function GastosPage() {
                       className="w-full px-5 py-4 bg-muted/50 border border-border rounded-2xl text-foreground appearance-none"
                     >
                       <option value="" className="bg-muted/50">General / Ninguno</option>
-                      {lotes.map((l: any) => <option key={l.id} value={l.id} className="bg-muted/50">{l.nombreLote}</option>)}
+                      {lotes.map((l: any) => <option key={l.id} value={l.id} className="bg-muted/50">{l.nombre || l.nombreLote}</option>)}
                     </select>
                   </div>
                 </div>

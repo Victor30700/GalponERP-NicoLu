@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, AlertCircle, Scale, Droplets, Ruler } from 'lucide-react'
+import { X, Save, AlertCircle, Scale, Droplets, Ruler, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
+import { format } from 'date-fns'
 
 interface QuickRecordProps {
   isOpen: boolean
@@ -13,35 +14,79 @@ interface QuickRecordProps {
   loteId: string
   type: 'mortality' | 'feed' | 'water' | 'weight'
   lote?: any
+  initialData?: any // Datos para edición
 }
 
-export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickRecordProps) {
+export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialData }: QuickRecordProps) {
   const [value, setValue] = useState('')
-  const [secondaryValue, setSecondaryValue] = useState('') // Para cantidad muestreada o temperatura
-  const [tertiaryValue, setTertiaryValue] = useState('') // Para humedad
+  const [secondaryValue, setSecondaryValue] = useState('') 
+  const [tertiaryValue, setTertiaryValue] = useState('') 
   const [nota, setNota] = useState('')
+  const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'))
+  
   const queryClient = useQueryClient()
+  const isEditing = !!initialData
 
-  const mutation = useMutation({
-    mutationFn: (data: any) => {
-      let endpoint = '/api/Mortalidad'
-      if (type === 'feed') endpoint = '/api/inventario/consumo-diario'
-      if (type === 'water') endpoint = '/api/Sanidad/bienestar'
-      if (type === 'weight') endpoint = '/api/Pesajes'
+  // Cargar datos si es edición
+  useEffect(() => {
+    if (isEditing && isOpen) {
+      const config = {
+        mortality: { main: 'cantidadBajas', note: 'causa' },
+        feed: { main: 'cantidad', note: 'justificacion' },
+        water: { main: 'consumoAgua', note: 'observaciones', sec: 'temperatura', ter: 'humedad' },
+        weight: { main: 'pesoPromedioGramos', sec: 'cantidadMuestreada' }
+      }[type]
+
+      setValue(initialData[config.main]?.toString() || '')
+      setNota(initialData[config.note] || '')
+      setFecha(format(new Date(initialData.fecha), 'yyyy-MM-dd'))
       
-      return api.post(endpoint, data)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lote', loteId] })
-      queryClient.invalidateQueries({ queryKey: ['lote-tendencias', loteId] })
-      queryClient.invalidateQueries({ queryKey: ['pesajes', 'lote', loteId] })
-      queryClient.invalidateQueries({ queryKey: ['sanidad'] })
-      toast.success('Registro guardado correctamente')
-      onClose()
+      if (config.sec) setSecondaryValue(initialData[config.sec]?.toString() || '')
+      if (config.ter) setTertiaryValue(initialData[config.ter]?.toString() || '')
+    } else if (!isOpen) {
+      // Limpiar al cerrar
       setValue('')
       setSecondaryValue('')
       setTertiaryValue('')
       setNota('')
+      setFecha(format(new Date(), 'yyyy-MM-dd'))
+    }
+  }, [isEditing, initialData, isOpen, type])
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => {
+      let endpoint = '/api/Mortalidad'
+      if (type === 'feed') endpoint = '/api/Inventario/consumo-diario'
+      if (type === 'water') endpoint = '/api/Sanidad/bienestar'
+      if (type === 'weight') endpoint = '/api/Pesajes'
+      
+      if (isEditing) {
+          // Nota: El backend de Inventario/Consumo y Sanidad/Bienestar 
+          // a veces no tienen PUT por ID explícito o funcionan por Upsert.
+          // Para Mortalidad y Pesajes usamos PUT /{id}.
+          if (type === 'mortality' || type === 'weight') {
+              return api.put(`${endpoint}/${initialData.id}`, data)
+          }
+          // Para bienestar, el POST /bienestar ya hace upsert por fecha.
+          return api.post(endpoint, data)
+      }
+      
+      return api.post(endpoint, data)
+    },
+    onSuccess: () => {
+      const keysToInvalidate = [
+        ['lote', loteId],
+        ['lote-tendencias', loteId],
+        ['pesajes', 'lote', loteId],
+        ['mortalidad', 'lote', loteId],
+        ['sanidad', 'bienestar', 'lote', loteId],
+        ['inventario', 'lote', loteId, 'movimientos']
+      ]
+      
+      keysToInvalidate.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+      
+      toast.success(isEditing ? 'Registro actualizado' : 'Registro guardado')
+      onClose()
     },
     onError: (err: any) => toast.error(err.message),
   })
@@ -50,25 +95,26 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
     e.preventDefault()
     if (!value) return
     
-    let data: any = {}
+    let data: any = { loteId, fecha: new Date(fecha).toISOString() }
+
+    if (isEditing) data.id = initialData.id
 
     if (type === 'mortality') {
-      data = { loteId, cantidad: Number(value), causa: nota || 'Registro rutinario', fecha: new Date().toISOString() }
+      data = { ...data, cantidad: Number(value), causa: nota || 'Registro rutinario' }
     } else if (type === 'feed') {
-      if (!lote?.productoId) {
+      if (!lote?.productoId && !isEditing) {
           toast.error('El lote no tiene un producto de alimento asignado.')
           return
       }
       data = { 
-          loteId, 
-          productoId: lote.productoId,
+          ...data,
+          productoId: initialData?.productoId || lote?.productoId,
           cantidad: Number(value), 
           justificacion: nota || 'Consumo diario' 
       }
     } else if (type === 'water') {
       data = { 
-          loteId, 
-          fecha: new Date().toISOString(),
+          ...data,
           consumoAgua: Number(value),
           temperatura: Number(secondaryValue) || 0,
           humedad: Number(tertiaryValue) || 0,
@@ -76,8 +122,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
       }
     } else if (type === 'weight') {
       data = {
-        loteId,
-        fecha: new Date().toISOString(),
+        ...data,
         pesoPromedioGramos: Number(value),
         cantidadMuestreada: Number(secondaryValue) || 10
       }
@@ -87,10 +132,10 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
   }
 
   const config = {
-    mortality: { title: 'Registrar Bajas', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Cantidad de aves', unit: 'und' },
-    feed: { title: 'Consumo Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Cantidad servida', unit: 'kg' },
-    water: { title: 'Consumo Agua', icon: Droplets, color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Litros consumidos', unit: 'L' },
-    weight: { title: 'Registro de Pesaje', icon: Ruler, color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'Peso Promedio', unit: 'g' },
+    mortality: { title: 'Bajas', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Cantidad de aves', unit: 'und' },
+    feed: { title: 'Alimento', icon: Scale, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Cantidad servida', unit: 'kg' },
+    water: { title: 'Agua', icon: Droplets, color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Litros consumidos', unit: 'L' },
+    weight: { title: 'Pesaje', icon: Ruler, color: 'text-indigo-500', bg: 'bg-indigo-500/10', label: 'Peso Promedio', unit: 'g' },
   }[type]
 
   return (
@@ -98,24 +143,41 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
       {isOpen && (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100]" />
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed bottom-0 left-0 right-0 glass z-[110] p-8 rounded-t-[2.5rem] border-t border-border" >
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed bottom-0 left-0 right-0 glass z-[110] p-8 rounded-t-[3rem] border-t border-border max-w-2xl mx-auto shadow-2xl" >
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-2xl ${config.bg} ${config.color}`}>
                   <config.icon size={24} />
                 </div>
-                <h2 className="text-2xl font-black text-foreground">{config.title}</h2>
+                <div>
+                  <h2 className="text-2xl font-black text-foreground">{isEditing ? 'Editar' : 'Registrar'} {config.title}</h2>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Lote: {lote?.nombre || 'Cargando...'}</p>
+                </div>
               </div>
-              <button onClick={onClose} className="p-2 bg-muted/50 rounded-full text-muted-foreground"><X size={24} /></button>
+              <button onClick={onClose} className="p-2 bg-muted/50 rounded-full text-muted-foreground hover:bg-muted transition-colors"><X size={24} /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Selector de Fecha */}
               <div className="space-y-2">
-                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">{config.label}</label>
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <Calendar size={12} /> Fecha del Registro
+                </label>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{config.label}</label>
                 <div className="relative">
                   <input
                     autoFocus
                     type="number"
+                    step="any"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
@@ -127,7 +189,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
 
               {type === 'weight' && (
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Cantidad Muestreada</label>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Cantidad Muestreada</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -144,7 +206,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
               {type === 'water' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Temperatura</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Temperatura</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -158,7 +220,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Humedad</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Humedad</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -175,12 +237,12 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
               )}
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Notas / Observaciones</label>
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Notas / Observaciones</label>
                 <textarea
                   value={nota}
                   onChange={(e) => setNota(e.target.value)}
                   rows={2}
-                  className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
                   placeholder="Opcional..."
                 />
               </div>
@@ -192,7 +254,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
                 className="w-full py-5 bg-primary hover:bg-primary/90 text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-primary/20 active:scale-95"
               >
                 <Save size={24} />
-                GUARDAR REGISTRO
+                {isEditing ? 'ACTUALIZAR REGISTRO' : 'GUARDAR REGISTRO'}
               </button>
             </form>
           </motion.div>
@@ -201,4 +263,3 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote }: QuickR
     </AnimatePresence>
   )
 }
-

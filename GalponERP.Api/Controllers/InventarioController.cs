@@ -5,6 +5,7 @@ using GalponERP.Application.Inventario.Commands.RegistrarPagoCompra;
 using GalponERP.Application.Inventario.Commands.RegistrarConciliacion;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
+using GalponERP.Application.Inventario.Queries.ObtenerMovimientosLote;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerReporteAjustes;
 using GalponERP.Application.Inventario.Queries.VerificarNivelesAlimento;
@@ -77,6 +78,13 @@ public class InventarioController : ControllerBase
     public async Task<IActionResult> ObtenerMovimientos()
     {
         var movimientos = await _mediator.Send(new ObtenerMovimientosQuery());
+        return Ok(movimientos);
+    }
+
+    [HttpGet("lote/{loteId}/movimientos")]
+    public async Task<IActionResult> ObtenerMovimientosLote(Guid loteId)
+    {
+        var movimientos = await _mediator.Send(new ObtenerMovimientosLoteQuery(loteId));
         return Ok(movimientos);
     }
 

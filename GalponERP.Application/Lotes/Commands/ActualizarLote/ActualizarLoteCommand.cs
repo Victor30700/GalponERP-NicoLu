@@ -6,6 +6,7 @@ namespace GalponERP.Application.Lotes.Commands.ActualizarLote;
 
 public record ActualizarLoteCommand(
     Guid Id,
+    string Nombre,
     Guid GalponId,
     DateTime FechaIngreso,
     int CantidadInicial,

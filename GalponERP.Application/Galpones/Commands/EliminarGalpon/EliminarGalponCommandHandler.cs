@@ -21,7 +21,7 @@ public class EliminarGalponCommandHandler : IRequestHandler<EliminarGalponComman
 
         if (galpon == null)
         {
-            throw new Exception("El galpón no existe.");
+            throw new KeyNotFoundException("El galpón no existe.");
         }
 
         galpon.Eliminar();

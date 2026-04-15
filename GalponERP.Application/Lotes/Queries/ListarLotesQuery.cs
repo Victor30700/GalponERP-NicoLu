@@ -4,19 +4,24 @@ using MediatR;
 
 namespace GalponERP.Application.Lotes.Queries.ListarLotes;
 
-public record ListarLotesQuery(bool SoloActivos = true) : IRequest<IEnumerable<LoteResponse>>;
+public record ListarLotesQuery(
+    bool SoloActivos = true,
+    string? Busqueda = null,
+    int? Mes = null,
+    int? Anio = null) : IRequest<IEnumerable<LoteResponse>>;
 
 public record LoteResponse(
     Guid Id,
-    string NombreLote,
+    string Nombre,
+    string NombreLote, // Compatibilidad
     Guid GalponId,
     string GalponNombre,
-    string NombreGalpon,
-    DateTime FechaInicio,
+    string NombreGalpon, // Compatibilidad
+    DateTime FechaInicio, // Compatibilidad
     DateTime FechaIngreso,
     int CantidadInicial,
-    int AvesVivas,
     int CantidadActual,
+    int AvesVivas, // Compatibilidad
     int MortalidadAcumulada,
     int PollosVendidos,
     decimal CostoUnitarioPollito,
@@ -36,17 +41,16 @@ public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumer
 
     public async Task<IEnumerable<LoteResponse>> Handle(ListarLotesQuery request, CancellationToken cancellationToken)
     {
-        var lotes = request.SoloActivos
-            ? await _loteRepository.ObtenerActivosAsync()
-            : await _loteRepository.ObtenerTodosAsync();
+        var lotes = await _loteRepository.ObtenerFiltradosAsync(request.Busqueda, request.Mes, request.Anio, request.SoloActivos);
 
         return lotes.Select(l => new LoteResponse(
             l.Id,
-            $"Lote {l.FechaIngreso:ddMM}-{l.Galpon?.Nombre ?? "N/A"}",
+            l.Nombre,
+            l.Nombre,
             l.GalponId,
             l.Galpon?.Nombre ?? "N/A",
             l.Galpon?.Nombre ?? "N/A",
-            l.FechaIngreso,
+            l.FechaIngreso, // FechaInicio
             l.FechaIngreso,
             l.CantidadInicial,
             l.CantidadActual,
@@ -56,7 +60,7 @@ public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumer
             l.CostoUnitarioPollito.Monto,
             l.EdadSemanas,
             l.Estado.ToString(),
-            0, // FCR placeholder for list (expensive to calculate here)
+            0, // FCR placeholder
             l.CantidadInicial > 0 ? Math.Round((decimal)l.MortalidadAcumulada / l.CantidadInicial * 100, 1) : 0));
     }
 }

@@ -36,6 +36,36 @@ public class LoteRepository : ILoteRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Lote>> ObtenerFiltradosAsync(string? busqueda, int? mes, int? anio, bool soloActivos)
+    {
+        var query = _context.Set<Lote>()
+            .Include(l => l.Galpon)
+            .AsQueryable();
+
+        if (soloActivos)
+        {
+            query = query.Where(l => l.Estado == EstadoLote.Activo);
+        }
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            query = query.Where(l => l.Nombre.ToLower().Contains(busqueda.ToLower()) || 
+                                    (l.Galpon != null && l.Galpon.Nombre.ToLower().Contains(busqueda.ToLower())));
+        }
+
+        if (mes.HasValue)
+        {
+            query = query.Where(l => l.FechaIngreso.Month == mes.Value);
+        }
+
+        if (anio.HasValue)
+        {
+            query = query.Where(l => l.FechaIngreso.Year == anio.Value);
+        }
+
+        return await query.OrderByDescending(l => l.FechaIngreso).ToListAsync();
+    }
+
     public void Agregar(Lote lote)
     {
         _context.Set<Lote>().Add(lote);

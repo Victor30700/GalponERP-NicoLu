@@ -16,6 +16,7 @@ public class PlantillaSanitariaRepository : IPlantillaSanitariaRepository
     public async Task<PlantillaSanitaria?> ObtenerPorIdAsync(Guid id)
     {
         return await _context.Set<PlantillaSanitaria>()
+            .IgnoreQueryFilters()
             .Include(p => p.Actividades)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }

@@ -21,7 +21,7 @@ public class ReabrirLoteCommandHandler : IRequestHandler<ReabrirLoteCommand, Uni
 
         if (lote == null)
         {
-            throw new Exception("Lote no encontrado.");
+            throw new KeyNotFoundException("Lote no encontrado.");
         }
 
         lote.Reabrir();

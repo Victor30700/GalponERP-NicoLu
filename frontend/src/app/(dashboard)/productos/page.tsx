@@ -16,7 +16,7 @@ const productoSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
   categoriaProductoId: z.string().uuid('Categoría inválida'),
   unidadMedidaId: z.string().uuid('Unidad de medida inválida'),
-  equivalenciaEnKg: z.number().min(0, 'No puede ser negativo'),
+  equivalenciaEnKg: z.number().positive('La equivalencia debe ser mayor a cero'),
   umbralMinimo: z.number().min(0, 'No puede ser negativo'),
 })
 
@@ -103,6 +103,13 @@ export default function ProductosPage() {
     formState: { errors },
   } = useForm<ProductoFormValues>({
     resolver: zodResolver(productoSchema),
+    defaultValues: {
+      nombre: '',
+      categoriaProductoId: '',
+      unidadMedidaId: '',
+      equivalenciaEnKg: 1,
+      umbralMinimo: 0
+    }
   })
 
   const onSubmit = (data: ProductoFormValues) => {
@@ -130,7 +137,7 @@ export default function ProductosPage() {
       })
     } else {
       setEditingProducto(null)
-      reset({ nombre: '', categoriaProductoId: '', unidadMedidaId: '', equivalenciaEnKg: 0, umbralMinimo: 0 })
+      reset({ nombre: '', categoriaProductoId: '', unidadMedidaId: '', equivalenciaEnKg: 1, umbralMinimo: 0 })
     }
     setIsFormOpen(true)
   }
