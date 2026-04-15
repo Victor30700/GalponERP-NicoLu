@@ -106,7 +106,11 @@ public class RegistrarIngresoMercaderiaCommandHandler : IRequestHandler<Registra
 
         _inventarioRepository.RegistrarMovimiento(movimiento);
 
-        // 4. Persistir todo en una sola transacción
+        // 4. Actualizar el stock en Kg cacheado en el Producto
+        producto.ActualizarStock(request.Cantidad, TipoMovimiento.Compra);
+        _productoRepository.Actualizar(producto);
+
+        // 5. Persistir todo en una sola transacción
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return compra.Id;

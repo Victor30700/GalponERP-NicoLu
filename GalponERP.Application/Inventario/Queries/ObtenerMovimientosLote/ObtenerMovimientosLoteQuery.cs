@@ -10,6 +10,7 @@ public record MovimientoLoteResponse(
     string NombreProducto,
     string CategoriaProducto,
     decimal Cantidad,
+    decimal CantidadKg,
     string Tipo,
     DateTime Fecha);
 
@@ -47,6 +48,7 @@ public class ObtenerMovimientosLoteHandler : IRequestHandler<ObtenerMovimientosL
                 prod?.Nombre ?? "N/A",
                 cat?.Nombre ?? "N/A",
                 m.Cantidad,
+                m.Cantidad * (prod?.PesoUnitarioKg ?? 1),
                 m.Tipo.ToString(),
                 m.Fecha);
         });

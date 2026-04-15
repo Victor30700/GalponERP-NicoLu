@@ -42,7 +42,7 @@ public class ObtenerRendimientoVivoLoteQueryHandler : IRequestHandler<ObtenerRen
 
         var productosAlimento = productos
             .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
-            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+            .ToDictionary(p => p.Id, p => p.PesoUnitarioKg);
 
         decimal alimentoConsumidoKg = movimientos
             .Where(m => (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida) && productosAlimento.ContainsKey(m.ProductoId))

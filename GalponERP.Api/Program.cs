@@ -133,11 +133,19 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "GalponERP API V1");
+    c.RoutePrefix = "swagger"; // La interfaz estará en /swagger
+});
+
+// Redireccionar raíz a Swagger para mayor comodidad
+app.MapGet("/", context => 
+{
+    context.Response.Redirect("/swagger");
+    return Task.CompletedTask;
+});
 
 app.UseExceptionHandler();
 app.UseCors("AllowFrontend");
@@ -184,5 +192,13 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Un error ocurrió durante el seeding de la base de datos.");
     }
 }
+
+// Mensaje explícito en consola para encontrar la URL fácilmente
+var loggerStart = app.Services.GetRequiredService<ILogger<Program>>();
+var urls = string.Join(", ", app.Urls);
+loggerStart.LogInformation("=================================================");
+loggerStart.LogInformation("SERVIDOR GALPON ERP INICIADO CORRECTAMENTE");
+loggerStart.LogInformation("URL DE LA API: http://localhost:5167/swagger");
+loggerStart.LogInformation("=================================================");
 
 app.Run();

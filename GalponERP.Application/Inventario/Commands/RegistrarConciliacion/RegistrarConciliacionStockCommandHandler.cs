@@ -64,6 +64,10 @@ public class RegistrarConciliacionStockCommandHandler : IRequestHandler<Registra
             );
 
             _inventarioRepository.RegistrarMovimiento(movimiento);
+
+            // Actualizar stock en Kg cacheado
+            producto.ActualizarStock(cantidadAjuste, tipoAjuste);
+            _productoRepository.Actualizar(producto);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

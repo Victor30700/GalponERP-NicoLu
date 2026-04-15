@@ -12,7 +12,7 @@ public class ObtenerProyeccionSacrificioQueryHandler : IRequestHandler<ObtenerPr
     private readonly IProductoRepository _productoRepository;
 
     private const decimal PESO_OBJETIVO = 2500m; // 2.5 Kg
-    private const decimal GANANCIA_DIARIA_BASE = 50m; // 50g por día promedio
+    private const decimal GANANCIA_DIARIA_BASE = 50m; // 50g por dÃ­a promedio
     private const decimal FCR_IDEAL = 1.6m;
 
     public ObtenerProyeccionSacrificioQueryHandler(
@@ -42,7 +42,7 @@ public class ObtenerProyeccionSacrificioQueryHandler : IRequestHandler<ObtenerPr
         
         var productosAlimento = productos
             .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
-            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+            .ToDictionary(p => p.Id, p => p.PesoUnitarioKg);
 
         var alimentoConsumidoKg = movimientos
             .Where(m => productosAlimento.ContainsKey(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
@@ -56,8 +56,8 @@ public class ObtenerProyeccionSacrificioQueryHandler : IRequestHandler<ObtenerPr
             fcrActual = alimentoConsumidoKg / biomasaGanadaKg;
         }
 
-        // Ajustar ganancia diaria según eficiencia (FCR)
-        // Si el FCR es mayor al ideal, el crecimiento es más lento.
+        // Ajustar ganancia diaria segÃºn eficiencia (FCR)
+        // Si el FCR es mayor al ideal, el crecimiento es mÃ¡s lento.
         decimal factorEficiencia = fcrActual > 0 ? FCR_IDEAL / fcrActual : 1.0m;
         decimal gananciaEstimada = GANANCIA_DIARIA_BASE * factorEficiencia;
 

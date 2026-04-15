@@ -33,7 +33,7 @@ public class VerificarNivelesAlimentoHandler : IRequestHandler<VerificarNivelesA
         var todosLosProductos = await _productoRepository.ObtenerTodosAsync();
         var productosAlimento = todosLosProductos
             .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
-            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+            .ToDictionary(p => p.Id, p => p.PesoUnitarioKg);
 
         var alimentoIds = productosAlimento.Keys.ToHashSet();
 

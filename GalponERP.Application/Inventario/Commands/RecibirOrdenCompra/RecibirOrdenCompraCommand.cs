@@ -83,9 +83,13 @@ public class RecibirOrdenCompraCommandHandler : IRequestHandler<RecibirOrdenComp
                 compraId);
 
             _inventarioRepository.RegistrarMovimiento(movimiento);
+
+            // 3. Actualizar el stock en Kg cacheado en el Producto
+            producto.ActualizarStock(item.Cantidad, TipoMovimiento.Compra);
+            _productoRepository.Actualizar(producto);
         }
 
-        // 3. Cerrar OC
+        // 4. Cerrar OC
         oc.MarcarComoRecibida();
         _ordenCompraRepository.Actualizar(oc);
 

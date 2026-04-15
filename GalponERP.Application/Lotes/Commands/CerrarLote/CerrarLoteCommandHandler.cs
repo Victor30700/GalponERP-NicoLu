@@ -61,10 +61,10 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
         var movimientos = (await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId)).ToList();
         var productos = await _productoRepository.ObtenerTodosAsync();
         
-        // Identificar productos que son alimento (por nombre de categoría)
+        // Identificar productos que son alimento (por nombre de categorÃ­a)
         var productosAlimento = productos
             .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
-            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+            .ToDictionary(p => p.Id, p => p.PesoUnitarioKg);
 
         decimal totalAlimentoConsumidoKg = movimientos
             .Where(m => (m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida) && productosAlimento.ContainsKey(m.ProductoId))
@@ -76,7 +76,7 @@ public class CerrarLoteCommandHandler : IRequestHandler<CerrarLoteCommand, Cerra
             .Select(m => m.CostoTotal ?? Moneda.Zero)
             .Aggregate(Moneda.Zero, (acc, next) => acc + next);
 
-        // 5. Amortización (Supongamos un valor fijo o cero)
+        // 5. AmortizaciÃ³n (Supongamos un valor fijo o cero)
         var amortizacion = Moneda.Zero;
 
         // 6. Calcular Costo Total usando el Servicio de Dominio

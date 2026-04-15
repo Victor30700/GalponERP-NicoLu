@@ -68,6 +68,11 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
         );
 
         _inventarioRepository.RegistrarMovimiento(movimiento);
+
+        // 3. Actualizar el stock en Kg cacheado en el Producto (para Feed Inventory Tracking)
+        producto.ActualizarStock(request.Cantidad, TipoMovimiento.Salida);
+        _productoRepository.Actualizar(producto);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return movimientoId;

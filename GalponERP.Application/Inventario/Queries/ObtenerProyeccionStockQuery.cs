@@ -59,8 +59,8 @@ public class ObtenerProyeccionStockQueryHandler : IRequestHandler<ObtenerProyecc
             }
 
             // Convertir consumo diario de Kg a la unidad del producto
-            decimal consumoDiarioEnUnidad = producto.EquivalenciaEnKg > 0 
-                ? consumoDiarioTotalKg / producto.EquivalenciaEnKg 
+            decimal consumoDiarioEnUnidad = producto.PesoUnitarioKg > 0 
+                ? consumoDiarioTotalKg / producto.PesoUnitarioKg 
                 : 0;
 
             if (consumoDiarioEnUnidad > 0)
@@ -82,13 +82,13 @@ public class ObtenerProyeccionStockQueryHandler : IRequestHandler<ObtenerProyecc
 
     private decimal ObtenerConsumoEstimadoGramos(int dia)
     {
-        // Modelo simplificado de consumo diario acumulado (gramos por pollo por día)
-        // Fuente: Guía de manejo Cobb/Ross (Aproximado)
-        if (dia <= 7) return 20;   // Semana 1: ~20g/día
-        if (dia <= 14) return 50;  // Semana 2: ~50g/día
-        if (dia <= 21) return 90;  // Semana 3: ~90g/día
-        if (dia <= 28) return 130; // Semana 4: ~130g/día
-        if (dia <= 35) return 170; // Semana 5: ~170g/día
-        return 200;                // Semana 6+: ~200g/día
+        // Modelo simplificado de consumo diario acumulado (gramos por pollo por dÃ­a)
+        // Fuente: GuÃ­a de manejo Cobb/Ross (Aproximado)
+        if (dia <= 7) return 20;   // Semana 1: ~20g/dÃ­a
+        if (dia <= 14) return 50;  // Semana 2: ~50g/dÃ­a
+        if (dia <= 21) return 90;  // Semana 3: ~90g/dÃ­a
+        if (dia <= 28) return 130; // Semana 4: ~130g/dÃ­a
+        if (dia <= 35) return 170; // Semana 5: ~170g/dÃ­a
+        return 200;                // Semana 6+: ~200g/dÃ­a
     }
 }

@@ -42,7 +42,7 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
             .Select(g => new
             {
                 ProductoId = g.Key,
-                // Auditoría Sprint 47: La fórmula debe coincidir exactamente con el Kárdex y Dashboard
+                // AuditorÃ­a Sprint 47: La fÃ³rmula debe coincidir exactamente con el KÃ¡rdex y Dashboard
                 // Entradas: Entrada, AjusteEntrada, Compra
                 // Salidas: Salida, AjusteSalida (y cualquier otro no contemplado en entradas)
                 Stock = g.Sum(m => (m.Tipo == TipoMovimiento.Entrada || 
@@ -59,7 +59,7 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
                 p.Nombre,
                 p.Categoria?.Nombre ?? "Sin Categoria",
                 stockActual,
-                Math.Round(stockActual * p.EquivalenciaEnKg, 2),
+                Math.Round(stockActual * p.PesoUnitarioKg, 2),
                 p.Unidad?.Nombre ?? "Sin Unidad");
         });
     }

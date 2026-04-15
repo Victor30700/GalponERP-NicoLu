@@ -27,7 +27,7 @@ export function OperationHistoryList({ data, type, onEdit, onDelete, isLoading }
     },
     feed: {
       label: 'Alimento',
-      valueKey: 'cantidad',
+      valueKey: 'cantidadKg',
       unit: 'kg',
       color: 'text-blue-500',
       bg: 'bg-blue-500/10'

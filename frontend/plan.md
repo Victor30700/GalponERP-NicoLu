@@ -1,52 +1,34 @@
-# Plan de Ejecución: Refactorización del Módulo de Operaciones (Lotes)
+# Plan de Trabajo: Refactorización del Registro de Consumo de Alimento (COMPLETADO)
 
-Este plan detalla los pasos técnicos para transformar la sección de **"OPERACIÓN"** en la vista de detalle del lote en un sistema CRUD completo, con historial filtrable y trazabilidad de inventario.
+Este plan aborda el problema de registro de equivalencia en Kg y el cálculo de consumo diario de alimento por unidades o por peso total.
 
-## 1. Análisis y Preparación (Grounding)
-- [x] Investigar entidades de Dominio (`Lote`, `Producto`, `MovimientoInventario`).
-- [x] Revisar controladores de backend (`Mortalidad`, `Pesajes`, `Inventario`, `Sanidad`).
-- [x] Identificar carencias en el backend (Falta DELETE/PUT para Movimientos de Inventario y Bienestar).
-- [x] Revisar hooks existentes en el frontend.
+## 1. Problemas Identificados
+- [x] **Registro de Producto Confuso**: El campo "Equivalencia en Kg" se presta a confusión.
+- [x] **Cálculo de Consumo Rígido**: El modal de registro rápido impedía ajustes precisos.
+- [x] **Inconsistencia de Datos**: Los cálculos de consumo y FCR eran incorrectos por falta de peso por unidad individual.
 
-## 2. Implementación en Backend (Cierre de Ciclo CRUD)
-Para cumplir con el requerimiento de CRUD completo, se deben añadir los siguientes puntos de acceso:
+## 2. Acciones en el Backend
 
-### A. Inventario (Consumo de Alimento)
-- [ ] Crear `EliminarMovimientoCommand` y `ActualizarMovimientoCommand` en `Application/Inventario`.
-- [ ] Añadir `DELETE` y `PUT` en `InventarioController` para movimientos.
-- [ ] Asegurar que al eliminar/actualizar un movimiento se revierta/actualice el impacto en el stock si es necesario (aunque para salidas/consumo es más simple).
+### A. Clarificación de la Entidad `Producto`
+- [x] Revisar comentarios y validaciones en `Producto.cs`.
+- [x] Mejorar la respuesta de la API en `ObtenerMovimientosLoteQuery` agregando `CantidadKg`.
 
-### B. Sanidad (Consumo de Agua / Bienestar)
-- [ ] Crear `EliminarBienestarCommand` y `ActualizarBienestarCommand` en `Application/Sanidad`.
-- [ ] Añadir `DELETE` y `PUT` en `SanidadController`.
+## 3. Acciones en el Frontend
 
-## 3. Refactorización del Frontend
+### A. Refactorización de la Gestión de Productos (`productos/page.tsx`)
+- [x] Cambiar etiqueta a **"Peso por Unidad (Kg)"**.
+- [x] Agregar descripción explicativa sobre la importancia para el FCR.
 
-### A. QuickRecordModal (Formularios de Registro)
-- [ ] Cargar lista de productos de la categoría "Alimento" usando `useCatalogos`.
-- [ ] Implementar selector de producto en el formulario de Alimento.
-- [ ] Cambiar la unidad de entrada para Alimento a "Unidades" (ej. Sacos).
-- [ ] Calcular `CantidadTotal = Unidades * EquivalenciaEnKg` antes de enviar al backend.
-- [ ] Asegurar que el modal maneje correctamente el estado de edición (`isEditing`) para todos los tipos.
+### B. Mejora del Modal de Registro Rápido (`QuickRecordModal.tsx`)
+- [x] **Cálculo Bidireccional**: Sincronización entre Unidades y Kg.
+- [x] **Ajuste Manual**: Permitir sobrescribir Kg y recalcular unidades equivalentes.
+- [x] **Visualización Clara**: Leyenda dinámica sobre el impacto en el inventario.
 
-### B. OperationFilters (Filtros de Historial)
-- [ ] Añadir selectores de Mes y Año.
-- [ ] Implementar lógica para filtrar por Mes/Año actual por defecto.
-
-### C. OperationHistoryList (Listado)
-- [ ] Asegurar que todos los items muestren la información relevante (Producto en caso de alimento).
-- [ ] Configurar las acciones de Editar y Eliminar para que disparen las mutaciones correctas.
-
-### D. LoteDashboard (Página Principal)
-- [ ] Implementar las funciones de eliminación para todos los tipos de registros.
-- [ ] Refinar el filtrado de la lista basado en los nuevos estados de `OperationFilters`.
+### C. Mejora del Historial de Operaciones (`OperationHistoryList.tsx`)
+- [x] Mostrar el peso total en Kg (`cantidadKg`) en lugar de las unidades para el historial de alimento.
 
 ## 4. Pruebas y Validación
-- [ ] Verificar registro de cada tipo.
-- [ ] Verificar edición de cada tipo.
-- [ ] Verificar eliminación con confirmación.
-- [ ] Validar que el consumo de alimento descuenta correctamente el stock (o al menos registra el movimiento adecuado).
-- [ ] Validar filtros temporales.
-
-## 5. Documentación
-- [ ] Actualizar `frontend/docs.md` con los cambios realizados.
+- [x] **Prueba de Registro**: Verificado que la nueva etiqueta es clara.
+- [x] **Prueba de Consumo por Unidades**: Verificado el cálculo automático de Kg.
+- [x] **Prueba de Consumo por Kg**: Verificado el recalculo de unidades para inventario.
+- [x] **Prueba de Ajuste Mixto**: Verificado que al ajustar Kg manualmente se actualizan las unidades enviadas al backend.

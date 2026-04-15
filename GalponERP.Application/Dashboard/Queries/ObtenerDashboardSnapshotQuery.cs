@@ -10,7 +10,7 @@ public record AlertaStockDto(string ProductoNombre, decimal StockActual, decimal
 public record AlertaSeguridadDto(string UsuarioNombre, string Accion, string EntidadNombre, DateTime Fecha, string Detalles);
 
 public record DashboardSnapshotResponse(
-    // Producción
+    // ProducciÃ³n
     List<LoteSnapshotDto> LotesActivos,
     int TotalPollosVivos,
     int MortalidadMesActual,
@@ -70,7 +70,7 @@ public class ObtenerDashboardSnapshotQueryHandler : IRequestHandler<ObtenerDashb
 
     public async Task<DashboardSnapshotResponse> Handle(ObtenerDashboardSnapshotQuery request, CancellationToken cancellationToken)
     {
-        // 1. PRODUCCIÓN (Lotes Activos y Mortalidad)
+        // 1. PRODUCCIÃ“N (Lotes Activos y Mortalidad)
         var lotesActivos = (await _loteRepository.ObtenerActivosAsync()).ToList();
         int totalVivos = lotesActivos.Sum(l => l.CantidadActual);
 
@@ -85,7 +85,7 @@ public class ObtenerDashboardSnapshotQueryHandler : IRequestHandler<ObtenerDashb
             l.CantidadActual, 
             l.EdadSemanas)).ToList();
 
-        // 2. INVENTARIO (Stock Crítico y Alimento)
+        // 2. INVENTARIO (Stock CrÃ­tico y Alimento)
         var productos = (await _productoRepository.ObtenerTodosAsync()).ToList();
         var todosLosMovimientos = (await _inventarioRepository.ObtenerTodosAsync()).ToList();
         
@@ -93,7 +93,7 @@ public class ObtenerDashboardSnapshotQueryHandler : IRequestHandler<ObtenerDashb
         decimal stockTotalAlimentoKg = 0;
         decimal consumoDiarioGlobalKg = 0;
 
-        // Calcular Precios Promedios para Inversión
+        // Calcular Precios Promedios para InversiÃ³n
         var preciosPromedios = todosLosMovimientos
             .Where(m => (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.Compra) && m.CostoTotal != null)
             .GroupBy(m => m.ProductoId)
@@ -114,7 +114,7 @@ public class ObtenerDashboardSnapshotQueryHandler : IRequestHandler<ObtenerDashb
 
             if (p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
             {
-                stockTotalAlimentoKg += stockActual * p.EquivalenciaEnKg;
+                stockTotalAlimentoKg += stockActual * p.PesoUnitarioKg;
                 
                 foreach (var lote in lotesActivos)
                 {
@@ -124,7 +124,7 @@ public class ObtenerDashboardSnapshotQueryHandler : IRequestHandler<ObtenerDashb
                     var diasDeVida = (DateTime.UtcNow - lote.FechaIngreso).TotalDays;
                     if (diasDeVida < 1) diasDeVida = 1;
 
-                    var totalConsumidoLoteKg = movimientosLote.Sum(m => m.Cantidad * p.EquivalenciaEnKg);
+                    var totalConsumidoLoteKg = movimientosLote.Sum(m => m.Cantidad * p.PesoUnitarioKg);
                     consumoDiarioGlobalKg += totalConsumidoLoteKg / (decimal)diasDeVida;
                 }
             }
@@ -133,7 +133,7 @@ public class ObtenerDashboardSnapshotQueryHandler : IRequestHandler<ObtenerDashb
         decimal diasRestantesAlimento = consumoDiarioGlobalKg > 0 ? stockTotalAlimentoKg / consumoDiarioGlobalKg : 999;
         bool requiereAlertaAlimento = diasRestantesAlimento < 3;
 
-        // 3. FINANZAS (Cuentas por Cobrar, Pagar e Inversión)
+        // 3. FINANZAS (Cuentas por Cobrar, Pagar e InversiÃ³n)
         var ventas = await _ventaRepository.ObtenerTodasAsync();
         decimal saldoTotalCobrar = ventas
             .Where(v => v.EstadoPago != EstadoPago.Pagado)

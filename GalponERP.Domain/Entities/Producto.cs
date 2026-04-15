@@ -17,7 +17,13 @@ public class Producto : Entity
     /// Multiplicador para convertir la unidad de medida a Kilogramos.
     /// Crucial para cálculos de FCR (Food Conversion Ratio).
     /// </summary>
-    public decimal EquivalenciaEnKg { get; private set; }
+    public decimal PesoUnitarioKg { get; private set; }
+
+    /// <summary>
+    /// Stock total acumulado en Kilogramos.
+    /// Se actualiza con cada entrada/salida de stock.
+    /// </summary>
+    public decimal StockActualKg { get; private set; }
 
     /// <summary>
     /// Cantidad mínima en stock antes de generar una alerta.
@@ -35,22 +41,24 @@ public class Producto : Entity
         string nombre, 
         Guid categoriaProductoId, 
         Guid unidadMedidaId, 
-        decimal equivalenciaEnKg,
+        decimal pesoUnitarioKg,
         decimal umbralMinimo = 0,
-        decimal costoUnitarioActual = 0) : base(id)
+        decimal costoUnitarioActual = 0,
+        decimal stockInicialKg = 0) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto es obligatorio.");
         
-        if (equivalenciaEnKg <= 0)
-            throw new ArgumentException("La equivalencia en Kg debe ser mayor a cero.");
+        if (pesoUnitarioKg <= 0)
+            throw new ArgumentException("El peso unitario en Kg debe ser mayor a cero.");
 
         Nombre = nombre;
         CategoriaProductoId = categoriaProductoId;
         UnidadMedidaId = unidadMedidaId;
-        EquivalenciaEnKg = equivalenciaEnKg;
+        PesoUnitarioKg = pesoUnitarioKg;
         UmbralMinimo = umbralMinimo;
         CostoUnitarioActual = costoUnitarioActual;
+        StockActualKg = stockInicialKg;
     }
 
     // Constructor para EF Core
@@ -60,20 +68,41 @@ public class Producto : Entity
         string nombre, 
         Guid categoriaProductoId, 
         Guid unidadMedidaId, 
-        decimal equivalenciaEnKg,
+        decimal pesoUnitarioKg,
         decimal umbralMinimo)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto no puede estar vacío.");
         
-        if (equivalenciaEnKg <= 0)
-            throw new ArgumentException("La equivalencia en Kg debe ser mayor a cero.");
+        if (pesoUnitarioKg <= 0)
+            throw new ArgumentException("El peso unitario en Kg debe ser mayor a cero.");
         
         Nombre = nombre;
         CategoriaProductoId = categoriaProductoId;
         UnidadMedidaId = unidadMedidaId;
-        EquivalenciaEnKg = equivalenciaEnKg;
+        PesoUnitarioKg = pesoUnitarioKg;
         UmbralMinimo = umbralMinimo;
+    }
+
+    /// <summary>
+    /// Actualiza el stock total en Kg según un movimiento.
+    /// </summary>
+    public void ActualizarStock(decimal cantidad, TipoMovimiento tipo)
+    {
+        decimal factor = (tipo == TipoMovimiento.Entrada || tipo == TipoMovimiento.AjusteEntrada || tipo == TipoMovimiento.Compra) ? 1 : -1;
+        StockActualKg += (cantidad * PesoUnitarioKg) * factor;
+
+        if (StockActualKg < 0) StockActualKg = 0; // Evitar stock negativo en Kg por ajustes
+    }
+
+    /// <summary>
+    /// Sincroniza el stock en Kg basado en el stock actual en unidades.
+    /// Útil para migraciones o correcciones de integridad.
+    /// </summary>
+    public void SincronizarStockKg(decimal stockActualUnidades)
+    {
+        StockActualKg = stockActualUnidades * PesoUnitarioKg;
+        if (StockActualKg < 0) StockActualKg = 0;
     }
 
     /// <summary>

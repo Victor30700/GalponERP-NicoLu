@@ -14,10 +14,11 @@ import { confirmDestructiveAction } from '@/lib/swal'
 
 const productoSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
-  categoriaProductoId: z.string().uuid('Categoría inválida'),
-  unidadMedidaId: z.string().uuid('Unidad de medida inválida'),
-  equivalenciaEnKg: z.number().positive('La equivalencia debe ser mayor a cero'),
+  categoriaProductoId: z.string().uuid('CategorÃ­a invÃ¡lida'),
+  unidadMedidaId: z.string().uuid('Unidad de medida invÃ¡lida'),
+  pesoUnitarioKg: z.number().positive('La equivalencia debe ser mayor a cero'),
   umbralMinimo: z.number().min(0, 'No puede ser negativo'),
+  stockInicial: z.number().min(0, 'No puede ser negativo').optional().default(0),
 })
 
 type ProductoFormValues = z.infer<typeof productoSchema>
@@ -29,8 +30,10 @@ interface Producto {
   categoriaNombre: string
   unidadMedidaId: string
   unidadMedidaNombre: string
-  equivalenciaEnKg: number
+  pesoUnitarioKg: number
   umbralMinimo: number
+  stockActual: number
+  stockActualKg: number
   isActive: boolean
 }
 
@@ -107,7 +110,7 @@ export default function ProductosPage() {
       nombre: '',
       categoriaProductoId: '',
       unidadMedidaId: '',
-      equivalenciaEnKg: 1,
+      pesoUnitarioKg: 1,
       umbralMinimo: 0
     }
   })
@@ -115,7 +118,7 @@ export default function ProductosPage() {
   const onSubmit = (data: ProductoFormValues) => {
     const values = { 
       ...data, 
-      equivalenciaEnKg: Number(data.equivalenciaEnKg),
+      pesoUnitarioKg: Number(data.pesoUnitarioKg),
       umbralMinimo: Number(data.umbralMinimo) 
     }
     if (editingProducto) {
@@ -132,12 +135,12 @@ export default function ProductosPage() {
         nombre: prod.nombre,
         categoriaProductoId: prod.categoriaId,
         unidadMedidaId: prod.unidadMedidaId,
-        equivalenciaEnKg: prod.equivalenciaEnKg,
+        pesoUnitarioKg: prod.pesoUnitarioKg,
         umbralMinimo: prod.umbralMinimo
       })
     } else {
       setEditingProducto(null)
-      reset({ nombre: '', categoriaProductoId: '', unidadMedidaId: '', equivalenciaEnKg: 1, umbralMinimo: 0 })
+      reset({ nombre: '', categoriaProductoId: '', unidadMedidaId: '', pesoUnitarioKg: 1, umbralMinimo: 0 })
     }
     setIsFormOpen(true)
   }
@@ -167,11 +170,11 @@ export default function ProductosPage() {
       header: 'Inventario', 
       accessor: (item: Producto) => (
         <div className="flex flex-col">
-          <span className="text-xs text-slate-300">
-            Min: {item.umbralMinimo} {item.unidadMedidaNombre}
+          <span className="text-xs font-bold text-emerald-500">
+            Total: {Number(item.stockActualKg || 0).toFixed(2)} Kg
           </span>
           <span className="text-[10px] text-muted-foreground">
-            Equiv: {item.equivalenciaEnKg}kg
+            {item.stockActual || 0} {item.unidadMedidaNombre}(s) de {item.pesoUnitarioKg}kg
           </span>
         </div>
       )
@@ -189,14 +192,14 @@ export default function ProductosPage() {
   return (
     <div className="relative">
       <UniversalGrid
-        title="Catálogo de Productos"
+        title="CatÃ¡logo de Productos"
         items={productos}
         columns={columns}
         isLoading={isLoading}
         onAdd={() => openForm()}
         onEdit={(item) => openForm(item)}
         onDelete={async (item) => {
-          const result = await confirmDestructiveAction('¿Eliminar producto?', 'Esta acción no se puede deshacer y podría afectar el inventario.')
+          const result = await confirmDestructiveAction('Â¿Eliminar producto?', 'Esta acciÃ³n no se puede deshacer y podrÃ­a afectar el inventario.')
           if (result.isConfirmed) {
             deleteMutation.mutate(item.id)
           }
@@ -214,7 +217,7 @@ export default function ProductosPage() {
                 <Scale size={12} /> {item.unidadMedidaNombre}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium uppercase tracking-tighter">
-                <Tag size={12} /> Mín: {item.umbralMinimo}
+                <Tag size={12} /> MÃ­n: {item.umbralMinimo}
               </div>
             </div>
           </div>
@@ -242,37 +245,46 @@ export default function ProductosPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">Categoría</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">CategorÃ­a</label>
                   <select {...register('categoriaProductoId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
-                    <option value="">Selecciona una categoría</option>
+                    <option value="">Selecciona una categorÃ­a</option>
                     {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
                   {errors.categoriaProductoId && <p className="text-xs text-red-400 ml-1">{errors.categoriaProductoId.message}</p>}
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Unidad de Medida</label>
+                  <select {...register('unidadMedidaId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
+                    <option value="">Selecciona unidad</option>
+                    {unidades.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+                  </select>
+                  {errors.unidadMedidaId && <p className="text-xs text-red-400 ml-1">{errors.unidadMedidaId.message}</p>}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground ml-1">Unidad de Medida</label>
-                    <select {...register('unidadMedidaId')} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none">
-                      <option value="">Selecciona unidad</option>
-                      {unidades.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
-                    </select>
-                    {errors.unidadMedidaId && <p className="text-xs text-red-400 ml-1">{errors.unidadMedidaId.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground ml-1">Stock Mínimo</label>
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Stock MÃ­nimo</label>
                     <input type="number" step="0.01" {...register('umbralMinimo', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
                     {errors.umbralMinimo && <p className="text-xs text-red-400 ml-1">{errors.umbralMinimo.message}</p>}
                   </div>
+                  {!editingProducto && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground ml-1 font-bold text-emerald-500">Stock Inicial (Unidades)</label>
+                      <input type="number" step="0.01" {...register('stockInicial', { valueAsNumber: true })} className="w-full px-4 py-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-bold" />
+                      {errors.stockInicial && <p className="text-xs text-red-400 ml-1">{errors.stockInicial.message}</p>}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">Equivalencia en Kg (opcional)</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Peso por Unidad (Kg)</label>
                   <div className="relative">
                     <Scale className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                    <input type="number" step="0.001" {...register('equivalenciaEnKg', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="0.000" />
+                    <input type="number" step="0.001" {...register('pesoUnitarioKg', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="Ej: 50.00" />
                   </div>
-                  {errors.equivalenciaEnKg && <p className="text-xs text-red-400 ml-1">{errors.equivalenciaEnKg.message}</p>}
+                  <p className="text-[10px] text-muted-foreground ml-1">Ingrese el peso en kilogramos de una sola unidad (ej: 1 saco = 50kg). Crucial para FCR.</p>
+                  {errors.pesoUnitarioKg && <p className="text-xs text-red-400 ml-1">{errors.pesoUnitarioKg.message}</p>}
                 </div>
 
                 <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-8 shadow-lg shadow-blue-500/20" >

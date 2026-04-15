@@ -9,6 +9,12 @@ public record ProductoResponse(
     string CategoriaNombre,
     Guid UnidadMedidaId,
     string UnidadMedidaNombre,
-    decimal EquivalenciaEnKg,
+    decimal PesoUnitarioKg,
     decimal UmbralMinimo,
-    bool IsActive);
+    decimal StockActual,
+    decimal StockActualKg,
+    bool IsActive)
+{
+    // Alias para el usuario que pidió ver el total como equivalenciaEnKg en el API
+    public decimal EquivalenciaEnKg => StockActualKg;
+}

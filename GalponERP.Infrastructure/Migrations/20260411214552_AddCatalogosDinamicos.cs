@@ -48,7 +48,7 @@ namespace GalponERP.Infrastructure.Migrations
                     table.PrimaryKey("PK_UnidadesMedida", x => x.Id);
                 });
 
-            // 2. Añadir las nuevas columnas a Productos como NULLABLES inicialmente
+            // 2. AÃ±adir las nuevas columnas a Productos como NULLABLES inicialmente
             migrationBuilder.AddColumn<Guid>(
                 name: "CategoriaProductoId",
                 table: "Productos",
@@ -56,13 +56,13 @@ namespace GalponERP.Infrastructure.Migrations
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
-                name: "EquivalenciaEnKg",
+                name: "PesoUnitarioKg",
                 table: "Productos",
                 type: "numeric(18,4)",
                 precision: 18,
                 scale: 4,
                 nullable: false,
-                defaultValue: 1m); // Default 1 para no romper cálculos
+                defaultValue: 1m); // Default 1 para no romper cÃ¡lculos
 
             migrationBuilder.AddColumn<Guid>(
                 name: "UnidadMedidaId",
@@ -70,7 +70,7 @@ namespace GalponERP.Infrastructure.Migrations
                 type: "uuid",
                 nullable: true);
 
-            // 3. SEEDING de Catálogos por defecto
+            // 3. SEEDING de CatÃ¡logos por defecto
             var catAlimentoId = Guid.NewGuid();
             var catMedicamentoId = Guid.NewGuid();
             var catInsumoId = Guid.NewGuid();
@@ -95,7 +95,7 @@ namespace GalponERP.Infrastructure.Migrations
                 ('{unitSacoId}', 'Saco', 'Sc', true, now());
             ");
 
-            // 4. MIGRACIÓN DE DATOS EXISTENTES
+            // 4. MIGRACIÃ“N DE DATOS EXISTENTES
             // Mapear Tipo -> CategoriaProductoId
             migrationBuilder.Sql($@"
                 UPDATE ""Productos"" SET ""CategoriaProductoId"" = '{catAlimentoId}' WHERE ""Tipo"" = 'Alimento';
@@ -106,14 +106,14 @@ namespace GalponERP.Infrastructure.Migrations
 
             // Mapear UnidadMedida -> UnidadMedidaId
             migrationBuilder.Sql($@"
-                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitKgId}', ""EquivalenciaEnKg"" = 1.0 WHERE ""UnidadMedida"" = 'Kg';
-                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitUnidadId}', ""EquivalenciaEnKg"" = 1.0 WHERE ""UnidadMedida"" = 'Unidad';
-                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitLitroId}', ""EquivalenciaEnKg"" = 1.0 WHERE ""UnidadMedida"" = 'Litro';
-                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitSacoId}', ""EquivalenciaEnKg"" = 40.0 WHERE ""UnidadMedida"" = 'Saco';
+                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitKgId}', ""PesoUnitarioKg"" = 1.0 WHERE ""UnidadMedida"" = 'Kg';
+                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitUnidadId}', ""PesoUnitarioKg"" = 1.0 WHERE ""UnidadMedida"" = 'Unidad';
+                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitLitroId}', ""PesoUnitarioKg"" = 1.0 WHERE ""UnidadMedida"" = 'Litro';
+                UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitSacoId}', ""PesoUnitarioKg"" = 40.0 WHERE ""UnidadMedida"" = 'Saco';
                 UPDATE ""Productos"" SET ""UnidadMedidaId"" = '{unitUnidadId}' WHERE ""UnidadMedidaId"" IS NULL;
             ");
 
-            // 5. Establecer columnas como NOT NULL y crear índices/FKs
+            // 5. Establecer columnas como NOT NULL y crear Ã­ndices/FKs
             migrationBuilder.AlterColumn<Guid>(
                 name: "CategoriaProductoId",
                 table: "Productos",
@@ -189,7 +189,7 @@ namespace GalponERP.Infrastructure.Migrations
                 table: "Productos");
 
             migrationBuilder.DropColumn(
-                name: "EquivalenciaEnKg",
+                name: "PesoUnitarioKg",
                 table: "Productos");
 
             migrationBuilder.DropColumn(

@@ -15,7 +15,7 @@ interface QuickRecordProps {
   loteId: string
   type: 'mortality' | 'feed' | 'water' | 'weight'
   lote?: any
-  initialData?: any // Datos para edición
+  initialData?: any // Datos para ediciÃ³n
 }
 
 export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialData }: QuickRecordProps) {
@@ -25,10 +25,22 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
   const [nota, setNota] = useState('')
   const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [selectedProductId, setSelectedProductId] = useState('')
+  const [stockActual, setStockActual] = useState<number | null>(null)
   
   const queryClient = useQueryClient()
   const { productos } = useCatalogos()
   const isEditing = !!initialData
+
+  // Obtener stock al seleccionar producto
+  useEffect(() => {
+    if (selectedProductId && type === 'feed') {
+      api.get<any>(`/api/Inventario/productos/${selectedProductId}/stock`)
+        .then(res => setStockActual(res.cantidad))
+        .catch(() => setStockActual(null))
+    } else {
+      setStockActual(null)
+    }
+  }, [selectedProductId, type])
 
   // Filtrar productos de alimento
   const alimentos = useMemo(() => 
@@ -42,7 +54,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
     [alimentos, selectedProductId]
   )
 
-  // Cargar datos si es edición
+  // Cargar datos si es ediciÃ³n
   useEffect(() => {
     if (isEditing && isOpen) {
       const config = {
@@ -52,16 +64,15 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
         weight: { main: 'pesoPromedioGramos', sec: 'cantidadMuestreada' }
       }[type]
 
-      // Para alimento, si estamos editando, el valor que viene es Kg. 
-      // Pero el usuario ahora ingresa Unidades.
+      // Para alimento, el valor 'cantidad' viene en unidades (sacos/bolsas)
+      // y 'cantidadKg' viene en kilogramos totales.
       if (type === 'feed' && initialData.productoId) {
         setSelectedProductId(initialData.productoId)
-        const prod = productos.find(p => p.id === initialData.productoId)
-        if (prod && prod.equivalenciaEnKg > 0) {
-           setValue((initialData[config.main] / prod.equivalenciaEnKg).toString())
-        } else {
-           setValue(initialData[config.main]?.toString() || '')
-        }
+        const units = initialData.cantidad;
+        const totalKg = initialData.cantidadKg;
+        
+        setValue(units?.toString() || '')
+        setSecondaryValue(totalKg?.toString() || '')
       } else {
         setValue(initialData[config.main]?.toString() || '')
       }
@@ -80,6 +91,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       setNota('')
       setFecha(format(new Date(), 'yyyy-MM-dd'))
       setSelectedProductId('')
+      setStockActual(null)
     }
   }, [isEditing, initialData, isOpen, type, productos])
 
@@ -94,7 +106,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
           if (type === 'mortality' || type === 'weight') {
               return api.put(`${endpoint}/${initialData.id}`, data)
           }
-          // Para alimento y agua, si no hay PUT explícito, el POST puede actuar como upsert
+          // Para alimento y agua, si no hay PUT explÃ­cito, el POST puede actuar como upsert
           // o necesitaremos implementar el PUT en el backend.
           return api.post(endpoint, data)
       }
@@ -108,7 +120,8 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
         ['pesajes', 'lote', loteId],
         ['mortalidad', 'lote', loteId],
         ['sanidad', 'bienestar', 'lote', loteId],
-        ['inventario', 'lote', loteId, 'movimientos']
+        ['inventario', 'lote', loteId, 'movimientos'],
+        ['catalogos', 'productos']
       ]
       
       keysToInvalidate.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
@@ -123,6 +136,12 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
     e.preventDefault()
     if (!value) return
     
+    // Validar stock antes de enviar
+    if (type === 'feed' && stockActual !== null && Number(value) > stockActual) {
+        toast.error(`Stock insuficiente. Solo quedan ${stockActual} unidades.`)
+        return
+    }
+
     let data: any = { loteId, fecha: new Date(fecha).toISOString() }
 
     if (isEditing) data.id = initialData.id
@@ -135,14 +154,13 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
           return
       }
       
-      // Calcular cantidad total en Kg
-      const equivalencia = selectedProduct?.equivalenciaEnKg || 1
-      const cantidadCalculada = Number(value) * equivalencia
+      // Enviar la cantidad en UNIDADES (ej: sacos) para el inventario
+      const cantidadFinal = Number(value) || 0
 
       data = { 
           ...data,
           productoId: selectedProductId,
-          cantidad: cantidadCalculada, 
+          cantidad: cantidadFinal, 
           justificacion: nota || 'Consumo diario' 
       }
     } else if (type === 'water') {
@@ -224,31 +242,81 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                       </select>
                       <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
+                    {selectedProduct && stockActual !== null && (
+                        <p className={`text-[10px] font-black uppercase tracking-widest ml-1 mt-1 ${stockActual <= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                           Stock: {stockActual} {selectedProduct.unidadMedidaNombre}(s) â‰ˆ {(stockActual * selectedProduct.pesoUnitarioKg).toFixed(1)} Kg totales
+                        </p>
+                    )}
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{config.label}</label>
-                <div className="relative">
-                  <input
-                    autoFocus
-                    type="number"
-                    step="any"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
-                    placeholder="0"
-                  />
-                  <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xl uppercase">{config.unit}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{type === 'feed' ? 'Cantidad de Unidades' : config.label}</label>
+                  <div className="relative">
+                    <input
+                      autoFocus={type !== 'feed'}
+                      type="number"
+                      step="any"
+                      value={value}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setValue(val);
+                        // Sincronizar con Kg si hay producto seleccionado
+                        if (type === 'feed' && selectedProduct) {
+                          const equiv = selectedProduct.pesoUnitarioKg || 0;
+                          setSecondaryValue(val ? (Number(val) * equiv).toFixed(2) : '');
+                        }
+                      }}
+                      className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xl uppercase">
+                        {type === 'feed' ? 'UNID' : config.unit}
+                    </span>
+                  </div>
                 </div>
-                {type === 'feed' && selectedProduct && (
-                  <p className="text-[10px] text-primary font-black uppercase tracking-widest text-center mt-2">
-                    Equivalencia: {selectedProduct.equivalenciaEnKg} kg por unidad
-                    {value && ` • Total: ${Number(value) * selectedProduct.equivalenciaEnKg} kg`}
-                  </p>
+
+                {type === 'feed' && (
+                  <div className={`space-y-2 transition-all ${value && value !== '0' ? 'opacity-30 pointer-events-none' : ''}`}>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Peso Total (Kg) - Opcional</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        value={secondaryValue}
+                        onChange={(e) => {
+                          const valKg = e.target.value;
+                          setSecondaryValue(valKg);
+                          // Recalcular unidades si hay producto
+                          if (selectedProduct && !value) {
+                             const equiv = selectedProduct.pesoUnitarioKg || 1;
+                             setValue(valKg ? (Number(valKg) / equiv).toFixed(2) : '');
+                          }
+                        }}
+                        className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
+                        placeholder="0.00"
+                      />
+                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xl uppercase">Kg</span>
+                    </div>
+                  </div>
                 )}
               </div>
+
+              {type === 'feed' && selectedProduct && (
+                  <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 space-y-1">
+                    <p className="text-[10px] text-primary font-black uppercase tracking-widest text-center">
+                      ConfiguraciÃ³n: 1 Unidad = {selectedProduct.pesoUnitarioKg} kg
+                    </p>
+                    <p className="text-sm text-muted-foreground font-bold text-center">
+                      CÃLCULO: <span className="text-foreground">{value || 0} Unid</span> Ã— <span className="text-foreground">{selectedProduct.pesoUnitarioKg} Kg</span> = <span className="text-primary font-black text-lg">{(Number(value || 0) * selectedProduct.pesoUnitarioKg).toFixed(2)} Kg reales</span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-medium text-center italic">
+                      Estos {(Number(value || 0) * selectedProduct.pesoUnitarioKg).toFixed(2)} Kg se restarÃ¡n de los {(stockActual || 0) * selectedProduct.pesoUnitarioKg} Kg totales en stock.
+                    </p>
+                  </div>
+              )}
 
               {type === 'weight' && (
                 <div className="space-y-2">
@@ -279,7 +347,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                         className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-2xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
                         placeholder="0.0"
                       />
-                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-sm uppercase">°C</span>
+                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-sm uppercase">Â°C</span>
                     </div>
                   </div>
                   <div className="space-y-2">

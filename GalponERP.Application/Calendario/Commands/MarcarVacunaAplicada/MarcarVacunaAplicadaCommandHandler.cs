@@ -10,17 +10,20 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
 {
     private readonly ICalendarioSanitarioRepository _calendarioRepository;
     private readonly IInventarioRepository _inventarioRepository;
+    private readonly IProductoRepository _productoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserContext _currentUserContext;
 
     public MarcarVacunaAplicadaCommandHandler(
         ICalendarioSanitarioRepository calendarioRepository,
         IInventarioRepository inventarioRepository,
+        IProductoRepository productoRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserContext currentUserContext)
     {
         _calendarioRepository = calendarioRepository;
         _inventarioRepository = inventarioRepository;
+        _productoRepository = productoRepository;
         _unitOfWork = unitOfWork;
         _currentUserContext = currentUserContext;
     }
@@ -42,6 +45,12 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
         if (!actividad.ProductoIdRecomendado.HasValue)
         {
             throw new Exception("La actividad no tiene un producto recomendado asignado.");
+        }
+
+        var producto = await _productoRepository.ObtenerPorIdAsync(actividad.ProductoIdRecomendado.Value);
+        if (producto == null)
+        {
+            throw new Exception("El producto recomendado no existe.");
         }
 
         var usuarioId = _currentUserContext.UsuarioId;
@@ -74,6 +83,10 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
 
         _calendarioRepository.Actualizar(actividad);
         _inventarioRepository.RegistrarMovimiento(movimiento);
+
+        // 4. Actualizar el stock en Kg cacheado en el Producto
+        producto.ActualizarStock(request.CantidadConsumida, TipoMovimiento.Salida);
+        _productoRepository.Actualizar(producto);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

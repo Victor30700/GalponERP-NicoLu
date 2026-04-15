@@ -16,8 +16,12 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
             .IsRequired()
             .HasMaxLength(150);
 
-        builder.Property(p => p.EquivalenciaEnKg)
+        builder.Property(p => p.PesoUnitarioKg)
             .HasPrecision(18, 4);
+
+        builder.Property(p => p.StockActualKg)
+            .HasPrecision(18, 4)
+            .HasDefaultValue(0);
 
         builder.Property(p => p.UmbralMinimo)
             .HasPrecision(18, 2)

@@ -36,6 +36,25 @@ public class ActualizarMovimientoCommandHandler : IRequestHandler<ActualizarMovi
             throw new Exception("El producto no existe.");
         }
 
+        // 1. Reversar el impacto anterior en el StockActualKg del producto original
+        if (movimiento.ProductoId == request.ProductoId)
+        {
+            // Mismo producto, solo ajustamos la diferencia
+            producto.ActualizarStock(-movimiento.Cantidad, movimiento.Tipo);
+            producto.ActualizarStock(request.Cantidad, movimiento.Tipo);
+        }
+        else
+        {
+            // Diferente producto, reversamos el viejo y aplicamos al nuevo
+            var productoAnterior = await _productoRepository.ObtenerPorIdAsync(movimiento.ProductoId);
+            if (productoAnterior != null)
+            {
+                productoAnterior.ActualizarStock(-movimiento.Cantidad, movimiento.Tipo);
+                _productoRepository.Actualizar(productoAnterior);
+            }
+            producto.ActualizarStock(request.Cantidad, movimiento.Tipo);
+        }
+
         decimal costoTotalConsumo = request.Cantidad * producto.CostoUnitarioActual;
 
         movimiento.Actualizar(
@@ -46,6 +65,7 @@ public class ActualizarMovimientoCommandHandler : IRequestHandler<ActualizarMovi
             new Moneda(costoTotalConsumo)
         );
 
+        _productoRepository.Actualizar(producto);
         movimiento.SetAuditoriaModificacion(DateTime.UtcNow, request.UsuarioId);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

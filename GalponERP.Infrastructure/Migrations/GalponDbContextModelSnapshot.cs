@@ -1156,10 +1156,6 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasDefaultValue(0m);
 
-                    b.Property<decimal>("EquivalenciaEnKg")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
-
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
 
@@ -1173,6 +1169,16 @@ namespace GalponERP.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<decimal>("PesoUnitarioKg")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("StockActualKg")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasDefaultValue(0m);
 
                     b.Property<decimal>("UmbralMinimo")
                         .ValueGeneratedOnAdd()

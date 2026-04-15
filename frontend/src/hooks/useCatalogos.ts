@@ -16,7 +16,7 @@ export interface ProductoCatalogo {
   categoriaNombre: string;
   unidadMedidaId: string;
   unidadMedidaNombre: string;
-  equivalenciaEnKg: number;
+  pesoUnitarioKg: number;
   umbralMinimo: number;
   isActive: boolean;
 }

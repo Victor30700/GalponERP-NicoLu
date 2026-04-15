@@ -67,7 +67,7 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
         decimal stockTotalAlimentoKg = 0;
         decimal consumoDiarioGlobalKg = 0;
 
-        // Calcular Precios Promedios para Inversión
+        // Calcular Precios Promedios para InversiÃ³n
         var preciosPromedios = todosLosMovimientos
             .Where(m => (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.Compra) && m.CostoTotal != null)
             .GroupBy(m => m.ProductoId)
@@ -86,10 +86,10 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
                 alertasStock.Add(new AlertaStockDashboardDto(p.Nombre, stockActual, p.UmbralMinimo));
             }
 
-            // Lógica específica para Alimento (Alertas de Días Restantes)
+            // LÃ³gica especÃ­fica para Alimento (Alertas de DÃ­as Restantes)
             if (p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
             {
-                stockTotalAlimentoKg += stockActual * p.EquivalenciaEnKg;
+                stockTotalAlimentoKg += stockActual * p.PesoUnitarioKg;
                 
                 foreach (var lote in lotesActivos)
                 {
@@ -99,7 +99,7 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
                     var diasDeVida = (DateTime.UtcNow - lote.FechaIngreso).TotalDays;
                     if (diasDeVida < 1) diasDeVida = 1;
 
-                    var totalConsumidoLoteKg = movimientosLote.Sum(m => m.Cantidad * p.EquivalenciaEnKg);
+                    var totalConsumidoLoteKg = movimientosLote.Sum(m => m.Cantidad * p.PesoUnitarioKg);
                     consumoDiarioGlobalKg += totalConsumidoLoteKg / (decimal)diasDeVida;
                 }
             }
@@ -123,7 +123,7 @@ public class ObtenerResumenDashboardQueryHandler : IRequestHandler<ObtenerResume
             tareasHoy += calendario.Count(c => c.DiaDeAplicacion == diaActualLote && c.Estado == EstadoCalendario.Pendiente);
         }
 
-        // 6. Inversión Total en Curso
+        // 6. InversiÃ³n Total en Curso
         decimal inversionTotal = 0;
         foreach (var lote in lotesActivos)
         {

@@ -10,8 +10,10 @@ public record CrearProductoCommand(
     string Nombre,
     Guid CategoriaProductoId,
     Guid UnidadMedidaId,
-    decimal EquivalenciaEnKg,
-    decimal UmbralMinimo = 0) : IRequest<Guid>;
+    decimal PesoUnitarioKg,
+    decimal UmbralMinimo = 0,
+    decimal StockInicial = 0,
+    decimal? EquivalenciaEnKg = null) : IRequest<Guid>;
 
 public class CrearProductoCommandValidator : AbstractValidator<CrearProductoCommand>
 {
@@ -27,36 +29,69 @@ public class CrearProductoCommandValidator : AbstractValidator<CrearProductoComm
         RuleFor(x => x.UnidadMedidaId)
             .NotEmpty().WithMessage("La unidad de medida es obligatoria.");
             
-        RuleFor(x => x.EquivalenciaEnKg)
-            .GreaterThan(0).WithMessage("La equivalencia en Kg debe ser mayor a cero.");
+        RuleFor(x => x.PesoUnitarioKg)
+            .GreaterThan(0).WithMessage("El peso unitario en Kg debe ser mayor a cero.");
 
         RuleFor(x => x.UmbralMinimo)
             .GreaterThanOrEqualTo(0).WithMessage("El umbral mínimo no puede ser negativo.");
+
+        RuleFor(x => x.StockInicial)
+            .GreaterThanOrEqualTo(0).WithMessage("El stock inicial no puede ser negativo.");
     }
 }
 
 public class CrearProductoCommandHandler : IRequestHandler<CrearProductoCommand, Guid>
 {
     private readonly IProductoRepository _productoRepository;
+    private readonly IInventarioRepository _inventarioRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public CrearProductoCommandHandler(IProductoRepository productoRepository, IUnitOfWork unitOfWork)
+    public CrearProductoCommandHandler(
+        IProductoRepository productoRepository, 
+        IInventarioRepository inventarioRepository,
+        IUnitOfWork unitOfWork,
+        ICurrentUserContext currentUserContext)
     {
         _productoRepository = productoRepository;
+        _inventarioRepository = inventarioRepository;
         _unitOfWork = unitOfWork;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<Guid> Handle(CrearProductoCommand request, CancellationToken cancellationToken)
     {
+        // El peso total inicial puede venir del DTO (como EquivalenciaEnKg según el usuario)
+        // o calcularse como StockInicial * PesoUnitarioKg
+        decimal stockInicialKg = request.EquivalenciaEnKg ?? (request.StockInicial * request.PesoUnitarioKg);
+
         var producto = new Producto(
             Guid.NewGuid(),
             request.Nombre,
             request.CategoriaProductoId,
             request.UnidadMedidaId,
-            request.EquivalenciaEnKg,
-            request.UmbralMinimo);
+            request.PesoUnitarioKg,
+            request.UmbralMinimo,
+            0, // Costo inicial
+            stockInicialKg);
 
         _productoRepository.Agregar(producto);
+
+        if (request.StockInicial > 0)
+        {
+            var movimiento = new MovimientoInventario(
+                Guid.NewGuid(),
+                producto.Id,
+                null, // No asociado a lote
+                request.StockInicial,
+                TipoMovimiento.Entrada,
+                DateTime.UtcNow,
+                _currentUserContext.UsuarioId ?? Guid.Empty,
+                "Carga inicial de stock al crear producto"
+            );
+            _inventarioRepository.RegistrarMovimiento(movimiento);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return producto.Id;

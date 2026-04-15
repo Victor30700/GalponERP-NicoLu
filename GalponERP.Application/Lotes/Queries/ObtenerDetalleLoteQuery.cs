@@ -81,13 +81,13 @@ public class ObtenerDetalleLoteQueryHandler : IRequestHandler<ObtenerDetalleLote
         var movimientos = await _inventarioRepository.ObtenerPorLoteIdAsync(request.LoteId);
         var productos = await _productoRepository.ObtenerTodosAsync();
 
-        // Cálculos financieros
+        // CÃ¡lculos financieros
         var totalVentas = ventas.Sum(v => v.Total.Monto);
         var totalGastos = gastos.Sum(g => g.Monto.Monto);
         var costoPollitos = lote.CantidadInicial * lote.CostoUnitarioPollito.Monto;
         var utilidad = totalVentas - totalGastos - costoPollitos;
 
-        // Cálculos FCR y Peso
+        // CÃ¡lculos FCR y Peso
         var ultimoPesaje = pesajes.OrderByDescending(p => p.Fecha).FirstOrDefault();
         decimal pesoPromedioActual = ultimoPesaje?.PesoPromedioGramos ?? 0;
 
@@ -97,7 +97,7 @@ public class ObtenerDetalleLoteQueryHandler : IRequestHandler<ObtenerDetalleLote
         
         var productosAlimento = productos
             .Where(p => p.Categoria?.Nombre.Equals("Alimento", StringComparison.OrdinalIgnoreCase) == true)
-            .ToDictionary(p => p.Id, p => p.EquivalenciaEnKg);
+            .ToDictionary(p => p.Id, p => p.PesoUnitarioKg);
 
         var alimentoConsumidoKg = movimientos
             .Where(m => productosAlimento.ContainsKey(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
