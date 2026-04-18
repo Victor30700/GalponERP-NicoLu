@@ -40,6 +40,7 @@ public class ObtenerProductoPorIdQueryHandler : IRequestHandler<ObtenerProductoP
             p.UmbralMinimo,
             stock,
             p.StockActualKg,
-            p.IsActive);
+            p.IsActive,
+            p.Unidad?.Tipo ?? Domain.Entities.TipoUnidad.UnidadFisica);
     }
 }

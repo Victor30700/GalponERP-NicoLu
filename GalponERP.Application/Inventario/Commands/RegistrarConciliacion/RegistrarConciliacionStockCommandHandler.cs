@@ -59,6 +59,7 @@ public class RegistrarConciliacionStockCommandHandler : IRequestHandler<Registra
                 tipoAjuste,
                 DateTime.UtcNow,
                 request.UsuarioId,
+                producto.PesoUnitarioKg, // Capturamos el peso actual como HISTÓRICO
                 item.Nota ?? "Conciliación de inventario físico",
                 new Moneda(costoTotalAjuste)
             );

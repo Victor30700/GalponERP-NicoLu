@@ -55,6 +55,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
                 if (usuario != null)
                 {
+                    // Si el usuario está desactivado por el administrador (Active = 0)
+                    // o eliminado físicamente (aunque aquí ya lo filtraría el IsActive del Repo)
+                    if (usuario.Active == 0)
+                    {
+                        context.Fail("El usuario no está activo en el sistema.");
+                        return;
+                    }
+
                     currentUserContext?.SetUser(usuario.Id, firebaseUid);
                     
                     var claims = new List<System.Security.Claims.Claim>
@@ -63,6 +71,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     };
                     var appIdentity = new System.Security.Claims.ClaimsIdentity(claims);
                     context.Principal?.AddIdentity(appIdentity);
+                }
+                else
+                {
+                    // Si el usuario no existe en la DB local (o está soft-deleted)
+                    context.Fail("Usuario no registrado o inactivo.");
                 }
             }
         };

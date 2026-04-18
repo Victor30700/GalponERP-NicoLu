@@ -53,7 +53,8 @@ export default function ConfiguracionPage() {
         fechaNacimiento: formData.fechaNacimiento ? new Date(formData.fechaNacimiento).toISOString() : new Date().toISOString(),
         direccion: formData.direccion || "",
         profesion: formData.profesion || "",
-        telefono: formData.telefono || ""
+        telefono: formData.telefono || "",
+        active: me.active
       });
       swal.toast("Perfil actualizado con éxito", "success");
     } catch (error: any) {

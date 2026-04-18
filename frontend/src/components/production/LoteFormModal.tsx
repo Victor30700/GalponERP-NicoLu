@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useLotes, useLote } from '@/hooks/useLotes'
+import { useGalpones } from '@/hooks/useGalpones'
+import { usePlantillas } from '@/hooks/usePlantillas'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, Bird, Calendar, Hash, DollarSign, ClipboardList } from 'lucide-react'
+import { X, Save, Bird, Hash, DollarSign, ClipboardList } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface LoteFormModalProps {
@@ -14,8 +15,11 @@ interface LoteFormModalProps {
 }
 
 export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
-  const queryClient = useQueryClient()
   const isEditing = !!lote
+  const { crearLote } = useLotes()
+  const { actualizarLote } = useLote(lote?.id || '')
+  const { galpones } = useGalpones()
+  const { plantillas } = usePlantillas()
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -48,38 +52,6 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
     }
   }, [lote, isOpen])
 
-  const { data: galpones = [] } = useQuery({
-    queryKey: ['galpones'],
-    queryFn: () => api.get<any[]>('/api/Galpones'),
-    enabled: isOpen
-  })
-
-  const { data: plantillas = [] } = useQuery({
-    queryKey: ['plantillas'],
-    queryFn: () => api.get<any[]>('/api/Plantillas'),
-    enabled: isOpen
-  })
-
-  const mutation = useMutation({
-    mutationFn: (data: any) => {
-      if (isEditing) {
-        // Omitir plantillaSanitariaId ya que ActualizarLoteCommand no lo soporta
-        const { plantillaSanitariaId, ...updateData } = data
-        return api.put(`/api/Lotes/${lote.id}`, { ...updateData, id: lote.id })
-      }
-      return api.post('/api/Lotes', data)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lotes'] })
-      if (isEditing) {
-        queryClient.invalidateQueries({ queryKey: ['lote', lote.id] })
-      }
-      toast.success(isEditing ? 'Lote actualizado correctamente' : 'Lote creado correctamente')
-      onClose()
-    },
-    onError: (err: any) => toast.error(err.message || 'Error al procesar la solicitud'),
-  })
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.galponId || !formData.fechaIngreso || !formData.cantidadInicial || !formData.costoUnitarioPollito) {
@@ -94,8 +66,28 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
       fechaIngreso: new Date(formData.fechaIngreso).toISOString()
     }
 
-    mutation.mutate(payload)
+    if (isEditing) {
+      // Omitir plantillaSanitariaId ya que ActualizarLoteCommand no lo soporta en el backend
+      const { plantillaSanitariaId, ...updateData } = payload
+      actualizarLote.mutate({ ...updateData, id: lote.id }, {
+        onSuccess: () => {
+          toast.success('Lote actualizado correctamente')
+          onClose()
+        },
+        onError: (err: any) => toast.error(err.message || 'Error al actualizar lote')
+      })
+    } else {
+      crearLote.mutate(payload, {
+        onSuccess: () => {
+          toast.success('Lote creado correctamente')
+          onClose()
+        },
+        onError: (err: any) => toast.error(err.message || 'Error al crear lote')
+      })
+    }
   }
+
+  const isPending = crearLote.isPending || actualizarLote.isPending
 
   return (
     <AnimatePresence>
@@ -223,7 +215,7 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   className="w-full py-5 bg-primary hover:bg-primary/90 text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-primary/20 active:scale-95"
                 >
                   <Save size={24} />

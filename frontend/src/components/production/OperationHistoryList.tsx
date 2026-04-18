@@ -97,7 +97,7 @@ export function OperationHistoryList({ data, type, onEdit, onDelete, isLoading }
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-black text-foreground">
-                    {item[config.valueKey]} {config.unit}
+                    {Number(item[config.valueKey]).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {config.unit}
                   </span>
                   {type === 'weight' && item.cantidadMuestreada && (
                     <span className="text-[10px] font-black text-muted-foreground uppercase bg-muted px-2 py-0.5 rounded-full">

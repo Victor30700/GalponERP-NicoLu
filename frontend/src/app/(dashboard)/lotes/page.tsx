@@ -1,52 +1,35 @@
 'use client'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useLotes, Lote } from '@/hooks/useLotes'
 import { UniversalGrid } from '@/components/shared/UniversalGrid'
-import { Bird, Calendar, Hash, ArrowRight, Filter, RefreshCw, Plus, Search } from 'lucide-react'
+import { Bird, Calendar, ArrowRight, RefreshCw, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { LoteFormModal } from '@/components/production/LoteFormModal'
-
-interface Lote {
-// ... (rest of interface)
-
-  nombre: string
-  nombreLote: string
-  galponNombre: string
-  fechaInicio: string
-  cantidadInicial: number
-  avesVivas: number
-  estado: string
-  fcrActual: number
-  mortalidadPorcentaje: number
-}
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 export default function LotesPage() {
-  const queryClient = useQueryClient()
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [soloActivos, setSoloActivos] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [mes, setMes] = useState<number | ''>('')
   const [anio, setAnio] = useState<number | ''>('')
 
-  const { data: lotes = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['lotes', soloActivos, busqueda, mes, anio],
-    queryFn: () => {
-      const params = new URLSearchParams()
-      params.append('soloActivos', soloActivos.toString())
-      if (busqueda) params.append('busqueda', busqueda)
-      if (mes) params.append('mes', mes.toString())
-      if (anio) params.append('anio', anio.toString())
-      
-      return api.get<Lote[]>(`/api/Lotes?${params.toString()}`)
-    },
+  const { lotes, isLoading, isFetching, refresh } = useLotes({
+    soloActivos,
+    busqueda,
+    mes,
+    anio
   })
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['lotes'] })
-    refetch()
+    refresh()
   }
 
   const columns = [

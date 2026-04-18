@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, User, Mail, Shield, Lock, Phone } from 'lucide-react'
+import { X, Save, User, Mail, Shield, Lock, Phone, MapPin, Briefcase, Calendar, CheckCircle2, XCircle } from 'lucide-react'
 import { useUsuarios, UserRole, CreateUsuarioRequest } from '@/hooks/useUsuarios'
 import { useSwal } from '@/hooks/useSwal'
 
@@ -26,7 +26,8 @@ export function UsuarioFormModal({ isOpen, onClose, usuario }: UsuarioFormModalP
     telefono: '',
     direccion: '',
     profesion: '',
-    fechaNacimiento: ''
+    fechaNacimiento: '',
+    active: 1
   })
 
   useEffect(() => {
@@ -40,7 +41,8 @@ export function UsuarioFormModal({ isOpen, onClose, usuario }: UsuarioFormModalP
         telefono: usuario.telefono || '',
         direccion: usuario.direccion || '',
         profesion: usuario.profesion || '',
-        fechaNacimiento: usuario.fechaNacimiento ? usuario.fechaNacimiento.split('T')[0] : ''
+        fechaNacimiento: usuario.fechaNacimiento ? usuario.fechaNacimiento.split('T')[0] : '',
+        active: usuario.active ?? 1
       })
     } else {
       setFormData({
@@ -52,7 +54,8 @@ export function UsuarioFormModal({ isOpen, onClose, usuario }: UsuarioFormModalP
         telefono: '',
         direccion: '',
         profesion: '',
-        fechaNacimiento: ''
+        fechaNacimiento: '',
+        active: 1
       })
     }
   }, [usuario, isOpen])
@@ -66,21 +69,26 @@ export function UsuarioFormModal({ isOpen, onClose, usuario }: UsuarioFormModalP
     }
 
     try {
+      const payload = {
+        ...formData,
+        apellidos: formData.apellidos || "",
+        direccion: formData.direccion || "",
+        profesion: formData.profesion || "",
+        telefono: formData.telefono || "",
+        active: formData.active,
+        // Aseguramos formato ISO para la fecha
+        fechaNacimiento: formData.fechaNacimiento ? new Date(formData.fechaNacimiento).toISOString() : new Date().toISOString()
+      }
+
       if (isEditing) {
         await actualizarUsuario.mutateAsync({
           id: usuario.id,
-          email: formData.email,
-          nombre: formData.nombre,
-          apellidos: formData.apellidos || "",
-          fechaNacimiento: formData.fechaNacimiento ? new Date(formData.fechaNacimiento).toISOString() : new Date().toISOString(),
-          direccion: formData.direccion || "",
-          profesion: formData.profesion || "",
-          telefono: formData.telefono || "",
-          rol: formData.rol
+          ...payload,
+          email: formData.email, // Por si acaso el backend no permite cambiar email o lo requiere
         })
         swal.toast('Usuario actualizado correctamente', 'success')
       } else {
-        await crearUsuario.mutateAsync(formData)
+        await crearUsuario.mutateAsync(payload)
         swal.toast('Usuario creado correctamente', 'success')
       }
       onClose()
@@ -204,6 +212,79 @@ export function UsuarioFormModal({ isOpen, onClose, usuario }: UsuarioFormModalP
                       onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                       className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Dirección</label>
+                  <div className="relative">
+                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={formData.direccion}
+                      onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Profesión</label>
+                  <div className="relative">
+                    <Briefcase size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={formData.profesion}
+                      onChange={(e) => setFormData({ ...formData, profesion: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Fecha de Nacimiento</label>
+                  <div className="relative">
+                    <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="date"
+                      value={formData.fechaNacimiento}
+                      onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4 md:col-span-2 p-6 bg-muted/30 rounded-[2rem] border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Estado del Usuario</label>
+                      <p className="text-sm text-muted-foreground font-medium">
+                        {formData.active === 1 
+                          ? 'El usuario puede acceder al sistema' 
+                          : 'El acceso al sistema está revocado'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, active: formData.active === 1 ? 0 : 1 })}
+                      className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all ${
+                        formData.active === 1 
+                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                          : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                      }`}
+                    >
+                      {formData.active === 1 ? (
+                        <>
+                          <CheckCircle2 size={20} />
+                          <span>ACTIVO</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={20} />
+                          <span>INACTIVO</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

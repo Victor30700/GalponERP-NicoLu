@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
+import { useAgentes, useConversacion, ChatMessage, Conversacion } from '@/hooks/useAgentes'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Send, 
@@ -21,7 +22,6 @@ import {
   X,
   Loader2
 } from 'lucide-react'
-import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { confirmDestructiveAction } from '@/lib/swal'
@@ -34,19 +34,10 @@ interface Message {
   isVoice?: boolean
 }
 
-interface Conversacion {
-  id: string
-  titulo: string
-  fechaInicio: string
-  totalMensajes: number
-}
-
 export default function ChatPage() {
-  const { profile, user, loading } = useAuth()
-  const router = useRouter()
+  const { profile, loading: authLoading } = useAuth()
   
   // State
-  const [conversaciones, setConversaciones] = useState<Conversacion[]>([])
   const [conversacionId, setConversacionId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -54,60 +45,52 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false)
   const [isAudioEnabled, setIsAudioEnabled] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true)
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
 
-  // Load conversations on mount
+  // Hooks
+  const { 
+    conversaciones, 
+    isLoadingConversaciones, 
+    enviarMensaje, 
+    uploadVoice, 
+    eliminarConversacion 
+  } = useAgentes()
+
+  const { mensajes: historial, isLoading: isLoadingMessages } = useConversacion(conversacionId || '')
+
+  // Sync historical messages
   useEffect(() => {
-    if (profile) {
-      fetchConversaciones()
+    if (!conversacionId) {
+      if (messages.length > 0) setMessages([]);
+      return;
     }
-  }, [profile])
+
+    const formattedMessages: Message[] = historial.map((m) => ({
+      id: m.id,
+      role: m.rol === 'user' ? 'user' : 'assistant',
+      content: m.contenido,
+      timestamp: new Date(m.fecha)
+    }));
+    
+    // Only set messages if they are actually different (simple length check or content check)
+    // To be safe and simple, we can just set them, provided historial is stable.
+    setMessages(formattedMessages);
+  }, [historial, conversacionId]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom()
   }, [messages, isTyping])
 
-  const fetchConversaciones = async () => {
-    try {
-      setIsLoadingConversations(true)
-      const data = await api.get<Conversacion[]>('/api/Agentes/conversaciones')
-      setConversaciones(data)
-    } catch (error) {
-      console.error("Error fetching conversations:", error)
-    } finally {
-      setIsLoadingConversations(false)
-    }
+  const loadConversacion = (id: string) => {
+    setConversacionId(id)
+    if (window.innerWidth < 768) setIsSidebarOpen(false)
   }
 
-  const loadConversacion = async (id: string) => {
-    try {
-      setIsLoadingMessages(true)
-      setConversacionId(id)
-      const data = await api.get<any>(`/api/Agentes/conversaciones/${id}`)
-      
-      const formattedMessages: Message[] = data.mensajes.map((m: any) => ({
-        id: m.id,
-        role: m.rol === 'user' ? 'user' : 'assistant',
-        content: m.contenido,
-        timestamp: new Date(m.fecha)
-      }))
-      
-      setMessages(formattedMessages)
-      if (window.innerWidth < 768) setIsSidebarOpen(false)
-    } catch (error) {
-      toast.error("No se pudo cargar la conversación")
-    } finally {
-      setIsLoadingMessages(false)
-    }
-  }
-
-  const deleteConversacion = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteConversacion = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     
     const result = await confirmDestructiveAction(
@@ -117,8 +100,7 @@ export default function ChatPage() {
 
     if (result.isConfirmed) {
       try {
-        await api.delete(`/api/Agentes/conversaciones/${id}`)
-        setConversaciones(prev => prev.filter(c => c.id !== id))
+        await eliminarConversacion.mutateAsync(id)
         if (conversacionId === id) {
           setConversacionId(null)
           setMessages([])
@@ -156,9 +138,9 @@ export default function ChatPage() {
     setIsTyping(true)
 
     try {
-      const response = await api.post<{ respuesta: string, conversacionId: string }>('/api/Agentes/chat', {
+      const response = await enviarMensaje.mutateAsync({
         mensaje: messageText,
-        conversacionId: conversacionId
+        conversacionId: conversacionId || undefined
       })
 
       const botMsg: Message = {
@@ -172,7 +154,6 @@ export default function ChatPage() {
       
       if (!conversacionId) {
         setConversacionId(response.conversacionId)
-        fetchConversaciones() // Refresh list to show new chat
       }
     } catch (error: any) {
       toast.error("Error al conectar con el asistente")
@@ -215,20 +196,12 @@ export default function ChatPage() {
 
   const sendVoiceMessage = async (blob: Blob) => {
     setIsTyping(true)
-    const formData = new FormData()
-    formData.append('Audio', blob, 'recording.wav')
-    if (conversacionId) formData.append('ConversacionId', conversacionId)
 
     try {
-      const idToken = await user?.getIdToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5167'}/api/voice/upload`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${idToken}` },
-        body: formData
+      const data = await uploadVoice.mutateAsync({
+        audio: blob,
+        conversacionId: conversacionId || undefined
       })
-
-      if (!response.ok) throw new Error("Error en el servidor de voz")
-      const data = await response.json()
       
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -248,7 +221,6 @@ export default function ChatPage() {
       setMessages(prev => [...prev, userMsg, botMsg])
       if (!conversacionId) {
         setConversacionId(data.conversacionId)
-        fetchConversaciones()
       }
 
       if (isAudioEnabled && data.respuestaAudioBase64) {
@@ -262,7 +234,7 @@ export default function ChatPage() {
     }
   }
 
-  if (loading) return null
+  if (authLoading) return null
 
   return (
     <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] glass border border-border rounded-3xl overflow-hidden shadow-2xl relative">
@@ -285,7 +257,7 @@ export default function ChatPage() {
           <div className="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar">
             <h3 className="px-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Historial</h3>
             
-            {isLoadingConversations ? (
+            {isLoadingConversaciones ? (
               <div className="flex justify-center p-8"><Loader2 className="animate-spin text-muted-foreground" /></div>
             ) : conversaciones.length === 0 ? (
               <p className="px-3 text-xs text-slate-600 italic">No hay chats previos</p>
@@ -305,7 +277,7 @@ export default function ChatPage() {
                     <p className="text-[10px] opacity-40">{c.totalMensajes} mensajes</p>
                   </div>
                   <button 
-                    onClick={(e) => deleteConversacion(c.id, e)}
+                    onClick={(e) => handleDeleteConversacion(c.id, e)}
                     className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-opacity"
                   >
                     <Trash2 size={14} />

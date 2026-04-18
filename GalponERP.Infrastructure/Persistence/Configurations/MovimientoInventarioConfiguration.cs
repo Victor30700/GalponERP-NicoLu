@@ -15,7 +15,12 @@ public class MovimientoInventarioConfiguration : IEntityTypeConfiguration<Movimi
 
         builder.Property(m => m.Cantidad)
             .IsRequired()
-            .HasPrecision(18, 2);
+            .HasPrecision(18, 6);
+
+        builder.Property(m => m.PesoUnitarioHistorico)
+            .IsRequired()
+            .HasPrecision(18, 6)
+            .HasDefaultValue(0);
 
         builder.Property(m => m.Tipo)
             .HasConversion<string>()

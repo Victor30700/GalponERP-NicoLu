@@ -146,7 +146,8 @@ public class GestionCatalogosPlugin
                 pFull.CategoriaId,
                 pFull.UnidadMedidaId,
                 equivalenciaKg > 0 ? equivalenciaKg : pFull.PesoUnitarioKg,
-                umbralMinimo >= 0 ? umbralMinimo : pFull.UmbralMinimo);
+                umbralMinimo >= 0 ? umbralMinimo : pFull.UmbralMinimo,
+                pFull.StockActual);
 
             await _mediator.Send(command);
             return $"Producto '{pFull.Nombre}' actualizado correctamente.";

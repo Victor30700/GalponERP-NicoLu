@@ -78,6 +78,7 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
             TipoMovimiento.Salida,
             DateTime.UtcNow,
             usuarioId.Value,
+            producto.PesoUnitarioKg, // Capturamos el peso actual como HISTÓRICO
             $"Aplicación de vacuna: {actividad.DescripcionTratamiento}"
         );
 

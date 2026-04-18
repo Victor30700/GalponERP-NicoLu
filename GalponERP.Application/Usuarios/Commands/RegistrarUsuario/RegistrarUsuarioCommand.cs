@@ -11,5 +11,6 @@ public record RegistrarUsuarioCommand(
     DateTime FechaNacimiento,
     string Direccion,
     string Profesion,
-    string Telefono,
-    RolGalpon Rol) : IRequest<Guid>;
+    string? Telefono,
+    RolGalpon Rol,
+    int Active = 1) : IRequest<Guid>;

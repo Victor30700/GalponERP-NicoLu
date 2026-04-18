@@ -19,8 +19,9 @@ public class Usuario : Entity
     public string? CodigoVinculacion { get; private set; }
     public DateTime? FechaExpiracionCodigo { get; private set; }
     public RolGalpon Rol { get; private set; }
+    public int Active { get; private set; }
 
-    public Usuario(Guid id, string firebaseUid, string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string telefono, RolGalpon rol) : base(id)
+    public Usuario(Guid id, string firebaseUid, string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string? telefono, RolGalpon rol, int active = 1) : base(id)
     {
         if (string.IsNullOrWhiteSpace(firebaseUid))
             throw new ArgumentException("El FirebaseUid es obligatorio.");
@@ -38,8 +39,10 @@ public class Usuario : Entity
         FechaNacimiento = fechaNacimiento;
         Direccion = direccion;
         Profesion = profesion;
-        Telefono = telefono;
+        Telefono = string.IsNullOrWhiteSpace(telefono) ? null : telefono;
         Rol = rol;
+        Active = active;
+        IsActive = active == 1;
     }
 
     public void GenerarCodigoVinculacion()
@@ -56,7 +59,7 @@ public class Usuario : Entity
 
     public void VincularWhatsApp(string numero)
     {
-        WhatsAppNumero = numero;
+        WhatsAppNumero = string.IsNullOrWhiteSpace(numero) ? null : numero;
         CodigoVinculacion = null;
         FechaExpiracionCodigo = null;
     }
@@ -69,7 +72,7 @@ public class Usuario : Entity
     // Constructor para EF Core
     private Usuario() : base() { }
 
-    public void ActualizarPerfil(string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string telefono, RolGalpon rol)
+    public void ActualizarPerfil(string email, string nombre, string apellidos, DateTime fechaNacimiento, string direccion, string profesion, string? telefono, RolGalpon rol)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("El email es obligatorio.");
@@ -83,7 +86,7 @@ public class Usuario : Entity
         FechaNacimiento = fechaNacimiento;
         Direccion = direccion;
         Profesion = profesion;
-        Telefono = telefono;
+        Telefono = string.IsNullOrWhiteSpace(telefono) ? null : telefono;
         Rol = rol;
     }
 
@@ -97,5 +100,11 @@ public class Usuario : Entity
     public void ActualizarRol(RolGalpon nuevoRol)
     {
         Rol = nuevoRol;
+    }
+
+    public void ActualizarEstado(int active)
+    {
+        Active = active;
+        IsActive = active == 1;
     }
 }

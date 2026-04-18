@@ -43,9 +43,6 @@ public class AnularVentaCommandHandler : IRequestHandler<AnularVentaCommand, Uni
         lote.AnularVenta(venta.CantidadPollos);
 
         // 3. Persistir cambios de manera atómica
-        _ventaRepository.Actualizar(venta);
-        _loteRepository.Actualizar(lote);
-
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

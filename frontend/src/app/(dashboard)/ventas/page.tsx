@@ -34,6 +34,8 @@ import * as z from 'zod'
 import { useCatalogos } from '@/hooks/useCatalogos'
 import { useVentas, Pago, Venta } from '@/hooks/useVentas'
 import { useSwal } from '@/hooks/useSwal'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 // --- Interfaces ---
 
@@ -81,12 +83,15 @@ type PagoFormValues = z.infer<typeof pagoSchema>
 // --- Main Component ---
 
 export default function VentasPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [activeTab, setActiveTab] = useState<'pendientes' | 'todas'>('pendientes')
   const [isVentaModalOpen, setIsVentaModalOpen] = useState(false)
   const [isPagoModalOpen, setIsPagoModalOpen] = useState(false)
   const [isDetalleModalOpen, setIsDetalleModalOpen] = useState(false)
   const [selectedVenta, setSelectedVenta] = useState<string | null>(null)
-  const queryClient = useQueryClient()
   const { confirm } = useSwal()
 
   // Custom Hook
@@ -110,7 +115,7 @@ export default function VentasPage() {
     },
   })
 
-  const { clientes, isLoadingClientes } = useCatalogos()
+  const { clientes } = useCatalogos()
 
   const { data: lotes = [] } = useQuery({
     queryKey: ['lotes', 'activos'],
@@ -218,7 +223,7 @@ export default function VentasPage() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Por Cobrar</p>
-            <p className="text-2xl font-black text-foreground">${totalPorCobrar.toLocaleString()}</p>
+            <p className="text-2xl font-black text-foreground">Bs. {totalPorCobrar.toLocaleString()}</p>
           </div>
         </div>
         <div className="glass border border-border p-4 rounded-2xl flex items-center gap-4">
@@ -289,7 +294,7 @@ export default function VentasPage() {
                   header: 'Total', 
                   accessor: (item: CuentaPorCobrar) => (
                     <span className="font-mono font-bold text-foreground">
-                      ${item.totalVenta.toLocaleString()}
+                      Bs. {item.totalVenta.toLocaleString()}
                     </span>
                   ) 
                 },
@@ -297,7 +302,7 @@ export default function VentasPage() {
                   header: 'Saldo', 
                   accessor: (item: CuentaPorCobrar) => (
                     <span className="font-mono font-bold text-red-400">
-                      ${item.saldoPendiente.toLocaleString()}
+                      Bs. {item.saldoPendiente.toLocaleString()}
                     </span>
                   ) 
                 },
@@ -338,11 +343,11 @@ export default function VentasPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-muted/50 rounded-xl border border-border">
                       <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Total</p>
-                      <p className="text-lg font-black text-foreground">${item.totalVenta.toLocaleString()}</p>
+                      <p className="text-lg font-black text-foreground">Bs. {item.totalVenta.toLocaleString()}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-xl border border-border">
                       <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Saldo</p>
-                      <p className="text-lg font-black text-red-400">${item.saldoPendiente.toLocaleString()}</p>
+                      <p className="text-lg font-black text-red-400">Bs. {item.saldoPendiente.toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -393,7 +398,7 @@ export default function VentasPage() {
                   header: 'Total', 
                   accessor: (item) => (
                     <span className="font-mono font-bold text-foreground">
-                      ${item.total.toLocaleString()}
+                      Bs. {item.total.toLocaleString()}
                     </span>
                   ) 
                 },
@@ -419,13 +424,15 @@ export default function VentasPage() {
                       >
                         <Eye size={14} />
                       </button>
-                      <button 
-                        onClick={() => handleAnularVenta(item.id)}
-                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-all"
-                        title="Anular Venta"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {!isEmpleado && (
+                        <button 
+                          onClick={() => handleAnularVenta(item.id)}
+                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-all"
+                          title="Anular Venta"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   )
                 }
@@ -448,7 +455,7 @@ export default function VentasPage() {
                   </div>
                   <div className="flex justify-between items-center pt-1">
                     <span className="text-xs text-muted-foreground uppercase font-bold">Total Venta</span>
-                    <span className="text-lg font-black text-foreground">${item.total.toLocaleString()}</span>
+                    <span className="text-lg font-black text-foreground">Bs. {item.total.toLocaleString()}</span>
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button 
@@ -457,12 +464,14 @@ export default function VentasPage() {
                     >
                       <Eye size={14} /> Ver Pagos
                     </button>
-                    <button 
-                      onClick={() => handleAnularVenta(item.id)}
-                      className="flex-1 py-2 bg-red-500/10 text-red-400 text-xs font-bold rounded-lg flex items-center justify-center gap-2"
-                    >
-                      <Trash2 size={14} /> Anular
-                    </button>
+                    {!isEmpleado && (
+                      <button 
+                        onClick={() => handleAnularVenta(item.id)}
+                        className="flex-1 py-2 bg-red-500/10 text-red-400 text-xs font-bold rounded-lg flex items-center justify-center gap-2"
+                      >
+                        <Trash2 size={14} /> Anular
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -523,7 +532,7 @@ export default function VentasPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">Precio por Kilo ($)</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Precio por Kilo (Bs.)</label>
                   <div className="relative">
                     <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input type="number" step="0.01" {...ventaForm.register('precioPorKilo', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
@@ -533,7 +542,7 @@ export default function VentasPage() {
                 <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex justify-between items-center">
                   <span className="text-blue-400 font-bold">Total Estimado:</span>
                   <span className="text-2xl font-black text-foreground">
-                    ${(ventaForm.watch('pesoTotalVendido') * ventaForm.watch('precioPorKilo') || 0).toLocaleString()}
+                    Bs. ${(ventaForm.watch('pesoTotalVendido') * ventaForm.watch('precioPorKilo') || 0).toLocaleString()}
                   </span>
                 </div>
 
@@ -565,11 +574,11 @@ export default function VentasPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-muted/50 rounded-2xl border border-border">
                       <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Total Venta</p>
-                      <p className="text-xl font-black text-foreground">${ventaDetalle.total.toLocaleString()}</p>
+                      <p className="text-xl font-black text-foreground">Bs. {ventaDetalle.total.toLocaleString()}</p>
                     </div>
                     <div className="p-4 bg-muted/50 rounded-2xl border border-border">
                       <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Saldo Pendiente</p>
-                      <p className="text-xl font-black text-red-400">${ventaDetalle.saldoPendiente.toLocaleString()}</p>
+                      <p className="text-xl font-black text-red-400">Bs. {ventaDetalle.saldoPendiente.toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -589,7 +598,7 @@ export default function VentasPage() {
                         {pagosDetalle.map((pago) => (
                           <div key={pago.id} className="p-4 bg-muted/50 rounded-xl border border-border flex justify-between items-center group">
                             <div>
-                              <p className="font-bold text-foreground">${pago.monto.toLocaleString()}</p>
+                              <p className="font-bold text-foreground">Bs. {pago.monto.toLocaleString()}</p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[10px] text-muted-foreground font-medium">{new Date(pago.fechaPago).toLocaleDateString()}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-700" />
@@ -598,12 +607,14 @@ export default function VentasPage() {
                                 </span>
                               </div>
                             </div>
-                            <button 
-                              onClick={() => handleEliminarPago(ventaDetalle.id, pago.id)}
-                              className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {!isEmpleado && (
+                              <button 
+                                onClick={() => handleEliminarPago(ventaDetalle.id, pago.id)}
+                                className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -641,7 +652,7 @@ export default function VentasPage() {
 
               <form onSubmit={pagoForm.handleSubmit(onPagoSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">Monto del Pago ($)</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Monto del Pago (Bs.)</label>
                   <div className="relative">
                     <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
                     <input type="number" step="0.01" {...pagoForm.register('monto', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground text-xl font-bold" />
@@ -711,10 +722,6 @@ export default function VentasPage() {
           </>
         )}
       </AnimatePresence>
-
     </div>
   )
 }
-
-
-

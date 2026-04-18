@@ -1,21 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
+export enum TipoUnidad {
+  Masa = 0,
+  Volumen = 1,
+  UnidadFisica = 2
+}
+
 export interface UnidadMedida {
   id: string;
   nombre: string;
   abreviatura: string;
+  tipo: TipoUnidad;
 }
 
 export interface CreateUnidadMedidaRequest {
   nombre: string;
   abreviatura: string;
+  tipo: TipoUnidad;
 }
 
 export interface UpdateUnidadMedidaRequest {
   id: string;
   nombre: string;
   abreviatura: string;
+  tipo: TipoUnidad;
 }
 
 export function useUnidadesMedida() {

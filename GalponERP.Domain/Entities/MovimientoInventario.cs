@@ -27,6 +27,12 @@ public class MovimientoInventario : Entity
     public Guid UsuarioId { get; private set; }
     
     /// <summary>
+    /// Peso unitario del producto al momento del movimiento (en Kg).
+    /// Permite mantener la integridad histórica del FCR si el producto cambia de presentación en el futuro.
+    /// </summary>
+    public decimal PesoUnitarioHistorico { get; private set; }
+
+    /// <summary>
     /// Costo total de la operación (para Entradas/Compras).
     /// </summary>
     public Moneda? CostoTotal { get; private set; }
@@ -42,6 +48,7 @@ public class MovimientoInventario : Entity
         TipoMovimiento tipo, 
         DateTime fecha, 
         Guid usuarioId, 
+        decimal pesoUnitarioHistorico,
         string? justificacion = null,
         Moneda? costoTotal = null,
         string? proveedor = null,
@@ -64,6 +71,7 @@ public class MovimientoInventario : Entity
         Fecha = fecha;
         Justificacion = justificacion;
         UsuarioId = usuarioId;
+        PesoUnitarioHistorico = pesoUnitarioHistorico;
         CostoTotal = costoTotal;
         Proveedor = proveedor;
         CompraId = compraId;

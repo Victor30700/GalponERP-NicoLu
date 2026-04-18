@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using GalponERP.Application.Inventario.Commands.EliminarMovimiento;
 using GalponERP.Application.Inventario.Commands.ActualizarMovimiento;
+using GalponERP.Application.Inventario.Commands;
 
 namespace GalponERP.Api.Controllers;
 
@@ -38,6 +39,18 @@ public class InventarioController : ControllerBase
     {
         _mediator = mediator;
         _currentUserContext = currentUserContext;
+    }
+
+    [HttpPost("ajustar-stock")]
+    [Authorize(Roles = "Admin,SubAdmin")]
+    public async Task<IActionResult> AjustarStock([FromBody] AjustarStockCommand command)
+    {
+        if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
+            return Unauthorized("Usuario no identificado.");
+
+        command.UsuarioId = _currentUserContext.UsuarioId.Value;
+        var id = await _mediator.Send(command);
+        return Ok(new { MovimientoId = id });
     }
 
     [HttpDelete("movimiento/{id}")]

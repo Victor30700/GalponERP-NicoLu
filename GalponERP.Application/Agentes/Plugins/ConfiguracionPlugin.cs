@@ -51,7 +51,8 @@ public class ConfiguracionPlugin
                 pFull.CategoriaId,
                 pFull.UnidadMedidaId,
                 pFull.PesoUnitarioKg,
-                nuevoUmbral);
+                nuevoUmbral,
+                pFull.StockActual);
 
             await _mediator.Send(command);
             return $"El umbral mÃ­nimo para '{pFull.Nombre}' ha sido actualizado a {nuevoUmbral} {pFull.UnidadMedidaNombre}.";

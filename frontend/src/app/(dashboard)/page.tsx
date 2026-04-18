@@ -50,7 +50,7 @@ export default function DashboardPage() {
     },
     { 
       name: 'Inversión Activa', 
-      value: `$${resumen?.inversionTotalEnCurso.toLocaleString()}` || '$0', 
+      value: `Bs. ${resumen?.inversionTotalEnCurso.toLocaleString() || '0'}`, 
       icon: DollarSign, 
       color: 'text-amber-500', 
       bg: 'bg-amber-500/10',
@@ -82,7 +82,7 @@ export default function DashboardPage() {
            </div>
            <div className="flex flex-col items-end">
               <span className="text-[10px] font-black text-muted-foreground uppercase">Autonomía</span>
-              <span className="text-sm font-bold text-foreground">{resumen?.diasAlimentoRestantes} días</span>
+              <span className="text-sm font-bold text-foreground">{resumen?.diasAlimentoRestantes.toFixed(1)} días</span>
            </div>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                   header: 'Utilidad', 
                   accessor: (item) => (
                     <span className="font-black text-emerald-400">
-                      ${item.utilidadTotalAcumulada.toLocaleString()}
+                      Bs. {item.utilidadTotalAcumulada.toLocaleString()}
                     </span>
                   ) 
                 },
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                     <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{item.totalLotes} lotes activos</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-emerald-400">${item.utilidadTotalAcumulada.toLocaleString()}</p>
+                    <p className="font-black text-emerald-400">Bs. {item.utilidadTotalAcumulada.toLocaleString()}</p>
                     <p className="text-[10px] text-red-400 font-bold uppercase">{item.promedioMortalidad.toFixed(1)}% mort.</p>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export default function DashboardPage() {
                   header: 'Utilidad Neta', 
                   accessor: (item) => (
                     <span className={`font-black ${item.utilidadNeta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      ${item.utilidadNeta.toLocaleString()}
+                      Bs. {item.utilidadNeta.toLocaleString()}
                     </span>
                   ) 
                 },
@@ -229,7 +229,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className={`font-black ${item.utilidadNeta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      ${item.utilidadNeta.toLocaleString()}
+                      Bs. {item.utilidadNeta.toLocaleString()}
                     </p>
                   </div>
                 </div>

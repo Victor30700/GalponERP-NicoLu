@@ -26,6 +26,10 @@ export const api = {
       throw new Error(errorMessage);
     }
 
+    if (response.status === 204) {
+      return {} as T;
+    }
+
     return response.json();
   },
 
@@ -41,6 +45,10 @@ export const api = {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
       throw new Error(errorMessage);
+    }
+
+    if (response.status === 204) {
+      return {} as T;
     }
 
     return response.json();

@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useClientes, useCliente, Cliente } from '@/hooks/useClientes'
 import { UniversalGrid } from '@/components/shared/UniversalGrid'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Save, User, Phone, Mail, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import { confirmDestructiveAction } from '@/lib/swal'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 // Schema de validación
 const clienteSchema = z.object({
@@ -23,53 +24,16 @@ const clienteSchema = z.object({
 
 type ClienteFormValues = z.infer<typeof clienteSchema>
 
-interface Cliente {
-  id: string
-  nombre: string
-  ruc: string
-  email?: string
-  telefono?: string
-  direccion?: string
-}
-
 export default function ClientesPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
-  const queryClient = useQueryClient()
-
-  // Fetch Clientes
-  const { data: clientes = [], isLoading } = useQuery({
-    queryKey: ['clientes'],
-    queryFn: () => api.get<Cliente[]>('/api/Clientes'),
-  })
-
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: (newCliente: ClienteFormValues) => api.post('/api/Clientes', newCliente),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientes'] })
-      closeForm()
-      toast.success('Cliente creado con éxito')
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (data: { id: string; values: ClienteFormValues }) => 
-      api.put(`/api/Clientes/${data.id}`, data.values),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientes'] })
-      closeForm()
-      toast.success('Cliente actualizado con éxito')
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/Clientes/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientes'] })
-      toast.success('Cliente eliminado')
-    },
-  })
+  const [editingClienteId, setEditingClienteId] = useState<string | null>(null)
+  
+  const { clientes, isLoading, crearCliente } = useClientes()
+  const { actualizarCliente, eliminarCliente } = useCliente(editingClienteId || '')
 
   // Form handling
   const {
@@ -82,25 +46,37 @@ export default function ClientesPage() {
   })
 
   const onSubmit = (data: ClienteFormValues) => {
-    if (editingCliente) {
-      updateMutation.mutate({ id: editingCliente.id, values: data })
+    if (editingClienteId) {
+      actualizarCliente.mutate({ ...data, id: editingClienteId }, {
+        onSuccess: () => {
+          toast.success('Cliente actualizado con éxito')
+          closeForm()
+        },
+        onError: (err: any) => toast.error(err.message)
+      })
     } else {
-      createMutation.mutate(data)
+      crearCliente.mutate(data, {
+        onSuccess: () => {
+          toast.success('Cliente creado con éxito')
+          closeForm()
+        },
+        onError: (err: any) => toast.error(err.message)
+      })
     }
   }
 
   const openForm = (cliente?: Cliente) => {
     if (cliente) {
-      setEditingCliente(cliente)
+      setEditingClienteId(cliente.id)
       reset({
         nombre: cliente.nombre,
-        ruc: cliente.ruc,
+        ruc: cliente.ruc || '',
         email: cliente.email || '',
         telefono: cliente.telefono || '',
         direccion: cliente.direccion || '',
       })
     } else {
-      setEditingCliente(null)
+      setEditingClienteId(null)
       reset({ nombre: '', ruc: '', email: '', telefono: '', direccion: '' })
     }
     setIsFormOpen(true)
@@ -108,9 +84,11 @@ export default function ClientesPage() {
 
   const closeForm = () => {
     setIsFormOpen(false)
-    setEditingCliente(null)
+    setEditingClienteId(null)
     reset()
   }
+
+  const isPending = crearCliente.isPending || actualizarCliente.isPending
 
   const columns = [
     { 
@@ -118,7 +96,7 @@ export default function ClientesPage() {
       accessor: (item: Cliente) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-            {item.nombre?.charAt(0) || 'C'}
+            {item.nombre?.charAt(0).toUpperCase() || 'C'}
           </div>
           <div>
             <p className="font-medium text-foreground">{item.nombre}</p>
@@ -138,16 +116,23 @@ export default function ClientesPage() {
         items={clientes}
         columns={columns}
         isLoading={isLoading}
-        onAdd={() => openForm()}
-        onEdit={(item) => openForm(item)}
-        onDelete={async (item) => {
+        onAdd={isEmpleado ? undefined : () => openForm()}
+        onEdit={isEmpleado ? undefined : (item) => openForm(item as Cliente)}
+        onDelete={isEmpleado ? undefined : async (item) => {
           const result = await confirmDestructiveAction(
             '¿Eliminar cliente?',
-            `¿Estás seguro de que deseas eliminar a ${item.nombre}? Esta acción no se puede deshacer.`
+            `¿Estás seguro de que deseas eliminar a ${(item as Cliente).nombre}? Esta acción no se puede deshacer.`
           );
           
           if (result.isConfirmed) {
-            deleteMutation.mutate(item.id)
+            setEditingClienteId((item as Cliente).id);
+            eliminarCliente.mutate(undefined, {
+              onSuccess: () => {
+                  toast.success('Cliente eliminado');
+                  setEditingClienteId(null);
+              },
+              onError: (err: any) => toast.error(err.message)
+            })
           }
         }}
         renderMobileCard={(item) => (
@@ -157,16 +142,10 @@ export default function ClientesPage() {
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Phone size={14} /> {item.telefono || 'Sin teléfono'}
             </div>
-            {item.email && (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Mail size={14} /> {item.email}
-              </div>
-            )}
           </div>
         )}
       />
 
-      {/* Slide-over Form (Mobile-friendly) */}
       <AnimatePresence>
         {isFormOpen && (
           <>
@@ -186,7 +165,7 @@ export default function ClientesPage() {
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-foreground">
-                  {editingCliente ? 'Editar Cliente' : 'Nuevo Cliente'}
+                  {editingClienteId ? 'Editar Cliente' : 'Nuevo Cliente'}
                 </h2>
                 <button onClick={closeForm} className="p-2 bg-muted/50 rounded-full text-muted-foreground">
                   <X size={20} />
@@ -218,20 +197,6 @@ export default function ClientesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">Correo Electrónico (Opcional)</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                    <input
-                      {...register('email')}
-                      type="email"
-                      className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                      placeholder="juan@ejemplo.com"
-                    />
-                  </div>
-                  {errors.email && <p className="text-xs text-red-400 ml-1">{errors.email.message}</p>}
-                </div>
-
-                <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground ml-1">Teléfono</label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -259,11 +224,11 @@ export default function ClientesPage() {
 
                 <button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={isPending}
                   className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-8 shadow-lg shadow-primary/20"
                 >
                   <Save size={20} />
-                  {editingCliente ? 'Guardar Cambios' : 'Crear Cliente'}
+                  {editingClienteId ? 'Guardar Cambios' : 'Crear Cliente'}
                 </button>
               </form>
             </motion.div>
@@ -273,5 +238,3 @@ export default function ClientesPage() {
     </div>
   )
 }
-
-

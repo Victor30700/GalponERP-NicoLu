@@ -4,18 +4,30 @@ import { Sidebar } from './Sidebar'
 import { TopNavbar } from './TopNavbar'
 import { BottomNav } from './BottomNav'
 import { useAuth } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
+import { hasAccess } from '@/lib/rbac'
+import { navigationSections } from '@/config/navigation'
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { profile, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
-    if (!loading && !profile) {
-      router.push('/login')
+    if (!loading) {
+      if (!profile) {
+        router.push('/login')
+      } else {
+        // Verificar permisos de ruta (Guardián)
+        const userRole = Number(profile.rol)
+        if (!hasAccess(pathname, userRole, navigationSections)) {
+          console.warn(`Acceso denegado a ${pathname} para el rol ${userRole}`)
+          router.push('/')
+        }
+      }
     }
-  }, [profile, loading, router])
+  }, [profile, loading, router, pathname])
 
   if (loading) {
     return (

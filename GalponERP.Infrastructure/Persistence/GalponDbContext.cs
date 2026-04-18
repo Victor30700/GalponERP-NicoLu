@@ -81,10 +81,6 @@ public class GalponDbContext : DbContext, IGalponDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Configurar Moneda como un Owned Type (Objeto de Valor) por defecto
-        // para evitar que EF Core lo intente tratar como una entidad independiente
-        modelBuilder.Owned<Moneda>();
-
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GalponDbContext).Assembly);
 
         // Global Query Filter for Soft Delete (IsActive)

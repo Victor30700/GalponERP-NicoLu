@@ -41,6 +41,7 @@ public class ObtenerProductosQueryHandler : IRequestHandler<ObtenerProductosQuer
             p.UmbralMinimo,
             stockPorProducto.ContainsKey(p.Id) ? stockPorProducto[p.Id] : 0,
             p.StockActualKg,
-            p.IsActive));
+            p.IsActive,
+            p.Unidad?.Tipo ?? TipoUnidad.UnidadFisica));
     }
 }

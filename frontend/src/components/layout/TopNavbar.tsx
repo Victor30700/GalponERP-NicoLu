@@ -1,15 +1,16 @@
 'use client'
 
-import { Search, Bell, User, LogOut, Sun, Moon } from 'lucide-react'
+import { Bell, User, LogOut, Sun, Moon } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { navigationItems } from '@/config/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { motion } from 'framer-motion'
+import { NotificationBell } from './NotificationBell'
+import { UserDropdown } from './UserDropdown'
 
 export function TopNavbar() {
   const pathname = usePathname()
-  const { profile, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   
   // Encontrar el nombre de la página actual basado en la ruta
@@ -29,16 +30,7 @@ export function TopNavbar() {
         </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative md:block hidden">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-          <input
-            type="text"
-            placeholder="Buscar..."
-            className="pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-full text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all w-64"
-          />
-        </div>
-        
+      <div className="flex items-center gap-2">
         {/* Toggle de Tema */}
         <button 
           onClick={toggleTheme}
@@ -54,32 +46,9 @@ export function TopNavbar() {
           </motion.div>
         </button>
 
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors relative rounded-lg hover:bg-muted/50">
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
-        </button>
+        <NotificationBell />
 
-        <div className="flex items-center gap-3 pl-4 border-l border-border">
-          <div className="text-right md:block hidden">
-            <p className="text-xs font-semibold text-foreground">{profile?.nombre || 'Usuario'}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{profile?.rol || 'Empleado'}</p>
-          </div>
-          <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center text-primary border border-primary/20 overflow-hidden">
-            {profile?.nombre ? (
-              <span className="text-xs font-bold">{profile.nombre.charAt(0)}</span>
-            ) : (
-              <User size={18} />
-            )}
-          </div>
-          
-          <button 
-            onClick={logout}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
-            title="Cerrar Sesión"
-          >
-            <LogOut size={20} />
-          </button>
-        </div>
+        <UserDropdown />
       </div>
     </header>
   )

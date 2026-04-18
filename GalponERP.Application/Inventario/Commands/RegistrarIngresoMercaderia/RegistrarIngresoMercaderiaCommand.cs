@@ -99,6 +99,7 @@ public class RegistrarIngresoMercaderiaCommandHandler : IRequestHandler<Registra
             TipoMovimiento.Compra,
             DateTime.UtcNow,
             request.UsuarioId,
+            producto.PesoUnitarioKg, // Capturamos el peso actual como HISTÓRICO
             request.Nota,
             new Moneda(request.CostoTotalCompra),
             proveedor.RazonSocial,

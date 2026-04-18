@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
@@ -9,11 +10,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly IUsuarioRepository _usuarioRepository;
 
-    public LoginCommandHandler(HttpClient httpClient, IConfiguration configuration)
+    public LoginCommandHandler(HttpClient httpClient, IConfiguration configuration, IUsuarioRepository usuarioRepository)
     {
         _httpClient = httpClient;
         _configuration = configuration;
+        _usuarioRepository = usuarioRepository;
     }
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -46,6 +49,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         if (result == null)
         {
             throw new Exception("Login failed: Empty response from Firebase");
+        }
+
+        // 4. Verificar si el usuario está activo en la base de datos local
+        var usuario = await _usuarioRepository.ObtenerPorEmailAsync(result.Email);
+        if (usuario != null && (usuario.Active == 0 || !usuario.IsActive))
+        {
+            throw new Exception("El usuario no está activo en el sistema. Contacte al administrador.");
         }
 
         return new LoginResponse(

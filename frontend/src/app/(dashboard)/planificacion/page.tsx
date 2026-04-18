@@ -52,6 +52,37 @@ export default function PlanificacionPage() {
         </div>
       </div>
 
+      {/* Guía de Uso */}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-6 glass rounded-[2rem] border border-primary/20 bg-primary/5 flex flex-col md:flex-row gap-6 items-start md:items-center"
+      >
+        <div className="p-4 rounded-2xl bg-primary/20 text-primary">
+          <Info size={32} />
+        </div>
+        <div className="space-y-2 flex-1">
+          <h3 className="text-lg font-black text-foreground uppercase tracking-widest">¿Cómo usar el simulador?</h3>
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+            Esta herramienta te permite <b>estimar tus ganancias y costos</b> antes de iniciar un lote. Ingresa la cantidad de aves y el peso que esperas que alcancen. El sistema usará el <b>FCR (Conversión Alimenticia)</b> para calcular cuánto alimento necesitarás comprar y en qué etapas del crecimiento se consumirá más.
+          </p>
+          <div className="flex flex-wrap gap-4 pt-2">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary/70">
+              <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px]">1</span>
+              Define la población
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary/70">
+              <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px]">2</span>
+              Ajusta precios de mercado
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary/70">
+              <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px]">3</span>
+              Obtén tu proyección financiera
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Formulario de Entrada */}
         <motion.div 
@@ -165,15 +196,15 @@ export default function PlanificacionPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="p-6 glass rounded-3xl border border-border">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Ingresos Proyectados</span>
-                    <span className="text-3xl font-black text-foreground">${resultado.ingresosProyectados.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-3xl font-black text-foreground">Bs. {resultado.ingresosProyectados.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                  </div>
                  <div className="p-6 glass rounded-3xl border border-border">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Utilidad Bruta</span>
-                    <span className="text-3xl font-black text-emerald-400">${resultado.utilidadBrutaProyectada.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-3xl font-black text-emerald-400">Bs. {resultado.utilidadBrutaProyectada.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                  </div>
                  <div className="p-6 glass rounded-3xl border border-border">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Costo Alimento Total</span>
-                    <span className="text-3xl font-black text-red-400">${resultado.costoAlimentoTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-3xl font-black text-red-400">Bs. {resultado.costoAlimentoTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                  </div>
                  <div className="p-6 glass rounded-3xl border border-border">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Alimento Necesario</span>
@@ -209,7 +240,7 @@ export default function PlanificacionPage() {
                             {etapa.consumoKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg
                           </td>
                           <td className="px-6 py-4 text-emerald-400 font-black">
-                            ${etapa.costoEstimado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            Bs. {etapa.costoEstimado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       ))}

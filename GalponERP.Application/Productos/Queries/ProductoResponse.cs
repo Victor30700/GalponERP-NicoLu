@@ -1,3 +1,4 @@
+using GalponERP.Domain.Entities;
 using MediatR;
 
 namespace GalponERP.Application.Productos.Queries;
@@ -13,7 +14,8 @@ public record ProductoResponse(
     decimal UmbralMinimo,
     decimal StockActual,
     decimal StockActualKg,
-    bool IsActive)
+    bool IsActive,
+    TipoUnidad TipoUnidad)
 {
     // Alias para el usuario que pidió ver el total como equivalenciaEnKg en el API
     public decimal EquivalenciaEnKg => StockActualKg;

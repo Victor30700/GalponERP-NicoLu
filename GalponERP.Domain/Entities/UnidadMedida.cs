@@ -9,8 +9,9 @@ public class UnidadMedida : Entity
 {
     public string Nombre { get; private set; } = null!;
     public string Abreviatura { get; private set; } = null!;
+    public TipoUnidad Tipo { get; private set; }
 
-    public UnidadMedida(Guid id, string nombre, string abreviatura) : base(id)
+    public UnidadMedida(Guid id, string nombre, string abreviatura, TipoUnidad tipo) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre de la unidad de medida es obligatorio.");
@@ -20,12 +21,13 @@ public class UnidadMedida : Entity
 
         Nombre = nombre;
         Abreviatura = abreviatura;
+        Tipo = tipo;
     }
 
     // Para EF Core
     private UnidadMedida() : base() { }
 
-    public void Actualizar(string nombre, string abreviatura)
+    public void Actualizar(string nombre, string abreviatura, TipoUnidad tipo)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre de la unidad de medida no puede estar vacío.");
@@ -35,5 +37,6 @@ public class UnidadMedida : Entity
 
         Nombre = nombre;
         Abreviatura = abreviatura;
+        Tipo = tipo;
     }
 }

@@ -118,7 +118,7 @@ public class VentasPlugin
     public async Task<string> RegistrarPagoVenta(
         [Description("ID de la venta a la que se aplica el pago (Guid)")] string ventaId,
         [Description("Monto recibido (debe ser mayor a cero)")] decimal monto,
-        [Description("Método de pago (0: Efectivo, 1: Transferencia, 2: Tarjeta, 3: Otros)")] int metodoPago)
+        [Description("Método de pago (1: Efectivo, 2: Transferencia, 3: Deposito, 4: QR)")] int metodoPago)
     {
         if (monto <= 0) return "Error: El monto del pago debe ser mayor a cero.";
 

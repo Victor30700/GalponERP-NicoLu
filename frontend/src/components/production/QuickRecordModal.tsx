@@ -154,19 +154,18 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
           return
       }
       
-      // Enviar la cantidad en UNIDADES al backend
-      // El backend ahora espera unidades para descontar ambos stocks
-      const cantidadUnidades = Number(value) || 0
+      // Enviar el valor en Kilogramos (secundaryValue) si existe, de lo contrario calcularlo
+      const cantidadKg = Number(secondaryValue) || (Number(value) * (Number(selectedProduct.pesoUnitarioKg) || 0))
 
-      if (cantidadUnidades <= 0) {
-        toast.error('Debe ingresar una cantidad válida en unidades.')
+      if (cantidadKg <= 0) {
+        toast.error('Debe ingresar una cantidad válida.')
         return
       }
 
       data = { 
           ...data,
           productoId: selectedProductId,
-          cantidad: cantidadUnidades, 
+          cantidad: cantidadKg, // Enviamos Kg exactos
           justificacion: nota || 'Consumo diario' 
       }
     } else if (type === 'water') {
@@ -274,7 +273,9 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                         // Calcular Kg automáticamente si hay producto seleccionado
                         if (type === 'feed' && selectedProduct) {
                           const pesoUnit = Number(selectedProduct.pesoUnitarioKg) || 0;
-                          setSecondaryValue(val ? (Number(val) * pesoUnit).toFixed(2) : '');
+                          // Usamos 3 decimales para evitar error de 1 gramo (0.001 kg)
+                          const calculatedKg = val ? (Number(val) * pesoUnit).toFixed(3) : '';
+                          setSecondaryValue(calculatedKg);
                         }
                       }}
                       className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
@@ -287,7 +288,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                 </div>
 
                 {type === 'feed' && (
-                  <div className={`space-y-2 transition-all ${value && value !== '0' ? 'opacity-30 pointer-events-none' : ''}`}>
+                  <div className="space-y-2 transition-all">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Equivalencia en Kilogramos (Kg)</label>
                     <div className="relative">
                       <input
@@ -298,12 +299,14 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                           const valKg = e.target.value;
                           setSecondaryValue(valKg);
                           // Recalcular unidades si hay producto
-                          if (selectedProduct && !value) {
+                          if (selectedProduct) {
                              const pesoUnit = Number(selectedProduct.pesoUnitarioKg) || 1;
-                             setValue(valKg ? (Number(valKg) / pesoUnit).toFixed(2) : '');
+                             // Usamos 3 decimales para mayor precisión en la conversión inversa
+                             const calculatedUnits = valKg ? (Number(valKg) / pesoUnit).toFixed(3) : '';
+                             setValue(calculatedUnits);
                           }
                         }}
-                        className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
+                        className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all border-blue-500/30"
                         placeholder="0.00"
                       />
                       <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xl uppercase">Kg</span>

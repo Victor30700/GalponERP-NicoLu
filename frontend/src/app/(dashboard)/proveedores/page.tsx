@@ -9,6 +9,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Save, Building2, Phone, Mail, MapPin, Truck } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
+import { toast } from 'sonner'
+import { confirmDestructiveAction } from '@/lib/swal'
 
 const proveedorSchema = z.object({
   nombre: z.string().min(3, 'El nombre es muy corto'),
@@ -25,6 +29,10 @@ interface Proveedor extends ProveedorFormValues {
 }
 
 export default function ProveedoresPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProveedor, setEditingProveedor] = useState<Proveedor | null>(null)
   const queryClient = useQueryClient()
@@ -38,22 +46,30 @@ export default function ProveedoresPage() {
     mutationFn: (newProv: ProveedorFormValues) => api.post('/api/Proveedores', newProv),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores'] })
+      toast.success('Proveedor creado con éxito')
       closeForm()
     },
+    onError: (err: any) => toast.error(err.message)
   })
 
   const updateMutation = useMutation({
     mutationFn: (data: { id: string; values: ProveedorFormValues }) => 
-      api.patch(`/api/Proveedores/${data.id}`, data.values),
+      api.put(`/api/Proveedores/${data.id}`, data.values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proveedores'] })
+      toast.success('Proveedor actualizado')
       closeForm()
     },
+    onError: (err: any) => toast.error(err.message)
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/Proveedores/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['proveedores'] }),
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['proveedores'] })
+        toast.success('Proveedor eliminado')
+    },
+    onError: (err: any) => toast.error(err.message)
   })
 
   const {
@@ -116,11 +132,15 @@ export default function ProveedoresPage() {
         items={proveedores}
         columns={columns}
         isLoading={isLoading}
-        onAdd={() => openForm()}
-        onEdit={(item) => openForm(item)}
-        onDelete={(item) => {
-          if (confirm('¿Estás seguro de eliminar este proveedor?')) {
-            deleteMutation.mutate(item.id)
+        onAdd={isEmpleado ? undefined : () => openForm()}
+        onEdit={isEmpleado ? undefined : (item) => openForm(item as Proveedor)}
+        onDelete={isEmpleado ? undefined : async (item) => {
+          const result = await confirmDestructiveAction(
+            '¿Eliminar proveedor?',
+            `¿Estás seguro de que deseas eliminar a ${(item as Proveedor).nombre}?`
+          )
+          if (result.isConfirmed) {
+            deleteMutation.mutate((item as Proveedor).id)
           }
         }}
         renderMobileCard={(item) => (
@@ -243,5 +263,3 @@ export default function ProveedoresPage() {
     </div>
   )
 }
-
-

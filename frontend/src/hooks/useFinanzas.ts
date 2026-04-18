@@ -67,6 +67,16 @@ export interface FlujoProyectado {
   detalle: DetalleFlujoProyectado[];
 }
 
+export interface CuentaPorPagar {
+  compraId: string;
+  fecha: string;
+  proveedorNombre: string;
+  totalCompra: number;
+  totalPagado: number;
+  saldoPendiente: number;
+  estadoPago: string;
+}
+
 export function useFinanzas(params?: { inicio?: string; fin?: string; categoria?: string }) {
   const queryParams = new URLSearchParams();
   if (params?.inicio) queryParams.append('inicio', params.inicio);
@@ -100,6 +110,11 @@ export function useFinanzas(params?: { inicio?: string; fin?: string; categoria?
     queryFn: () => api.get<CuentaPorCobrar[]>('/api/Finanzas/cuentas-por-cobrar'),
   });
 
+  const cuentasPorPagar = useQuery({
+    queryKey: ['finanzas', 'cuentas-por-pagar'],
+    queryFn: () => api.get<CuentaPorPagar[]>('/api/Finanzas/cuentas-por-pagar'),
+  });
+
   return {
     flujoCaja: flujoCaja.data,
     isLoadingFlujo: flujoCaja.isLoading,
@@ -111,5 +126,7 @@ export function useFinanzas(params?: { inicio?: string; fin?: string; categoria?
     isLoadingProyectado: flujoProyectado.isLoading,
     cuentasPorCobrar: cuentasPorCobrar.data || [],
     isLoadingCxC: cuentasPorCobrar.isLoading,
+    cuentasPorPagar: cuentasPorPagar.data || [],
+    isLoadingCxP: cuentasPorPagar.isLoading,
   };
 }

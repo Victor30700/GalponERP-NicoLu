@@ -41,6 +41,7 @@ public class RegistrarMovimientoInventarioCommandHandler : IRequestHandler<Regis
             request.Tipo,
             request.Fecha,
             request.UsuarioId,
+            producto.PesoUnitarioKg, // Capturamos el peso actual como HISTÓRICO
             request.Justificacion,
             new Moneda(costoTotal)
         );

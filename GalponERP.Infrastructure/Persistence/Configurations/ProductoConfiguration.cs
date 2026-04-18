@@ -17,14 +17,14 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
             .HasMaxLength(150);
 
         builder.Property(p => p.PesoUnitarioKg)
-            .HasPrecision(18, 4);
+            .HasPrecision(18, 6);
 
         builder.Property(p => p.StockActual)
-            .HasPrecision(18, 4)
+            .HasPrecision(18, 6)
             .HasDefaultValue(0);
 
         builder.Property(p => p.StockActualKg)
-            .HasPrecision(18, 4)
+            .HasPrecision(18, 6)
             .HasDefaultValue(0);
 
         builder.Property(p => p.UmbralMinimo)

@@ -57,6 +57,10 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Property(u => u.Rol)
             .IsRequired();
 
+        builder.Property(u => u.Active)
+            .IsRequired()
+            .HasDefaultValue(1);
+
         builder.Property(u => u.FechaNacimiento)
             .IsRequired();
 

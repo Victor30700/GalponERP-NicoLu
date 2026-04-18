@@ -50,7 +50,8 @@ public class ListarProductosQueryHandler : IRequestHandler<ListarProductosQuery,
                 p.UmbralMinimo,
                 stockUnidades,
                 p.StockActualKg,
-                p.IsActive);
+                p.IsActive,
+                p.Unidad?.Tipo ?? TipoUnidad.UnidadFisica);
         });
     }
 }

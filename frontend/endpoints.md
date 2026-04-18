@@ -1,313 +1,130 @@
-Mortalidad
+Productos
 
 
 GET
-/api/Mortalidad
+/api/Productos
+
+
+Code	Details
 200	
 Response body
 Download
 [
   {
-    "id": "040173a1-7227-48dd-9f27-946a8dfd8872",
-    "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-    "fecha": "2026-04-15T02:01:42.808Z",
-    "cantidadBajas": 10,
-    "causa": "bajas "
+    "id": "01ae0259-fd86-44db-a2d2-20afd565ed4e",
+    "nombre": "medicamento",
+    "categoriaId": "b126e519-c2b0-4ee9-ac76-e1b65815acc0",
+    "categoriaNombre": "Medicamento",
+    "unidadMedidaId": "41a833d0-b6d6-44b7-8b0b-fe013381ffff",
+    "unidadMedidaNombre": "Litro",
+    "pesoUnitarioKg": 0,
+    "umbralMinimo": 10,
+    "stockActual": 0,
+    "stockActualKg": 0,
+    "isActive": true,
+    "tipoUnidad": 0,
+    "equivalenciaEnKg": 0
   },
   {
-    "id": "879a3512-5962-425c-bae9-a97e4eb8e0e7",
-    "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-    "fecha": "2026-04-15T01:53:53.306Z",
-    "cantidadBajas": 5,
-    "causa": "Registro rutinario"
+    "id": "3619dcdb-6070-438f-a3a5-41bec1e38a15",
+    "nombre": "medicacion",
+    "categoriaId": "b126e519-c2b0-4ee9-ac76-e1b65815acc0",
+    "categoriaNombre": "Medicamento",
+    "unidadMedidaId": "ac6d09fd-8496-466f-8eed-a45a7b7d3e04",
+    "unidadMedidaNombre": "Mililitros",
+    "pesoUnitarioKg": 0,
+    "umbralMinimo": 10,
+    "stockActual": 10,
+    "stockActualKg": 0,
+    "isActive": true,
+    "tipoUnidad": 0,
+    "equivalenciaEnKg": 0
   },
   {
-    "id": "5209d200-2e15-47b6-ac5d-470c1ae86705",
-    "loteId": "77991288-37d9-4d19-bf74-b200f023bf47",
-    "fecha": "2026-04-14T03:23:02.181Z",
-    "cantidadBajas": 1,
-    "causa": "Registro rutinario"
+    "id": "14e5b850-9d94-4d0e-a171-58c2316aabbf",
+    "nombre": "saco alimento",
+    "categoriaId": "50fc56d1-9a43-4f74-a0a1-32ed4c0dd56d",
+    "categoriaNombre": "Alimento",
+    "unidadMedidaId": "bbad2736-6abd-439d-85ee-8f24e6c50006",
+    "unidadMedidaNombre": "Kilogramo",
+    "pesoUnitarioKg": 45,
+    "umbralMinimo": 100,
+    "stockActual": 0.94,
+    "stockActualKg": 42.3,
+    "isActive": true,
+    "tipoUnidad": 0,
+    "equivalenciaEnKg": 42.3
   },
   {
-    "id": "ed42fa49-b889-4e65-8a29-edbf67242d65",
-    "loteId": "77991288-37d9-4d19-bf74-b200f023bf47",
-    "fecha": "2026-04-14T03:22:22.298Z",
-    "cantidadBajas": 1,
-    "causa": "Registro rutinario"
-  },
-  {
-    "id": "66f5ddcf-c2e8-4fde-b516-3a3ee91e7fdc",
-    "loteId": "d68785af-7f59-4e18-af4a-a172b66359bb",
-    "fecha": "2026-04-14T03:14:09.005Z",
-    "cantidadBajas": 10,
-    "causa": "ddddddddd"
-  },
-  {
-    "id": "b258236c-599f-4321-b242-0ace943977b2",
-    "loteId": "d68785af-7f59-4e18-af4a-a172b66359bb",
-    "fecha": "2026-04-11T20:02:49.709Z",
-    "cantidadBajas": 50,
-    "causa": "esto es una prueba"
+    "id": "de4e2f44-288f-4007-9768-91d97b66b3e0",
+    "nombre": "saco",
+    "categoriaId": "50fc56d1-9a43-4f74-a0a1-32ed4c0dd56d",
+    "categoriaNombre": "Alimento",
+    "unidadMedidaId": "bbad2736-6abd-439d-85ee-8f24e6c50006",
+    "unidadMedidaNombre": "Kilogramo",
+    "pesoUnitarioKg": 50,
+    "umbralMinimo": 100,
+    "stockActual": 0,
+    "stockActualKg": 0,
+    "isActive": true,
+    "tipoUnidad": 0,
+    "equivalenciaEnKg": 0
   }
 ]
-
-
+ 
 POST
-/api/Mortalidad
-{
-  "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-  "cantidad": 10,
-  "causa": "bajas ",
-  "fecha": "2026-04-15T02:01:42.808Z"
-}
-
-200	
-Response body
-Download
-"040173a1-7227-48dd-9f27-946a8dfd8872"
-
-GET
-/api/Mortalidad/{id}
-
-Name	Description
-id *
-string($uuid)
-(path)
-040173a1-7227-48dd-9f27-946a8dfd8872
-
-
-Code	Details
-200	
-Response body
-Download
-{
-  "id": "040173a1-7227-48dd-9f27-946a8dfd8872",
-  "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-  "fecha": "2026-04-15T02:01:42.808Z",
-  "cantidadBajas": 10,
-  "causa": "bajas ",
-  "usuarioId": "6a95eb11-fe5d-4c93-8fcf-e0e648dcf97f"
-}
-
-PUT
-/api/Mortalidad/{id}
-
-Name	Description
-id *
-string($uuid)
-(path)
-040173a1-7227-48dd-9f27-946a8dfd8872
+/api/Productos
 
 {
-  "id": "040173a1-7227-48dd-9f27-946a8dfd8872",
-  "cantidad": 10,
-  "causa": "string",
-  "fecha": "2026-04-15T02:08:08.351Z"
-}
-
-GET
-/api/Mortalidad/lote/{loteId}
-
-Name	Description
-loteId *
-string($uuid)
-(path)
-5c499942-d1a4-47f6-836f-731ff98760d5
-
-
-Code	Details
-200	
-Response body
-Download
-[
-  {
-    "id": "040173a1-7227-48dd-9f27-946a8dfd8872",
-    "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-    "fecha": "2026-04-15T02:08:08.351Z",
-    "cantidadBajas": 10,
-    "causa": "string"
-  },
-  {
-    "id": "879a3512-5962-425c-bae9-a97e4eb8e0e7",
-    "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-    "fecha": "2026-04-15T01:53:53.306Z",
-    "cantidadBajas": 5,
-    "causa": "Registro rutinario"
-  }
-]
-
-GET
-/api/Mortalidad/reporte-transversal
-
-Name	Description
-inicio
-string($date-time)
-(query)
-inicio
-fin
-string($date-time)
-(query)
-fin
-
-
-Code	Details
-200	
-Response body
-Download
-{
-  "totalBajas": 77,
-  "porCausa": [
-    {
-      "causa": "esto es una prueba",
-      "cantidad": 50,
-      "porcentaje": 64.93506493506493
-    },
-    {
-      "causa": "ddddddddd",
-      "cantidad": 10,
-      "porcentaje": 12.987012987012987
-    },
-    {
-      "causa": "string",
-      "cantidad": 10,
-      "porcentaje": 12.987012987012987
-    },
-    {
-      "causa": "Registro rutinario",
-      "cantidad": 7,
-      "porcentaje": 9.090909090909092
-    }
-  ],
-  "detalle": [
-    {
-      "id": "040173a1-7227-48dd-9f27-946a8dfd8872",
-      "fecha": "2026-04-15T02:08:08.351Z",
-      "lote": "5c499942",
-      "cantidad": 10,
-      "causa": "string"
-    },
-    {
-      "id": "879a3512-5962-425c-bae9-a97e4eb8e0e7",
-      "fecha": "2026-04-15T01:53:53.306Z",
-      "lote": "5c499942",
-      "cantidad": 5,
-      "causa": "Registro rutinario"
-    },
-    {
-      "id": "5209d200-2e15-47b6-ac5d-470c1ae86705",
-      "fecha": "2026-04-14T03:23:02.181Z",
-      "lote": "77991288",
-      "cantidad": 1,
-      "causa": "Registro rutinario"
-    },
-    {
-      "id": "ed42fa49-b889-4e65-8a29-edbf67242d65",
-      "fecha": "2026-04-14T03:22:22.298Z",
-      "lote": "77991288",
-      "cantidad": 1,
-      "causa": "Registro rutinario"
-    },
-    {
-      "id": "66f5ddcf-c2e8-4fde-b516-3a3ee91e7fdc",
-      "fecha": "2026-04-14T03:14:09.005Z",
-      "lote": "d68785af",
-      "cantidad": 10,
-      "causa": "ddddddddd"
-    },
-    {
-      "id": "b258236c-599f-4321-b242-0ace943977b2",
-      "fecha": "2026-04-11T20:02:49.709Z",
-      "lote": "d68785af",
-      "cantidad": 50,
-      "causa": "esto es una prueba"
-    }
-  ]
-}
-
-GET
-/api/Mortalidad/lote/{loteId}/tendencias
-
-Name	Description
-loteId *
-string($uuid)
-(path)
-5c499942-d1a4-47f6-836f-731ff98760d5
-
-
-Code	Details
-200	
-Response body
-Download
-[
-  {
-    "fecha": "Semana 1",
-    "cantidad": 15,
-    "porcentaje": 0.6,
-    "semana": 1,
-    "fcr": 0
-  }
-]
-
-Pesajes
-
-POST
-/api/Pesajes
-
-{
-  "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-  "fecha": "2026-04-15T02:10:59.482Z",
-  "pesoPromedioGramos": 2.5,
-  "cantidadMuestreada": 100
+  "nombre": "test test test test",
+  "categoriaProductoId": "de4e2f44-288f-4007-9768-91d97b66b3e0",
+  "unidadMedidaId": "41a833d0-b6d6-44b7-8b0b-fe013381ffff",
+  "pesoUnitarioKg": 100,
+  "umbralMinimo": 10,
+  "stockInicial": 100
 }
 
 
 Code	Details
-200	
-Response body
-Download
-"985a8f4e-bd9c-4187-836d-c38f86695383"
-
-GET
-/api/Pesajes/{id}
-
-Name	Description
-id *
-string($uuid)
-(path)
-985a8f4e-bd9c-4187-836d-c38f86695383
-
-Code	Details
-200	
-Response body
-Download
-{
-  "id": "985a8f4e-bd9c-4187-836d-c38f86695383",
-  "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-  "fecha": "2026-04-15T02:10:59.482Z",
-  "pesoPromedioGramos": 2.5,
-  "cantidadMuestreada": 100,
-  "usuarioId": "6a95eb11-fe5d-4c93-8fcf-e0e648dcf97f"
-}
-
-PUT
-/api/Pesajes/{id}
-
-Name	Description
-id *
-string($uuid)
-(path)
-985a8f4e-bd9c-4187-836d-c38f86695383
-
-
-Code	Details
-204
+201
 Undocumented
-Response headers
- date: Wed,15 Apr 2026 02:21:55 GMT 
- server: Kestrel 
+Response body
+Download
+{
+  "productoId": "1ec0ac18-a86e-449b-96f4-bcf83e1235e4"
+}
 
-DELETE
-/api/Pesajes/{id}
+GET
+/api/Productos/{id}
+
+Name	Description
+id *
+string($uuid)
+(path)
+1ec0ac18-a86e-449b-96f4-bcf83e1235e4
+
+Code	Details
+200	
+Response body
+Download
+{
+  "id": "1ec0ac18-a86e-449b-96f4-bcf83e1235e4",
+  "nombre": "string",
+  "categoriaId": "50fc56d1-9a43-4f74-a0a1-32ed4c0dd56d",
+  "categoriaNombre": "Alimento",
+  "unidadMedidaId": "41a833d0-b6d6-44b7-8b0b-fe013381ffff",
+  "unidadMedidaNombre": "Litro",
+  "pesoUnitarioKg": 10,
+  "umbralMinimo": 10,
+  "stockActual": 100,
+  "stockActualKg": 1000,
+  "isActive": true,
+  "tipoUnidad": 0,
+  "equivalenciaEnKg": 1000
+}
+
+PUT
+/api/Productos/{id}
 
 Name	Description
 id *
@@ -316,25 +133,20 @@ string($uuid)
 id
 
 
-GET
-/api/Pesajes/lote/{loteId}
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "nombre": "string",
+  "categoriaProductoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "unidadMedidaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "pesoUnitarioKg": 0,
+  "umbralMinimo": 0
+}
+
+DELETE
+/api/Productos/{id}
 
 Name	Description
-loteId *
+id *
 string($uuid)
 (path)
-5c499942-d1a4-47f6-836f-731ff98760d5
-
-Code	Details
-200	
-Response body
-Download
-[
-  {
-    "id": "985a8f4e-bd9c-4187-836d-c38f86695383",
-    "loteId": "5c499942-d1a4-47f6-836f-731ff98760d5",
-    "fecha": "2026-04-15T02:21:40.163Z",
-    "pesoPromedioGramos": 10,
-    "cantidadMuestreada": 100
-  }
-]
+id

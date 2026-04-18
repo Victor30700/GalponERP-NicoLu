@@ -20,17 +20,21 @@ public class UsuarioRepository : IUsuarioRepository
 
     public async Task<Usuario?> ObtenerPorFirebaseUidAsync(string firebaseUid)
     {
-        return await _context.Usuarios.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+        return await _context.Usuarios.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
     }
 
     public async Task<Usuario?> ObtenerPorEmailAsync(string email)
     {
-        return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+        return await _context.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
     }
 
     public async Task<Usuario?> ObtenerPorTelefonoAsync(string telefono)
     {
-        return await _context.Usuarios.FirstOrDefaultAsync(u => u.Telefono == telefono);
+        return await _context.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Telefono == telefono);
     }
 
     public async Task<Usuario?> ObtenerPorWhatsAppAsync(string whatsAppNumero)

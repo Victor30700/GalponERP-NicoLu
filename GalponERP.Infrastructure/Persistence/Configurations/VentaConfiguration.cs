@@ -1,4 +1,5 @@
 using GalponERP.Domain.Entities;
+using GalponERP.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,19 +23,21 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
             .IsRequired()
             .HasPrecision(18, 2);
 
-        builder.ComplexProperty(v => v.PrecioPorKilo, b =>
-        {
-            b.Property(p => p.Monto)
-                .HasColumnName("PrecioPorKilo")
-                .HasPrecision(18, 2);
-        });
+        builder.Property(v => v.PrecioPorKilo)
+            .HasConversion(
+                m => m.Monto,
+                v => new Moneda(v))
+            .HasColumnName("PrecioPorKilo")
+            .HasPrecision(18, 2)
+            .IsRequired();
 
-        builder.ComplexProperty(v => v.Total, b =>
-        {
-            b.Property(p => p.Monto)
-                .HasColumnName("TotalVenta")
-                .HasPrecision(18, 2);
-        });
+        builder.Property(v => v.Total)
+            .HasConversion(
+                m => m.Monto,
+                v => new Moneda(v))
+            .HasColumnName("TotalVenta")
+            .HasPrecision(18, 2)
+            .IsRequired();
 
         builder.HasOne<Lote>()
             .WithMany()
@@ -62,7 +65,5 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
         builder.HasIndex(v => v.LoteId);
         builder.HasIndex(v => v.ClienteId);
         builder.HasIndex(v => v.Fecha);
-
-        builder.HasQueryFilter(v => v.IsActive);
     }
 }

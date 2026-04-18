@@ -14,14 +14,18 @@ public class ObtenerUsuariosQueryHandler : IRequestHandler<ObtenerUsuariosQuery,
 
     public async Task<IEnumerable<UsuarioResponse>> Handle(ObtenerUsuariosQuery request, CancellationToken cancellationToken)
     {
-        var usuarios = await _usuarioRepository.ObtenerTodosConInactivosAsync();
+        var usuarios = await _usuarioRepository.ObtenerTodosAsync();
         
-        return usuarios.Select(u => new UsuarioResponse(
-            u.Id,
-            u.FirebaseUid,
-            u.Email,
-            u.Nombre,
-            u.Rol,
-            u.IsActive));
+        // Filtro explícito de seguridad adicional
+        return usuarios
+            .Where(u => u.IsActive)
+            .Select(u => new UsuarioResponse(
+                u.Id,
+                u.FirebaseUid,
+                u.Email,
+                u.Nombre,
+                u.Rol,
+                u.IsActive,
+                u.Active));
     }
 }

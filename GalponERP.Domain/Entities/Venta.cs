@@ -58,7 +58,7 @@ public class Venta : Entity
         EstadoPago = estadoPago;
     }
 
-    public void RegistrarPago(Guid id, Moneda monto, DateTime fechaPago, MetodoPago metodoPago, Guid usuarioId)
+    public PagoVenta RegistrarPago(Guid id, Moneda monto, DateTime fechaPago, MetodoPago metodoPago, Guid usuarioId)
     {
         if (monto.Monto > SaldoPendiente.Monto)
             throw new InvalidOperationException($"El monto del pago ({monto}) no puede exceder el saldo pendiente ({SaldoPendiente}).");
@@ -67,6 +67,8 @@ public class Venta : Entity
         _pagos.Add(pago);
 
         ActualizarEstadoPagoSegunSaldos();
+        
+        return pago;
     }
 
     public void AnularPago(Guid pagoId, Guid usuarioId)

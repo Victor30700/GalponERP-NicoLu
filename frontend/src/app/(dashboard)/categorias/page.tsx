@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Save, Tag, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { confirmDestructiveAction, showSuccessAlert } from '@/lib/swal'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 const categoriaSchema = z.object({
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
@@ -24,6 +26,10 @@ interface Categoria extends CategoriaFormValues {
 }
 
 export default function CategoriasPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null)
   const queryClient = useQueryClient()
@@ -114,9 +120,9 @@ export default function CategoriasPage() {
         items={categorias}
         columns={columns}
         isLoading={isLoading}
-        onAdd={() => openForm()}
-        onEdit={(item) => openForm(item as Categoria)}
-        onDelete={async (item) => {
+        onAdd={isEmpleado ? undefined : () => openForm()}
+        onEdit={isEmpleado ? undefined : (item) => openForm(item as Categoria)}
+        onDelete={isEmpleado ? undefined : async (item) => {
           const result = await confirmDestructiveAction(
             '¿Eliminar categoría?',
             `¿Estás seguro de que deseas eliminar la categoría "${(item as Categoria).nombre}"? Esta acción no se puede deshacer.`

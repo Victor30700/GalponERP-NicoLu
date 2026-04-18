@@ -17,7 +17,7 @@ public class ObtenerUsuarioActualQueryHandler : IRequestHandler<ObtenerUsuarioAc
     {
         var usuario = await _usuarioRepository.ObtenerPorIdAsync(request.UsuarioId);
         
-        if (usuario == null)
+        if (usuario == null || !usuario.IsActive)
             return null;
 
         return new UsuarioResponse(
@@ -26,6 +26,7 @@ public class ObtenerUsuarioActualQueryHandler : IRequestHandler<ObtenerUsuarioAc
             usuario.Email,
             usuario.Nombre,
             usuario.Rol,
-            usuario.IsActive);
+            usuario.IsActive,
+            usuario.Active);
     }
 }

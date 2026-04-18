@@ -14,8 +14,14 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { confirmDestructiveAction } from '@/lib/swal'
 import { SanitaryEventModal } from '@/components/production/SanitaryEventModal'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 export default function SanidadPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const queryClient = useQueryClient()
   const [isSanitaryModalOpen, setIsSanitaryModalOpen] = useState(false)
   const [dateRange, setDateRange] = useState({
@@ -242,17 +248,19 @@ export default function SanidadPage() {
                       <button onClick={() => handleEdit(baja)} className="p-2.5 bg-muted/50 hover:bg-muted/50 rounded-xl text-muted-foreground hover:text-primary transition-all">
                         <Edit size={18} />
                       </button>
-                      <button 
-                        onClick={async () => {
-                          const result = await confirmDestructiveAction('¿Eliminar registro?', 'Esta acción no se puede deshacer.')
-                          if (result.isConfirmed) {
-                            deleteMutation.mutate(baja.id)
-                          }
-                        }}
-                        className="p-2.5 bg-red-500/5 hover:bg-red-500/10 rounded-xl text-red-500/50 hover:text-red-500 transition-all"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {!isEmpleado && (
+                        <button 
+                          onClick={async () => {
+                            const result = await confirmDestructiveAction('¿Eliminar registro?', 'Esta acción no se puede deshacer.')
+                            if (result.isConfirmed) {
+                              deleteMutation.mutate(baja.id)
+                            }
+                          }}
+                          className="p-2.5 bg-red-500/5 hover:bg-red-500/10 rounded-xl text-red-500/50 hover:text-red-500 transition-all"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

@@ -44,8 +44,6 @@ public class ActualizarVentaCommandHandler : IRequestHandler<ActualizarVentaComm
             request.PesoTotalVendido,
             new Moneda(request.PrecioPorKilo));
 
-        _ventaRepository.Actualizar(venta);
-
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

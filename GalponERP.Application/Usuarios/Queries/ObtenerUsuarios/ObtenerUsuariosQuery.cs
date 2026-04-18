@@ -11,4 +11,5 @@ public record UsuarioResponse(
     string Email,
     string Nombre,
     RolGalpon Rol,
-    bool IsActive);
+    bool IsActive,
+    int Active);

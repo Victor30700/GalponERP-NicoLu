@@ -792,8 +792,8 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Cantidad")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
 
                     b.Property<Guid?>("CompraId")
                         .HasColumnType("uuid");
@@ -820,6 +820,12 @@ namespace GalponERP.Infrastructure.Migrations
 
                     b.Property<Guid?>("LoteId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("PesoUnitarioHistorico")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasDefaultValue(0m);
 
                     b.Property<Guid>("ProductoId")
                         .HasColumnType("uuid");
@@ -1183,19 +1189,19 @@ namespace GalponERP.Infrastructure.Migrations
                         .HasColumnType("character varying(150)");
 
                     b.Property<decimal>("PesoUnitarioKg")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
 
                     b.Property<decimal>("StockActual")
                         .ValueGeneratedOnAdd()
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
                         .HasDefaultValue(0m);
 
                     b.Property<decimal>("StockActualKg")
                         .ValueGeneratedOnAdd()
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
                         .HasDefaultValue(0m);
 
                     b.Property<decimal>("UmbralMinimo")
@@ -1343,6 +1349,9 @@ namespace GalponERP.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Tipo")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("UsuarioCreacionId")
                         .HasColumnType("uuid");
 
@@ -1359,6 +1368,11 @@ namespace GalponERP.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Active")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("Apellidos")
                         .IsRequired()

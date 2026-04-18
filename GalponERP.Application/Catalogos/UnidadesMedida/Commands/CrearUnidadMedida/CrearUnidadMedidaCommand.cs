@@ -8,7 +8,8 @@ namespace GalponERP.Application.Catalogos.UnidadesMedida.Commands.CrearUnidadMed
 
 public record CrearUnidadMedidaCommand(
     string Nombre,
-    string Abreviatura) : IRequest<Guid>;
+    string Abreviatura,
+    TipoUnidad Tipo) : IRequest<Guid>;
 
 public class CrearUnidadMedidaCommandValidator : AbstractValidator<CrearUnidadMedidaCommand>
 {
@@ -21,6 +22,9 @@ public class CrearUnidadMedidaCommandValidator : AbstractValidator<CrearUnidadMe
         RuleFor(x => x.Abreviatura)
             .NotEmpty().WithMessage("La abreviatura es obligatoria.")
             .MaximumLength(10).WithMessage("La abreviatura no puede exceder los 10 caracteres.");
+
+        RuleFor(x => x.Tipo)
+            .IsInEnum().WithMessage("El tipo de unidad no es válido.");
     }
 }
 
@@ -40,7 +44,8 @@ public class CrearUnidadMedidaCommandHandler : IRequestHandler<CrearUnidadMedida
         var unidad = new UnidadMedida(
             Guid.NewGuid(),
             request.Nombre,
-            request.Abreviatura);
+            request.Abreviatura,
+            request.Tipo);
 
         _unidadMedidaRepository.Agregar(unidad);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

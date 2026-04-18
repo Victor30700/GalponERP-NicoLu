@@ -14,6 +14,10 @@ import { useSwal } from "@/hooks/useSwal";
 export default function UsuariosPage() {
   const { profile } = useAuth();
   const { usuarios, isLoadingUsuarios, eliminarUsuario } = useUsuarios();
+  
+  // Filtro de seguridad adicional en el cliente
+  const usuariosActivos = usuarios.filter(u => u.isActive !== false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | undefined>(undefined);
   const swal = useSwal();
@@ -87,7 +91,7 @@ export default function UsuariosPage() {
 
       <UniversalGrid
         title="Usuarios"
-        items={usuarios}
+        items={usuariosActivos}
         isLoading={isLoadingUsuarios}
         onAdd={handleAdd}
         onEdit={handleEdit}
@@ -117,10 +121,16 @@ export default function UsuariosPage() {
             header: 'Estado', 
             accessor: (item) => (
               <div className="flex items-center gap-2">
-                {item.isActive ? (
-                  <><CheckCircle size={16} className="text-emerald-500" /> <span className="text-xs font-bold text-emerald-500 uppercase">Activo</span></>
+                {item.active === 1 ? (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20">
+                    <CheckCircle size={14} />
+                    <span className="text-[10px] font-black uppercase">Habilitado</span>
+                  </div>
                 ) : (
-                  <><XCircle size={16} className="text-red-500" /> <span className="text-xs font-bold text-red-500 uppercase">Inactivo</span></>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20">
+                    <XCircle size={14} />
+                    <span className="text-[10px] font-black uppercase">Deshabilitado</span>
+                  </div>
                 )}
               </div>
             )

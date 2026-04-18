@@ -77,6 +77,7 @@ public class RecibirOrdenCompraCommandHandler : IRequestHandler<RecibirOrdenComp
                 TipoMovimiento.Compra,
                 DateTime.UtcNow,
                 usuarioId,
+                producto.PesoUnitarioKg, // Capturamos el peso actual como HISTÓRICO
                 $"Recepción OC {oc.Id}: {request.NotaRecibo}",
                 item.Total,
                 oc.Proveedor?.RazonSocial,

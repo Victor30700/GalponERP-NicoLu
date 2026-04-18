@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useAuditoria, AuditoriaLog } from '@/hooks/useAuditoria'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ShieldCheck, 
@@ -22,48 +21,28 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-// --- Interfaces ---
-
-interface AuditoriaLog {
-  id: string
-  usuarioId: string
-  usuarioNombre: string
-  accion: string
-  entidad: string
-  entidadNombre: string
-  entidadId: string
-  fecha: string
-  detalles: string
-  detallesJSON: string
-}
-
 // --- Main Component ---
 
 export default function AuditoriaPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEntidad, setSelectedEntidad] = useState('')
   const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null)
-  const queryClient = useQueryClient()
 
-  // Queries
-  const { data: logs = [], isLoading } = useQuery({
-    queryKey: ['auditoria', 'logs', selectedEntidad],
-    queryFn: () => {
-      const params = new URLSearchParams()
-      if (selectedEntidad) params.append('entidad', selectedEntidad)
-      return api.get<AuditoriaLog[]>(`/api/Auditoria/logs?${params.toString()}`)
-    },
+  // Queries using hook
+  const { logs, isLoading, restaurarEntidad } = useAuditoria({
+    entidad: selectedEntidad
   })
 
-  // Mutations
-  const restaurarMutation = useMutation({
-    mutationFn: (log: AuditoriaLog) => api.patch(`/api/Auditoria/restaurar/${log.entidad}/${log.entidadId}`, {}),
-    onSuccess: () => {
-      toast.success('Entidad restaurada correctamente')
-      queryClient.invalidateQueries({ queryKey: ['auditoria'] })
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
+  const handleRestaurar = async (log: AuditoriaLog) => {
+    if (confirm('¿Deseas restaurar este registro eliminado?')) {
+      try {
+        await restaurarEntidad.mutateAsync({ entidad: log.entidad, id: log.entidadId })
+        toast.success('Entidad restaurada correctamente')
+      } catch (err: any) {
+        toast.error(err.message || 'Error al restaurar')
+      }
+    }
+  }
 
   const filteredLogs = logs.filter(log => 
     log.usuarioNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -181,11 +160,7 @@ export default function AuditoriaPage() {
                         </button>
                         {log.accion.toLowerCase() === 'eliminar' && (
                           <button 
-                            onClick={() => {
-                              if (confirm('¿Deseas restaurar este registro eliminado?')) {
-                                restaurarMutation.mutate(log)
-                              }
-                            }}
+                            onClick={() => handleRestaurar(log)}
                             className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-bold transition-all"
                           >
                             <RotateCcw size={14} /> Restaurar

@@ -1,6 +1,7 @@
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Domain.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.RegistrarUsuario;
@@ -30,7 +31,18 @@ public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCo
             return existingUserByEmail.Id;
         }
 
-        // 2. Intentar crear o recuperar el UID de Firebase
+        // 2. Verificar si ya existe en la BD local por Teléfono
+        string? telefonoNormalizado = request.Telefono?.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+        if (!string.IsNullOrWhiteSpace(telefonoNormalizado))
+        {
+            var existingUserByPhone = await _usuarioRepository.ObtenerPorTelefonoAsync(telefonoNormalizado);
+            if (existingUserByPhone != null)
+            {
+                throw new UsuarioDomainException($"El número de teléfono {telefonoNormalizado} ya está registrado con otro usuario.");
+            }
+        }
+
+        // 3. Intentar crear o recuperar el UID de Firebase
         string firebaseUid;
         try
         {
@@ -87,8 +99,9 @@ public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCo
             fechaUtc,
             request.Direccion ?? string.Empty,
             request.Profesion ?? string.Empty,
-            request.Telefono ?? string.Empty,
-            request.Rol);
+            telefonoNormalizado,
+            request.Rol,
+            request.Active);
 
         _usuarioRepository.Agregar(usuario);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

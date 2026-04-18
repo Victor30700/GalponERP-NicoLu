@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useGalpones, useGalpon, Galpon } from '@/hooks/useGalpones'
 import { UniversalGrid } from '@/components/shared/UniversalGrid'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,50 +19,12 @@ const galponSchema = z.object({
 
 type GalponFormValues = z.infer<typeof galponSchema>
 
-interface Galpon extends GalponFormValues {
-  id: string
-  isActive: boolean
-}
-
 export default function GalponesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingGalpon, setEditingGalpon] = useState<Galpon | null>(null)
-  const queryClient = useQueryClient()
-
-  const { data: galpones = [], isLoading } = useQuery({
-    queryKey: ['galpones'],
-    queryFn: () => api.get<Galpon[]>('/api/Galpones'),
-  })
-
-  const createMutation = useMutation({
-    mutationFn: (newGalpon: GalponFormValues) => api.post('/api/Galpones', newGalpon),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['galpones'] })
-      toast.success('Galpón creado correctamente')
-      closeForm()
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (data: { id: string; values: GalponFormValues }) => 
-      api.patch(`/api/Galpones/${data.id}`, data.values),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['galpones'] })
-      toast.success('Galpón actualizado')
-      closeForm()
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/Galpones/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['galpones'] })
-      toast.success('Galpón eliminado')
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
+  const [editingGalponId, setEditingGalponId] = useState<string | null>(null)
+  
+  const { galpones, isLoading, crearGalpon } = useGalpones()
+  const { actualizarGalpon, eliminarGalpon } = useGalpon(editingGalponId || '')
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<GalponFormValues>({
     resolver: zodResolver(galponSchema),
@@ -71,19 +32,31 @@ export default function GalponesPage() {
 
   const onSubmit = (data: GalponFormValues) => {
     const values = { ...data, capacidad: Number(data.capacidad) }
-    if (editingGalpon) {
-      updateMutation.mutate({ id: editingGalpon.id, values })
+    if (editingGalponId) {
+      actualizarGalpon.mutate(values, {
+        onSuccess: () => {
+          toast.success('Galpón actualizado')
+          closeForm()
+        },
+        onError: (err: any) => toast.error(err.message)
+      })
     } else {
-      createMutation.mutate(values)
+      crearGalpon.mutate(values, {
+        onSuccess: () => {
+          toast.success('Galpón creado correctamente')
+          closeForm()
+        },
+        onError: (err: any) => toast.error(err.message)
+      })
     }
   }
 
   const openForm = (galpon?: Galpon) => {
     if (galpon) {
-      setEditingGalpon(galpon)
+      setEditingGalponId(galpon.id)
       reset(galpon)
     } else {
-      setEditingGalpon(null)
+      setEditingGalponId(null)
       reset({ nombre: '', capacidad: 0, ubicacion: '' })
     }
     setIsFormOpen(true)
@@ -91,7 +64,7 @@ export default function GalponesPage() {
 
   const closeForm = () => {
     setIsFormOpen(false)
-    setEditingGalpon(null)
+    setEditingGalponId(null)
     reset()
   }
 
@@ -127,6 +100,8 @@ export default function GalponesPage() {
     },
   ]
 
+  const isPending = crearGalpon.isPending || actualizarGalpon.isPending
+
   return (
     <div className="relative">
       <UniversalGrid
@@ -139,7 +114,10 @@ export default function GalponesPage() {
         onDelete={async (item) => {
           const result = await confirmDestructiveAction('¿Eliminar galpón?', 'Los lotes asociados podrían verse afectados.')
           if (result.isConfirmed) {
-            deleteMutation.mutate(item.id)
+            eliminarGalpon.mutate(undefined, {
+              onSuccess: () => toast.success('Galpón eliminado'),
+              onError: (err: any) => toast.error(err.message)
+            })
           }
         }}
         renderMobileCard={(item) => (
@@ -153,7 +131,7 @@ export default function GalponesPage() {
             <div className="grid grid-cols-2 gap-2 mt-4">
               <div className="p-3 bg-muted/50 rounded-xl border border-border">
                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Capacidad</p>
-                <p className="text-foreground font-bold">{item.capacidad.toLocaleString()}</p>
+                <p className="text-foreground font-bold">{(item.capacidad || 0).toLocaleString()}</p>
               </div>
               <div className="p-3 bg-muted/50 rounded-xl border border-border">
                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Ubicación</p>
@@ -171,7 +149,7 @@ export default function GalponesPage() {
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} className="fixed bottom-0 left-0 right-0 md:top-0 md:right-0 md:left-auto md:w-full md:max-w-md glass z-[70] shadow-2xl p-8 rounded-t-[2.5rem] md:rounded-none overflow-y-auto" >
               <div className="flex items-center justify-between mb-10">
                 <div>
-                  <h2 className="text-3xl font-black text-foreground">{editingGalpon ? 'Editar' : 'Nuevo'}</h2>
+                  <h2 className="text-3xl font-black text-foreground">{editingGalponId ? 'Editar' : 'Nuevo'}</h2>
                   <p className="text-emerald-500 font-bold uppercase tracking-widest text-xs mt-1">Infraestructura</p>
                 </div>
                 <button onClick={closeForm} className="p-3 bg-muted/50 rounded-2xl text-muted-foreground hover:text-foreground transition-all"><X size={24} /></button>
@@ -203,9 +181,9 @@ export default function GalponesPage() {
                 </div>
 
                 <div className="pt-8">
-                  <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-emerald-500/20 active:scale-95" >
+                  <button type="submit" disabled={isPending} className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-emerald-500/20 active:scale-95" >
                     <Save size={24} />
-                    {editingGalpon ? 'GUARDAR CAMBIOS' : 'REGISTRAR GALPÓN'}
+                    {editingGalponId ? 'GUARDAR CAMBIOS' : 'REGISTRAR GALPÓN'}
                   </button>
                 </div>
               </form>

@@ -31,15 +31,16 @@ public class RegistrarPagoVentaCommandHandler : IRequestHandler<RegistrarPagoVen
             ? DateTime.SpecifyKind(request.FechaPago, DateTimeKind.Utc) 
             : request.FechaPago.ToUniversalTime();
 
-        venta.RegistrarPago(
+        var pago = venta.RegistrarPago(
             pagoId,
             new Moneda(request.Monto),
             fechaPagoUtc,
             request.MetodoPago,
             request.UsuarioId);
 
+        // Forzar el estado de la venta como modificado para asegurar la actualización de saldos y auditoría
         _ventaRepository.Actualizar(venta);
-
+        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return pagoId;

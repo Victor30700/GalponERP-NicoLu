@@ -1,24 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { useUnidadesMedida, useUnidadMedida, type UnidadMedida } from '@/hooks/useUnidadesMedida'
+import { useUnidadesMedida, useUnidadMedida, type UnidadMedida, TipoUnidad } from '@/hooks/useUnidadesMedida'
 import { UniversalGrid, Column } from '@/components/shared/UniversalGrid'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, Ruler, Type } from 'lucide-react'
+import { X, Save, Ruler, Type, Activity } from 'lucide-react'
 import { toast } from 'sonner'
 import { confirmDestructiveAction } from '@/lib/swal'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 const unidadSchema = z.object({
   nombre: z.string().min(2, 'El nombre es muy corto'),
   abreviatura: z.string().min(1, 'La abreviatura es requerida'),
+  tipo: z.number().int().min(0).max(2)
 })
 
 type UnidadFormValues = z.infer<typeof unidadSchema>
 
 export default function UnidadesMedidaPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingUnidad, setEditingUnidad] = useState<UnidadMedida | null>(null)
   
@@ -32,6 +39,9 @@ export default function UnidadesMedidaPage() {
     formState: { errors },
   } = useForm<UnidadFormValues>({
     resolver: zodResolver(unidadSchema),
+    defaultValues: {
+        tipo: TipoUnidad.UnidadFisica
+    }
   })
 
   const onSubmit = (data: UnidadFormValues) => {
@@ -59,11 +69,12 @@ export default function UnidadesMedidaPage() {
       setEditingUnidad(unidad)
       reset({
         nombre: unidad.nombre,
-        abreviatura: unidad.abreviatura
+        abreviatura: unidad.abreviatura,
+        tipo: unidad.tipo
       })
     } else {
       setEditingUnidad(null)
-      reset({ nombre: '', abreviatura: '' })
+      reset({ nombre: '', abreviatura: '', tipo: TipoUnidad.UnidadFisica })
     }
     setIsFormOpen(true)
   }
@@ -74,6 +85,14 @@ export default function UnidadesMedidaPage() {
     reset()
   }
 
+  const getTipoBadge = (tipo: TipoUnidad) => {
+    switch (tipo) {
+        case TipoUnidad.Masa: return <span className="bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded text-[10px] font-bold border border-orange-500/20">MASA (KG)</span>
+        case TipoUnidad.Volumen: return <span className="bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">VOLUMEN (LT)</span>
+        default: return <span className="bg-purple-500/10 text-purple-500 px-2 py-0.5 rounded text-[10px] font-bold border border-purple-500/20">UNIDAD FÍSICA</span>
+    }
+  }
+
   const columns: Column<UnidadMedida>[] = [
     { 
       header: 'Nombre', 
@@ -82,7 +101,10 @@ export default function UnidadesMedidaPage() {
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold">
             <Ruler size={14} />
           </div>
-          <span className="font-medium text-foreground">{item.nombre}</span>
+          <div className="flex flex-col">
+            <span className="font-medium text-foreground">{item.nombre}</span>
+            <div className="mt-0.5">{getTipoBadge(item.tipo)}</div>
+          </div>
         </div>
       )
     },
@@ -103,9 +125,9 @@ export default function UnidadesMedidaPage() {
         items={unidades}
         columns={columns}
         isLoading={isLoading}
-        onAdd={() => openForm()}
-        onEdit={(item) => openForm(item)}
-        onDelete={async (item) => {
+        onAdd={isEmpleado ? undefined : () => openForm()}
+        onEdit={isEmpleado ? undefined : (item) => openForm(item as UnidadMedida)}
+        onDelete={isEmpleado ? undefined : async (item) => {
           const result = await confirmDestructiveAction(
             '¿Eliminar unidad de medida?', 
             'Esto podría afectar a los productos que usan esta unidad.'
@@ -123,7 +145,10 @@ export default function UnidadesMedidaPage() {
         renderMobileCard={(item) => (
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-bold text-foreground">{item.nombre}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">{item.nombre}</h3>
+                {getTipoBadge(item.tipo)}
+              </div>
               <p className="text-sm text-blue-400 font-mono">{item.abreviatura}</p>
             </div>
           </div>
@@ -183,6 +208,22 @@ export default function UnidadesMedidaPage() {
                   {errors.abreviatura && <p className="text-xs text-red-400 ml-1">{errors.abreviatura.message}</p>}
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Magnitud / Tipo</label>
+                  <div className="relative">
+                    <Activity className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <select
+                      {...register('tipo', { valueAsNumber: true })}
+                      className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none transition-all"
+                    >
+                      <option value={TipoUnidad.UnidadFisica}>Unidad Física (Contable)</option>
+                      <option value={TipoUnidad.Masa}>Masa (Kilogramos)</option>
+                      <option value={TipoUnidad.Volumen}>Volumen (Litros)</option>
+                    </select>
+                  </div>
+                  {errors.tipo && <p className="text-xs text-red-400 ml-1">{errors.tipo.message}</p>}
+                </div>
+
                 <button
                   type="submit"
                   disabled={createUnidad.isPending || updateUnidad.isPending}
@@ -200,6 +241,3 @@ export default function UnidadesMedidaPage() {
     </div>
   )
 }
-
-
-

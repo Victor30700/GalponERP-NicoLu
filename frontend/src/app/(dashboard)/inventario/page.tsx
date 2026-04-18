@@ -43,6 +43,8 @@ import {
   type PagoCompra,
   type KardexItem
 } from '@/hooks/useInventario'
+import { useAuth } from '@/context/AuthContext'
+import { UserRole } from '@/lib/rbac'
 
 // --- Interfaces (Existing ones from hook are imported) ---
 
@@ -99,6 +101,10 @@ type ConciliacionFormValues = z.infer<typeof conciliacionSchema>
 // --- Main Component ---
 
 export default function InventarioPage() {
+  const { profile } = useAuth()
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
+  const isEmpleado = userRole === UserRole.Empleado
+
   const [activeTab, setActiveTab] = useState<'stock' | 'movimientos' | 'compras' | 'reportes'>('stock')
   const [isCompraModalOpen, setIsCompraModalOpen] = useState(false)
   const [isAjusteModalOpen, setIsAjusteModalOpen] = useState(false)
@@ -114,7 +120,7 @@ export default function InventarioPage() {
     valoracion, isLoadingValoracion,
     proyecciones, isLoadingProyecciones,
     nivelesAlimento, isLoadingNiveles,
-    registrarCompra, registrarAjuste, realizarConciliacion
+    registrarCompra, registrarAjuste, realizarConciliacion, ajustarStock
   } = useInventario()
 
   const { data: productos = [] } = useQuery({
@@ -205,7 +211,7 @@ export default function InventarioPage() {
           <div>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Valorización Total</p>
             <p className="text-xl font-black text-foreground">
-              {isLoadingValoracion ? '...' : `$${valoracion?.valorTotalEmpresa.toLocaleString() || 0}`}
+              {isLoadingValoracion ? '...' : `Bs. ${(valoracion?.valorTotalEmpresa || 0).toLocaleString()}`}
             </p>
           </div>
         </div>
@@ -216,7 +222,7 @@ export default function InventarioPage() {
           <div>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Stock Alimento</p>
             <p className="text-xl font-black text-foreground">
-              {isLoadingNiveles ? '...' : `${nivelesAlimento?.stockActualAlimento.toLocaleString() || 0} kg`}
+              {isLoadingNiveles ? '...' : `${(nivelesAlimento?.stockActualAlimento || 0).toLocaleString()} kg`}
             </p>
           </div>
         </div>
@@ -227,7 +233,7 @@ export default function InventarioPage() {
           <div>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Autonomía estimada</p>
             <p className="text-xl font-black text-foreground">
-              {isLoadingNiveles ? '...' : `${nivelesAlimento?.diasRestantes || 0} días`}
+              {isLoadingNiveles ? '...' : `${(nivelesAlimento?.diasRestantes || 0).toFixed(1)} días`}
             </p>
           </div>
         </div>
@@ -280,20 +286,22 @@ export default function InventarioPage() {
       <AnimatePresence mode="wait">
         {activeTab === 'stock' && (
           <motion.div key="stock" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <div className="flex justify-end mb-4 gap-2">
-                <button 
-                    onClick={() => setIsConciliacionModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-border"
-                >
-                    <CheckCircle2 size={16} /> Conciliación
-                </button>
-                <button 
-                    onClick={() => setIsAjusteModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20"
-                >
-                    <Plus size={16} /> Nuevo Ajuste
-                </button>
-            </div>
+            {!isEmpleado && (
+              <div className="flex justify-end mb-4 gap-2">
+                  <button 
+                      onClick={() => setIsConciliacionModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all border border-border"
+                  >
+                      <CheckCircle2 size={16} /> Conciliación
+                  </button>
+                  <button 
+                      onClick={() => setIsAjusteModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20"
+                  >
+                      <Plus size={16} /> Nuevo Ajuste
+                  </button>
+              </div>
+            )}
             <UniversalGrid
               title="Stock de Inventario"
               items={stock}
@@ -319,10 +327,10 @@ export default function InventarioPage() {
                   accessor: (item) => (
                     <div className="flex flex-col">
                       <span className={cn("text-lg font-bold", item.stockActual > 0 ? "text-emerald-400" : "text-red-400")}>
-                        {item.stockActual.toLocaleString()} {item.unidadMedida}
+                        {(item.stockActual ?? 0).toLocaleString()} {item.unidadMedida}
                       </span>
                       {item.stockActualKg > 0 && (
-                        <span className="text-xs text-muted-foreground">{item.stockActualKg.toLocaleString()} Kg equiv.</span>
+                        <span className="text-xs text-muted-foreground">{(item.stockActualKg ?? 0).toLocaleString()} Kg equiv.</span>
                       )}
                     </div>
                   )
@@ -348,12 +356,55 @@ export default function InventarioPage() {
                 {
                     header: 'Acciones',
                     accessor: (item) => (
+                      <div className="flex items-center gap-1">
+                        {!isEmpleado && (
+                          <button 
+                              onClick={() => {
+                                import('sweetalert2').then((Swal) => {
+                                  Swal.default.fire({
+                                    title: `Conciliar: ${item.nombreProducto}`,
+                                    text: `Stock en sistema: ${item.stockActual} ${item.unidadMedida}. Ingrese el conteo físico real:`,
+                                    input: 'number',
+                                    inputAttributes: {
+                                      step: '0.01',
+                                      min: '0'
+                                    },
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Ajustar Stock',
+                                    cancelButtonText: 'Cancelar',
+                                    confirmButtonColor: '#3b82f6',
+                                    background: '#1e293b',
+                                    color: '#f8fafc',
+                                    inputValidator: (value) => {
+                                      if (!value) return 'Debe ingresar una cantidad'
+                                    }
+                                  }).then((result) => {
+                                    if (result.isConfirmed) {
+                                      ajustarStock.mutate({
+                                        productoId: item.productoId,
+                                        cantidadFisica: Number(result.value),
+                                        nota: 'Conciliación rápida desde tabla de stock'
+                                      }, {
+                                        onSuccess: () => toast.success('Inventario ajustado correctamente'),
+                                        onError: (err: any) => toast.error(err.message)
+                                      })
+                                    }
+                                  })
+                                })
+                              }}
+                              className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg text-emerald-500 transition-colors"
+                              title="Conciliar Stock Físico"
+                          >
+                              <CheckCircle2 size={16} />
+                          </button>
+                        )}
                         <button 
                             onClick={() => setSelectedProductoId(item.productoId)}
                             className="p-2 bg-muted/50 hover:bg-muted/50 rounded-lg text-muted-foreground transition-colors"
                         >
                             <Info size={16} />
                         </button>
+                      </div>
                     )
                 }
               ]}
@@ -435,7 +486,7 @@ export default function InventarioPage() {
                   header: 'Cantidad', 
                   accessor: (item) => (
                     <span className="font-mono font-bold text-foreground">
-                      {item.cantidad.toLocaleString()}
+                      {(item.cantidad ?? 0).toLocaleString()}
                     </span>
                   ) 
                 },
@@ -458,7 +509,7 @@ export default function InventarioPage() {
                   <h3 className="font-bold text-foreground text-lg">{item.nombreProducto}</h3>
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border">
                     <div className="text-xs text-muted-foreground uppercase font-bold">Cantidad</div>
-                    <div className="text-xl font-black text-foreground">{item.cantidad.toLocaleString()}</div>
+                    <div className="text-xl font-black text-foreground">{(item.cantidad ?? 0).toLocaleString()}</div>
                   </div>
                   {item.justificacion && (
                     <p className="text-xs text-muted-foreground italic">"{item.justificacion}"</p>
@@ -475,7 +526,7 @@ export default function InventarioPage() {
               title="Ordenes de Compra"
               items={compras}
               isLoading={isLoadingCompras}
-              onAdd={() => setIsCompraModalOpen(true)}
+              onAdd={isEmpleado ? undefined : () => setIsCompraModalOpen(true)}
               columns={[
                 { 
                   header: 'Proveedor', 
@@ -493,7 +544,7 @@ export default function InventarioPage() {
                   header: 'Total', 
                   accessor: (item) => (
                     <span className="font-mono font-bold text-foreground">
-                      ${item.total.toLocaleString()}
+                      Bs. {(item.total ?? 0).toLocaleString()}
                     </span>
                   )
                 },
@@ -501,7 +552,7 @@ export default function InventarioPage() {
                   header: 'Saldo',
                   accessor: (item) => (
                     <span className={cn("font-mono font-bold", item.saldoPendiente > 0 ? "text-red-400" : "text-emerald-400")}>
-                      ${item.saldoPendiente.toLocaleString()}
+                      Bs. {(item.saldoPendiente ?? 0).toLocaleString()}
                     </span>
                   )
                 },
@@ -516,9 +567,9 @@ export default function InventarioPage() {
                     </span>
                   )
                 },
-                {
+                ...(!isEmpleado ? [{
                     header: 'Acciones',
-                    accessor: (item) => (
+                    accessor: (item: any) => (
                         <button 
                             onClick={() => setSelectedCompraId(item.id)}
                             className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg text-emerald-500 transition-colors"
@@ -526,7 +577,7 @@ export default function InventarioPage() {
                             <DollarSign size={16} />
                         </button>
                     )
-                }
+                }] : [])
               ]}
               renderMobileCard={(item) => (
                 <div className="space-y-4">
@@ -541,22 +592,24 @@ export default function InventarioPage() {
                   </div>
                   <div className="flex justify-between items-start">
                     <h3 className="text-xl font-black text-foreground">{item.proveedorNombre}</h3>
-                    <button 
-                        onClick={() => setSelectedCompraId(item.id)}
-                        className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500"
-                    >
-                        <DollarSign size={20} />
-                    </button>
+                    {!isEmpleado && (
+                      <button 
+                          onClick={() => setSelectedCompraId(item.id)}
+                          className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500"
+                      >
+                          <DollarSign size={20} />
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-muted/50 rounded-xl border border-border">
                       <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Total Compra</p>
-                      <p className="text-lg font-black text-foreground">${item.total.toLocaleString()}</p>
+                      <p className="text-lg font-black text-foreground">Bs. {(item.total ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-xl border border-border">
                       <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Saldo Pendiente</p>
                       <p className={cn("text-lg font-black", item.saldoPendiente > 0 ? "text-red-400" : "text-emerald-400")}>
-                        ${item.saldoPendiente.toLocaleString()}
+                        Bs. {(item.saldoPendiente ?? 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -579,16 +632,16 @@ export default function InventarioPage() {
                             <div key={i} className="space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground font-bold uppercase">{det.categoria}</span>
-                                    <span className="text-foreground font-black">${det.valor.toLocaleString()}</span>
+                                    <span className="text-foreground font-black">Bs. {(det.valor || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
                                     <motion.div 
                                         initial={{ width: 0 }}
-                                        animate={{ width: `${det.porcentaje}%` }}
+                                        animate={{ width: `${det.porcentaje || 0}%` }}
                                         className="h-full bg-blue-500"
                                     />
                                 </div>
-                                <p className="text-[10px] text-muted-foreground text-right font-bold">{det.porcentaje.toFixed(1)}% del total</p>
+                                <p className="text-[10px] text-muted-foreground text-right font-bold">{(det.porcentaje || 0).toFixed(1)}% del total</p>
                             </div>
                         ))}
                     </div>
@@ -604,14 +657,14 @@ export default function InventarioPage() {
                             <div key={i} className="p-4 bg-muted/50 rounded-2xl border border-border flex items-center justify-between">
                                 <div>
                                     <p className="font-bold text-foreground">{proy.nombreProducto}</p>
-                                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Consumo: {proy.consumoDiarioEstimado.toLocaleString()} / día</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Consumo: {(proy.consumoDiarioEstimado || 0).toLocaleString()} / día</p>
                                 </div>
                                 <div className="text-right">
                                     <p className={cn(
                                         "text-lg font-black",
                                         proy.diasRestantes < 5 ? "text-red-400" : proy.diasRestantes < 15 ? "text-amber-400" : "text-emerald-400"
                                     )}>
-                                        {proy.diasRestantes} días
+                                        {(proy.diasRestantes || 0).toFixed(1)} días
                                     </p>
                                     <p className="text-[10px] text-muted-foreground uppercase font-bold">Agotamiento: {new Date(proy.fechaAgotamientoEstimada).toLocaleDateString()}</p>
                                 </div>
@@ -676,14 +729,15 @@ export default function InventarioPage() {
                     {compraForm.formState.errors.cantidad && <p className="text-xs text-red-400">{compraForm.formState.errors.cantidad.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground ml-1">Costo Total ($)</label>
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Costo Total (Bs.)</label>
+
                     <input type="number" step="0.01" {...compraForm.register('costoTotalCompra', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
                     {compraForm.formState.errors.costoTotalCompra && <p className="text-xs text-red-400">{compraForm.formState.errors.costoTotalCompra.message}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground ml-1">Monto Pagado Hoy ($)</label>
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Monto Pagado Hoy (Bs.)</label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input type="number" step="0.01" {...compraForm.register('montoPagado', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" />
@@ -839,12 +893,12 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="p-4 bg-muted/50 rounded-2xl border border-border">
                                         <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Stock Actual</p>
-                                        <p className="text-2xl font-black text-emerald-400">{stock?.stockActual.toLocaleString()} <span className="text-xs font-normal opacity-60">{stock?.unidadMedida}</span></p>
+                                        <p className="text-2xl font-black text-emerald-400">{(stock?.stockActual ?? 0).toLocaleString()} <span className="text-xs font-normal opacity-60">{stock?.unidadMedida}</span></p>
                                     </div>
                                     {(stock?.stockActualKg ?? 0) > 0 && (
                                         <div className="p-4 bg-muted/50 rounded-2xl border border-border">
                                             <p className="text-[10px] text-muted-foreground font-black uppercase mb-1">Equivalente</p>
-                                            <p className="text-2xl font-black text-foreground">{stock?.stockActualKg.toLocaleString()} <span className="text-xs font-normal opacity-60">kg</span></p>
+                                            <p className="text-2xl font-black text-foreground">{(stock?.stockActualKg ?? 0).toLocaleString()} <span className="text-xs font-normal opacity-60">kg</span></p>
                                         </div>
                                     )}
                                 </div>
@@ -879,7 +933,7 @@ function ProductoDetalleModal({ productoId, onClose }: { productoId: string | nu
                                                             {item.salida > 0 ? `-${item.salida}` : '-'}
                                                         </td>
                                                         <td className="py-3 font-mono font-black text-foreground">
-                                                            {item.saldo.toLocaleString()}
+                                                            {(item.saldo ?? 0).toLocaleString()}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -982,7 +1036,7 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
                                                 <DollarSign size={20} />
                                             </div>
                                             <div>
-                                                <p className="text-lg font-black text-foreground">${pago.monto.toLocaleString()}</p>
+                                            <p className="text-lg font-black text-foreground">Bs. {(pago.monto ?? 0).toLocaleString()}</p>
                                                 <p className="text-[10px] text-muted-foreground font-bold uppercase">{new Date(pago.fechaPago).toLocaleDateString()} • {pago.metodoPago}</p>
                                             </div>
                                         </div>

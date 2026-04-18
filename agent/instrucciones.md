@@ -1,78 +1,34 @@
-# Instrucciones de Desarrollo: Refactorización de Productos e Inventario (Control de Alimento en Kg)
+# ROL Y CONTEXTO
+Eres un Arquitecto de Software Fullstack Senior especializado en Seguridad Frontend y Experiencia de Usuario. Tu misión es la IMPLEMENTACIÓN TOTAL del sistema de Roles y Permisos (RBAC) en el frontend de "GalponERP" (Next.js/React). Debes asegurar que las políticas de acceso para Admin (2), Sub-Admin (1) y Empleado (0) se apliquen de manera estricta y sin fisuras en toda la aplicación.
 
-## 1. Contexto y Objetivo
-Estamos trabajando en el proyecto Fullstack **GalponERP (Pollos NicoLu)**. Necesitamos modificar la forma en que se registran y gestionan los productos (específicamente la categoría "Alimento") para llevar un control exacto del inventario en Kilogramos y Unidades.
+# OBJETIVO
+Implementar restricciones de acceso y visibilidad en tres niveles: navegación (Sidebar), protección de rutas (Middleware/Layouts) y restricciones granulares en la interfaz de usuario (ocultar botones/formularios). Todo debe basarse en el rol numérico proveniente del perfil del usuario autenticado.
 
-Actualmente, el registro de productos asume un modelo básico. Necesitamos agregar el **Peso Unitario (Kg)** y replantear el seguimiento del stock total para que, al registrar el consumo diario de los pollos en un lote, se descuenten los Kilogramos exactos del inventario global del producto.
+# REGLAS DE FLUJO DE TRABAJO (ESTRICTO)
+1. **Auditoría de Componentes:** Debes analizar `frontend/src/config/navigation.ts`, `frontend/src/components/layout/Sidebar.tsx`, `DashboardLayout.tsx` y las vistas críticas mencionadas en el plan.
+2. **Generación del Plan:** En `D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\plan_rbac.md`, crea un checklist detallado separando la implementación por Fases (Navegación, Rutas, UI) indicando qué archivos exactos se van a modificar.
+3. **ESPERA:** Una vez generado el plan, DETENTE y espera mi aprobación para proceder.
+4. **Implementación Real:** No solo describas los cambios. Usa tus herramientas para SOBREESCRIBIR los archivos `.ts` y `.tsx` correspondientes, inyectando la lógica de filtrado y protección.
+5. **Documentación:** Al finalizar, detalla en `D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\docs_rbac.md` cómo funciona la utilidad `hasAccess`, cómo se protegió el Layout y qué vistas fueron refactorizadas.
 
-## 2. Cambios Requeridos en la API (Contrato)
-El endpoint de creación y edición de productos (`POST /api/Productos` y `PUT /api/Productos/{id}`) debe ser modificado.
+# ALCANCE TÉCNICO POR CAPA
 
-**Payload Actual:**
-```json
-{
-  "nombre": "string",
-  "categoriaProductoId": "uuid",
-  "unidadMedidaId": "uuid",
-  "equivalenciaEnKg": 0,
-  "umbralMinimo": 0,
-  "stockInicial": 0
-}
-Nuevo Payload Esperado:
+## 1. Filtrado de Menú (Navegación y Sidebar)
+- **`navigation.ts`:** Modificar la interfaz `NavigationItem` para incluir una propiedad opcional `roles?: number[]` (donde 0=Empleado, 1=Sub-Admin, 2=Admin). Mapear todos los ítems según la Matriz de Permisos.
+- **`Sidebar.tsx`:** Extraer el rol del usuario utilizando el hook `useAuth`. Interceptar y filtrar el array `navigationSections` antes del renderizado para que solo se muestren las rutas permitidas.
 
-JSON
-{
-  "nombre": "string",
-  "categoriaProductoId": "uuid",
-  "unidadMedidaId": "uuid",
-  "pesoUnitarioKg": 50, 
-  "equivalenciaEnKg": 5000, 
-  "umbralMinimo": 100,
-  "stockInicial": 100
-}
-Nota de Negocio: pesoUnitarioKg representa cuánto pesa 1 unidad (ej. 1 saco = 50kg). equivalenciaEnKg pasará a representar el Peso Total Inicial (ej. 100 sacos * 50kg = 5000kg).
+## 2. Protección de Rutas (Guardián)
+- **Utilidad de Acceso:** Crear una función centralizada (ej. `hasAccess(pathname, role)`) que evalúe si la ruta actual está permitida para el rol del usuario basándose en la configuración de `navigation.ts`.
+- **`DashboardLayout.tsx` (o equivalente):** Implementar la lógica para leer la ruta actual y el rol. Si la validación de `hasAccess` falla, ejecutar una redirección forzada (ej. `router.push('/')`) hacia el Dashboard general.
+- **Bloqueos Estrictos:** Asegurar el bloqueo total a `/finanzas` para Empleados y a `/configuracion` y `/auditoria` para Sub-Admin y Empleados.
 
-3. Flujo de Trabajo y Requerimientos Arquitectónicos
-A. Backend (.NET - Clean Architecture & CQRS)
-Domain: Actualizar la entidad Producto.cs para incluir PesoUnitarioKg.
+## 3. Restricciones en Vistas (UI y Componentes)
+- **Replicación de Patrones:** Replicar la lógica de `canManage` (ya existente en `usuarios/page.tsx`) hacia los módulos de Inventario, Lotes, Productos y Sanidad.
+- **Acciones de Escritura:** Deshabilitar o no renderizar botones de "Crear", "Editar" y "Eliminar" si el usuario tiene rol `0` (Empleado) en módulos donde solo tiene permiso de lectura.
+- **Formularios:** Bloquear los modales o formularios de mutación si el usuario logra forzar el estado visual; la interfaz no debe permitir el envío (submit).
 
-Infrastructure: Actualizar la configuración de Entity Framework (ProductoConfiguration.cs) y generar la migración correspondiente.
+# INSTRUCCIÓN DE SEGURIDAD
+NO asumas que el sistema es seguro solo por ocultar un enlace en el Sidebar. Es obligatorio que el Guardián de Rutas esté implementado para evitar accesos directos por URL. Además, asegúrate de que al ocultar componentes (como un botón de eliminar) no se rompa el layout (evitar errores de `undefined` o renderizado condicional roto en tablas).
 
-Application: - Modificar CrearProductoCommand, ActualizarProductoCommand y sus respectivos validadores y Handlers.
-
-Crucial: Revisar la lógica en RegistrarConsumoAlimentoCommandHandler (o el handler de inventario correspondiente). Al registrar un consumo diario (que vendrá en Kg), el sistema debe descontar esos Kg del total disponible (equivalenciaEnKg o el campo de tracking de peso total) y calcular cuántas unidades físicas representa para descontar el Stock.
-
-B. Frontend (Next.js / React)
-Módulo de Productos (/productos):
-
-Actualizar el formulario de "Nuevo Producto" para incluir el input PesoUnitarioKg.
-
-Implementar un cálculo reactivo: Cuando el usuario ingrese Stock Inicial (ej. 100) y Peso Unitario (ej. 50), el campo Peso Total / Equivalencia (ej. 5000) debe calcularse automáticamente para enviarse al backend.
-
-Módulo de Operaciones (/lotes/[id] - Consumo):
-
-Modificar la vista de "Registrar Alimento" diario.
-
-Mostrar el stock restante dinámico (ej. "Disponibles: 4500 Kg").
-
-Al registrar el consumo diario en Kg, preparar el payload para el endpoint correspondiente de la API de Operaciones/Inventario.
-
-4. Archivos y Rutas de Destino (Strict Grounding)
-Debes generar la salida de tu análisis en archivos locales específicos. Utiliza las siguientes rutas absolutas:
-
-Plan de Trabajo (DESTINO 1): D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\plan.md
-
-Documentación Final (DESTINO 2): D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\docs.md
-
-5. Instrucciones de Ejecución Inmediata (¡ALTO AQUÍ!)
-Tu ÚNICA tarea en este momento es analizar el proyecto (Backend y Frontend) y redactar el Plan de Trabajo en formato Markdown dentro del archivo agent\plan.md.
-
-Este plan debe contener:
-
-Los archivos exactos que vas a modificar en el Backend.
-
-Los archivos exactos que vas a modificar en el Frontend.
-
-Las consultas/comandos SQL o migraciones de EF Core a generar.
-
-REGLA CRÍTICA: UNA VEZ GENERADO EL ARCHIVO plan.md, DETENTE POR COMPLETO. No escribas ni modifiques ningún código fuente de la aplicación. Espera explícitamente mis instrucciones para proceder con la implementación. Cuando yo te dé la orden, ejecutarás el código y, al finalizar, documentarás todo en docs.md.
+# INICIO
+Comienza auditando la configuración de navegación y el Sidebar. Luego, genera el `plan_rbac.md` con los pasos exactos y los archivos afectados para mi revisión.

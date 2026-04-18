@@ -11,5 +11,6 @@ public record ActualizarUsuarioCommand(
     DateTime FechaNacimiento,
     string Direccion,
     string Profesion,
-    string Telefono,
-    RolGalpon Rol) : IRequest;
+    string? Telefono,
+    RolGalpon Rol,
+    int Active) : IRequest;

@@ -1,8 +1,8 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useLote } from '@/hooks/useLotes'
+import { useGalpones } from '@/hooks/useGalpones'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Bird, TrendingUp, AlertCircle, DollarSign, Plus, 
@@ -13,42 +13,35 @@ import {
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import { LoteFormModal } from '@/components/production/LoteFormModal'
+import { CerrarLoteModal } from '@/components/production/CerrarLoteModal'
 import { ManualActivityModal } from '@/components/production/ManualActivityModal'
 import { OperationFilters } from '@/components/production/OperationFilters'
 import { OperationHistoryList } from '@/components/production/OperationHistoryList'
+import { QuickRecordModal } from '@/components/production/QuickRecordModal'
 import { cn } from '@/lib/utils'
 import { confirmAction, confirmDestructiveAction, promptAction } from '@/lib/swal'
 import { useCalendarioSanitario, EstadoCalendario, TipoActividad } from '@/hooks/useCalendarioSanitario'
-import { useProyeccionSacrificio } from '@/hooks/useDashboard'
+import { useProyeccionSacrificio } from '@/hooks/useDashboard' 
 import { usePesajes } from '@/hooks/usePesajes'
 import { useMortalidad } from '@/hooks/useMortalidad'
 import { useSanidad } from '@/hooks/useSanidad'
 import { useInventario, useMovimientosLote } from '@/hooks/useInventario'
+import { api } from '@/lib/api' // Keeping it for trends if needed, though we could create a hook for it
+import { useQuery } from '@tanstack/react-query'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 
-// Optimización: Lazy Loading de componentes pesados
-const QuickRecordModal = dynamic(() => import('@/components/production/QuickRecordModal').then(mod => mod.QuickRecordModal), { ssr: false })
-
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false })
-const AreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false })
-const Area = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false })
-const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false })
-const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false })
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false })
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false })
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false })
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false })
+// --- Main Page Component ---
 
 export default function LoteDashboard() {
   const { id } = useParams()
   const router = useRouter()
-  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'overview' | 'daily' | 'sanitary' | 'actions'>('overview')
   const [recordType, setRecordType] = useState<'mortality' | 'feed' | 'water' | 'weight' | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
   const [isManualModalOpen, setIsManualModalOpen] = useState(false)
+  const [isCerrarModalOpen, setIsCerrarModalOpen] = useState(false)
   const [newGalponId, setNewGalponId] = useState('')
   
   // Estados para historial y filtros
@@ -58,11 +51,19 @@ export default function LoteDashboard() {
   const [historyTab, setHistoryTab] = useState<'mortality' | 'feed' | 'water' | 'weight'>('mortality')
   const [editingItem, setEditingItem] = useState<any>(null)
 
-  const { data: lote, isLoading: isLoadingLote } = useQuery({
-    queryKey: ['lote', id],
-    queryFn: () => api.get<any>(`/api/Lotes/${id}`),
-    enabled: !!id
-  })
+  const { 
+    lote, 
+    isLoading: isLoadingLote,
+    cerrarLote,
+    reabrirLote,
+    cancelarLote,
+    eliminarLote,
+    trasladarLote,
+    rendimientoVivo: rendimiento,
+    descargarReportePdf
+  } = useLote(id as string)
+
+  const { galpones } = useGalpones()
 
   const { pesajes, isLoading: isLoadingPesajes, eliminarPesaje } = usePesajes(id as string)
   const { mortalidad, isLoading: isLoadingMortalidad, eliminarMortalidad } = useMortalidad(id as string)
@@ -70,111 +71,54 @@ export default function LoteDashboard() {
   const { data: movimientos = [], isLoading: isLoadingMovimientosLote } = useMovimientosLote(id as string)
   const { eliminarMovimiento } = useInventario()
 
-  // Función de filtrado avanzada
-  const filterByDate = (items: any[]) => {
-    return items.filter((item: any) => {
-      const itemDate = new Date(item.fecha);
-      
-      // Si hay fecha específica, manda sobre mes/año
-      if (selectedDate) {
-        return item.fecha.startsWith(selectedDate);
-      }
-      
-      // Filtrar por mes y año
-      return (itemDate.getMonth() + 1) === selectedMonth && 
-             itemDate.getFullYear() === selectedYear;
-    });
-  };
-
-  const getFilteredData = () => {
-    const rawData = 
-      historyTab === 'mortality' ? mortalidad :
-      historyTab === 'feed' ? movimientos.filter((m: any) => m.tipo === 'Salida' || m.tipo === 'AjusteSalida') :
-      historyTab === 'water' ? historialBienestar :
-      pesajes;
-    
-    return filterByDate(rawData);
-  };
-
-  const { data: galpones = [] } = useQuery({
-    queryKey: ['galpones'],
-    queryFn: () => api.get<any[]>('/api/Galpones'),
-    enabled: isTransferModalOpen && !!id
-  })
-
+  // Tendencias (podríamos moverlo a useMortalidad más adelante)
   const { data: tendenciasResponse } = useQuery({
     queryKey: ['lote-tendencias', id],
     queryFn: () => api.get<any>(`/api/Mortalidad/lote/${id}/tendencias`),
     enabled: !!id
   })
 
-  // Normalizar tendencias
   const tendencias = Array.isArray(tendenciasResponse) 
     ? tendenciasResponse 
     : (tendenciasResponse?.tendencias || [])
 
-  const { data: rendimiento } = useQuery({
-    queryKey: ['lote-rendimiento', id],
-    queryFn: () => api.get<any>(`/api/Lotes/${id}/rendimiento-vivo`),
-    enabled: !!id
-  })
-
-  // Hook de Proyección de Sacrificio
   const { data: proyeccion } = useProyeccionSacrificio(id as string)
 
-  // Hook de Calendario Sanitario
   const { 
     calendario, 
     aplicarActividad, 
-    agregarActividadManual, 
-    reprogramarActividad 
   } = useCalendarioSanitario(id as string)
-
-  // Actions Mutations
-  const cerrarLote = useMutation({
-    mutationFn: () => api.post(`/api/Lotes/${id}/cerrar`, { LoteId: id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lote', id] })
-      toast.success('Lote cerrado correctamente')
-    },
-  })
-
-  const reabrirLote = useMutation({
-    mutationFn: () => api.put(`/api/Lotes/${id}/reabrir`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lote', id] })
-      toast.success('Lote reabierto correctamente')
-    },
-  })
-
-  const cancelarLote = useMutation({
-    mutationFn: (justificacion: string) => api.post(`/api/Lotes/${id}/cancelar`, justificacion),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lote', id] })
-      toast.success('Lote cancelado correctamente')
-    },
-  })
-
-  const eliminarLote = useMutation({
-    mutationFn: () => api.delete(`/api/Lotes/${id}`),
-    onSuccess: () => {
-      toast.success('Lote eliminado correctamente')
-      router.push('/lotes')
-    },
-  })
-
-  const trasladarLote = useMutation({
-    mutationFn: (galponId: string) => api.post(`/api/Lotes/${id}/trasladar`, galponId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lote', id] })
-      toast.success('Lote trasladado correctamente')
-      setIsTransferModalOpen(false)
-    },
-  })
 
   const descargarReporte = () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
     window.open(`${baseUrl}/api/Lotes/${id}/reporte-cierre-pdf`, '_blank')
+  }
+
+  // Función para filtrar datos del historial
+  const getFilteredData = () => {
+    let baseData: any[] = []
+    if (historyTab === 'mortality') baseData = mortalidad || []
+    else if (historyTab === 'feed') baseData = movimientos || []
+    else if (historyTab === 'water') baseData = historialBienestar || []
+    else if (historyTab === 'weight') baseData = pesajes || []
+
+    return baseData.filter((item: any) => {
+      const fechaStr = item.fecha || item.fechaRegistro || item.fechaMovimiento
+      if (!fechaStr) return true
+      
+      const itemDate = new Date(fechaStr)
+      
+      // Filtro por fecha exacta
+      if (selectedDate) {
+        return itemDate.toISOString().split('T')[0] === selectedDate
+      }
+
+      // Filtro por mes y año
+      const matchMonth = selectedMonth ? (itemDate.getMonth() + 1) === selectedMonth : true
+      const matchYear = selectedYear ? itemDate.getFullYear() === selectedYear : true
+      
+      return matchMonth && matchYear
+    })
   }
 
   if (isLoadingLote) return (
@@ -186,7 +130,7 @@ export default function LoteDashboard() {
   const kpis = [
     { label: 'Pollos Vivos', value: lote?.avesVivas?.toLocaleString() || '0', sub: `${lote?.mortalidadPorcentaje?.toFixed(1)}% mortalidad`, icon: Bird, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     { label: 'Conversión (FCR)', value: lote?.fcrActual?.toFixed(2) || '0.00', sub: 'Eficiencia alimenticia', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Costo Acumulado', value: `$${lote?.costoTotalAcumulado?.toLocaleString() || '0'}`, sub: 'Inversión total', icon: DollarSign, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Costo Acumulado', value: `Bs. ${lote?.costoTotalAcumulado?.toLocaleString() || '0'}`, sub: 'Inversión total', icon: DollarSign, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Días de Vida', value: rendimiento?.diasDeVida || '0', sub: 'Edad cronológica', icon: Calendar, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   ]
 
@@ -280,7 +224,7 @@ export default function LoteDashboard() {
               <div className="p-4 glass rounded-2xl border border-border">
                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Costo por Kilo Vivo</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-black text-primary">${rendimiento.costoPorKiloVivo?.toFixed(2)}</p>
+                  <p className="text-xl font-black text-primary">Bs. {rendimiento.costoPorKiloVivo?.toFixed(2)}</p>
                   <p className="text-[10px] text-slate-600 font-bold uppercase">Actual</p>
                 </div>
               </div>
@@ -571,13 +515,7 @@ export default function LoteDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {lote?.estado === 'Activo' && (
               <button 
-                onClick={async () => {
-                  const result = await confirmAction('¿Cerrar Lote?', 'Esta acción registrará el cierre definitivo.', 'warning')
-                  if (result.isConfirmed) {
-                    cerrarLote.mutate()
-                  }
-                }}
-                disabled={cerrarLote.isPending}
+                onClick={() => setIsCerrarModalOpen(true)}
                 className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-emerald-500/50 transition-all text-left group"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -595,7 +533,10 @@ export default function LoteDashboard() {
                 onClick={async () => {
                   const result = await confirmAction('¿Reabrir Lote?', 'El lote volverá a estar activo.', 'question')
                   if (result.isConfirmed) {
-                    reabrirLote.mutate()
+                    reabrirLote.mutate(undefined, {
+                      onSuccess: () => toast.success('Lote reabierto correctamente'),
+                      onError: (err: any) => toast.error(err.message || 'Error al reabrir lote')
+                    })
                   }
                 }}
                 disabled={reabrirLote.isPending}
@@ -628,7 +569,10 @@ export default function LoteDashboard() {
                     )
                     
                     if (confirmCancel.isConfirmed) {
-                      cancelarLote.mutate(result.value)
+                      cancelarLote.mutate(result.value, {
+                        onSuccess: () => toast.success('Lote cancelado correctamente'),
+                        onError: (err: any) => toast.error(err.message || 'Error al cancelar lote')
+                      })
                     }
                   }
                 }}
@@ -646,7 +590,7 @@ export default function LoteDashboard() {
             )}
 
             <button 
-              onClick={descargarReporte}
+              onClick={() => descargarReportePdf()}
               className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-primary/50 transition-all text-left group"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -675,7 +619,13 @@ export default function LoteDashboard() {
               onClick={async () => {
                 const result = await confirmDestructiveAction('¿Eliminar Lote?', 'Esta acción es permanente y no se puede deshacer.')
                 if (result.isConfirmed) {
-                  eliminarLote.mutate()
+                  eliminarLote.mutate(undefined, {
+                    onSuccess: () => {
+                      toast.success('Lote eliminado correctamente')
+                      router.push('/lotes')
+                    },
+                    onError: (err: any) => toast.error(err.message || 'Error al eliminar lote')
+                  })
                 }
               }}
               disabled={eliminarLote.isPending}
@@ -737,7 +687,13 @@ export default function LoteDashboard() {
                   ))}
                 </select>
                 <button
-                  onClick={() => trasladarLote.mutate(newGalponId)}
+                  onClick={() => trasladarLote.mutate(newGalponId, {
+                    onSuccess: () => {
+                      toast.success('Lote trasladado correctamente')
+                      setIsTransferModalOpen(false)
+                    },
+                    onError: (err: any) => toast.error(err.message || 'Error al trasladar lote')
+                  })}
                   disabled={trasladarLote.isPending || !newGalponId}
                   className="w-full py-4 bg-primary text-black font-black rounded-2xl uppercase tracking-widest hover:bg-primary/90 transition-all disabled:opacity-50"
                 >
@@ -753,6 +709,13 @@ export default function LoteDashboard() {
         isOpen={isManualModalOpen} 
         onClose={() => setIsManualModalOpen(false)} 
         loteId={id as string} 
+      />
+
+      <CerrarLoteModal
+        isOpen={isCerrarModalOpen}
+        onClose={() => setIsCerrarModalOpen(false)}
+        loteId={id as string}
+        loteNombre={lote?.nombre || lote?.nombreLote || ''}
       />
     </div>
   )

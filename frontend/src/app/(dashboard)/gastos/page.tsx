@@ -13,8 +13,14 @@ import { api } from '@/lib/api';
 import { UniversalGrid } from '@/components/shared/UniversalGrid';
 import { confirmDestructiveAction } from '@/lib/swal';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/lib/rbac';
 
 export default function GastosPage() {
+  const { profile } = useAuth();
+  const userRole = profile?.rol !== undefined ? Number(profile.rol) : null;
+  const isEmpleado = userRole === UserRole.Empleado;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGasto, setEditingGasto] = useState<any>(null);
   const { gastos, isLoading, createGasto, updateGasto, deleteGasto } = useGastos();
@@ -101,12 +107,14 @@ export default function GastosPage() {
           <p className="text-muted-foreground mt-1">Registra egresos operativos, insumos y mantenimiento.</p>
         </div>
 
-        <button 
-          onClick={() => openModal()}
-          className="flex items-center gap-2 px-6 py-4 bg-primary text-black font-black rounded-2xl text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
-        >
-          <Plus size={18} /> Nuevo Gasto
-        </button>
+        {!isEmpleado && (
+          <button 
+            onClick={() => openModal()}
+            className="flex items-center gap-2 px-6 py-4 bg-primary text-black font-black rounded-2xl text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
+          >
+            <Plus size={18} /> Nuevo Gasto
+          </button>
+        )}
       </div>
 
       <UniversalGrid
@@ -114,8 +122,8 @@ export default function GastosPage() {
         items={gastos}
         isLoading={isLoading}
         searchPlaceholder="Buscar por descripción o tipo..."
-        onEdit={(item) => openModal(item)}
-        onDelete={(item) => handleDelete(item.id)}
+        onEdit={isEmpleado ? undefined : (item) => openModal(item)}
+        onDelete={isEmpleado ? undefined : (item) => handleDelete(item.id)}
         columns={[
           { 
             header: 'Descripción', 
@@ -130,7 +138,7 @@ export default function GastosPage() {
             header: 'Monto', 
             accessor: (item) => {
               const val = typeof item.monto === 'object' ? item.monto.monto : item.monto;
-              return <span className="font-black text-foreground">${val.toLocaleString()}</span>;
+              return <span className="font-black text-foreground">Bs. {val.toLocaleString()}</span>;
             }
           },
           { header: 'Fecha', accessor: (item) => new Date(item.fecha).toLocaleDateString() },
@@ -153,7 +161,7 @@ export default function GastosPage() {
                   <h3 className="font-bold text-foreground">{item.descripcion}</h3>
                   <span className="px-2 py-0.5 bg-muted/50 rounded text-[8px] font-black text-primary uppercase tracking-widest">{item.tipoGasto}</span>
                 </div>
-                <span className="text-lg font-black text-foreground">${val.toLocaleString()}</span>
+                <span className="text-lg font-black text-foreground">Bs. {val.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-bold uppercase">
                 <div className="flex items-center gap-1"><Calendar size={12} /> {new Date(item.fecha).toLocaleDateString()}</div>
@@ -181,6 +189,7 @@ export default function GastosPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Descripción</label>
+
                   <input 
                     required 
                     type="text" 
@@ -193,7 +202,8 @@ export default function GastosPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Monto ($)</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Monto (Bs.)</label>
+
                     <div className="relative">
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                       <input 
@@ -208,6 +218,7 @@ export default function GastosPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Fecha</label>
+
                     <input 
                       required 
                       type="date" 
@@ -220,6 +231,7 @@ export default function GastosPage() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Tipo de Gasto</label>
+
                   <div className="relative">
                     <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input 
@@ -236,6 +248,7 @@ export default function GastosPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Galpón</label>
+
                     <select 
                       required 
                       value={formData.galponId} 
@@ -247,7 +260,8 @@ export default function GastosPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Lote (Opcional)</label>
+                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Lote</label>
+
                     <select 
                       value={formData.loteId} 
                       onChange={(e) => setFormData({...formData, loteId: e.target.value})}

@@ -37,10 +37,10 @@ public static class GalponDbSeeder
         if (!await context.UnidadesMedida.AnyAsync())
         {
             context.UnidadesMedida.AddRange(
-                new UnidadMedida(Guid.NewGuid(), "Kilogramo", "Kg"),
-                new UnidadMedida(Guid.NewGuid(), "Unidad individual", "Und"),
-                new UnidadMedida(Guid.NewGuid(), "Dosis (Medicina)", "Dos"),
-                new UnidadMedida(Guid.NewGuid(), "Bulto de 50 Kg", "Bulto")
+                new UnidadMedida(Guid.NewGuid(), "Kilogramo", "Kg", TipoUnidad.Masa),
+                new UnidadMedida(Guid.NewGuid(), "Unidad individual", "Und", TipoUnidad.UnidadFisica),
+                new UnidadMedida(Guid.NewGuid(), "Dosis (Medicina)", "Dos", TipoUnidad.Volumen),
+                new UnidadMedida(Guid.NewGuid(), "Bulto de 50 Kg", "Bulto", TipoUnidad.Masa)
             );
         }
     }

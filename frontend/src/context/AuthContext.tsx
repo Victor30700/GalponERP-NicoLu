@@ -11,12 +11,17 @@ import { api } from "@/lib/api";
 
 interface UserProfile {
   id: string;
+  firebaseUid: string;
   nombre: string;
   apellidos: string;
   email: string;
-  rol: string;
+  rol: number;
   telefono: string;
   isActive: boolean;
+  active: number;
+  direccion?: string;
+  profesion?: string;
+  fechaNacimiento?: string;
 }
 
 interface AuthResponse {
@@ -50,10 +55,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(userProfile);
       console.log("Perfil obtenido con éxito:", userProfile.email);
     } catch (error: any) {
-      console.error(`Error fetching profile (intento ${retryCount + 1}):`, error.message);
+      const errorMessage = error?.message || (typeof error === 'string' ? error : 'Error desconocido');
+      console.error(`Error fetching profile (intento ${retryCount + 1}):`, error);
       
       // Si falla con 401 y tenemos un refresh token, intentamos refrescar la sesión una vez
-      if (error.message?.includes('401') && localStorage.getItem("refreshToken") && retryCount === 0) {
+      if (errorMessage.includes('401') && localStorage.getItem("refreshToken") && retryCount === 0) {
         console.log("Token probablemente expirado (401), intentando refrescar sesión...");
         const newToken = await refreshSession();
         if (newToken) {
@@ -193,6 +199,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
     } catch (error: any) {
       console.error("AuthContext: Error en login:", error);
+      if (error.message?.includes("no está activo")) {
+        throw new Error("Tu cuenta ha sido desactivada. Contacta al administrador.");
+      }
       throw new Error(error.message || "Credenciales incorrectas o error de servidor");
     }
   };

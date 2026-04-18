@@ -16,8 +16,9 @@ public class VentaRepository : IVentaRepository
     public async Task<Venta?> ObtenerPorIdAsync(Guid id)
     {
         return await _context.Ventas
+            .IgnoreQueryFilters()
             .Include(v => v.Pagos)
-            .FirstOrDefaultAsync(v => v.Id == id && v.IsActive);
+            .FirstOrDefaultAsync(v => v.Id == id);
     }
 
     public async Task<IEnumerable<Venta>> ObtenerPorLoteAsync(Guid loteId)

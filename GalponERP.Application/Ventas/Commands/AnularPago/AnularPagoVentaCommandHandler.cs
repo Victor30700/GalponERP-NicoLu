@@ -25,7 +25,6 @@ public class AnularPagoVentaCommandHandler : IRequestHandler<AnularPagoVentaComm
         // Anulamos el pago usando la lógica de dominio
         venta.AnularPago(request.PagoId, request.UsuarioId);
 
-        _ventaRepository.Actualizar(venta);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

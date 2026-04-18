@@ -12,25 +12,27 @@ export interface Usuario {
   firebaseUid: string;
   email: string;
   nombre: string;
-  apellidos?: string;
+  apellidos: string;
   fechaNacimiento?: string;
   direccion?: string;
   profesion?: string;
   telefono?: string;
   rol: UserRole;
   isActive: boolean;
+  active: number;
 }
 
 export interface CreateUsuarioRequest {
   email: string;
   password?: string;
   nombre: string;
-  apellidos?: string;
-  fechaNacimiento?: string;
-  direccion?: string;
-  profesion?: string;
-  telefono?: string;
+  apellidos: string;
+  fechaNacimiento: string;
+  direccion: string;
+  profesion: string;
+  telefono: string;
   rol: UserRole;
+  active: number;
 }
 
 export interface UpdateUsuarioRequest {
@@ -43,6 +45,7 @@ export interface UpdateUsuarioRequest {
   profesion: string;
   telefono: string;
   rol: UserRole;
+  active: number;
 }
 
 export function useUsuarios() {
@@ -73,7 +76,12 @@ export function useUsuarios() {
 
   const eliminarUsuario = useMutation({
     mutationFn: (id: string) => api.delete(`/api/Usuarios/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usuarios'] }),
+    onSuccess: () => {
+      // Invalidamos todas las consultas relacionadas con usuarios
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      // Forzamos un refetch inmediato para asegurar que la lista esté limpia
+      queryClient.refetchQueries({ queryKey: ['usuarios'] });
+    },
   });
 
   const generarCodigoWhatsapp = useMutation({

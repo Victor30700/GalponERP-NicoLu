@@ -31,32 +31,34 @@ export default function FinanzasPage() {
 
   const kpis = [
     { 
-      label: 'Ingresos Totales', 
-      value: `$${flujoCaja?.totalIngresos.toLocaleString() || '0'}`, 
-      icon: ArrowUpRight, 
-      color: 'text-emerald-500', 
-      bg: 'bg-emerald-500/10' 
+      label: 'Ingresos (30d)', 
+      value: `Bs. ${flujoCaja?.totalIngresos.toLocaleString() || '0'}`,
+
+      icon: TrendingUp, 
+      color: 'text-emerald-400', 
+      bg: 'bg-emerald-400/10' 
     },
     { 
-      label: 'Egresos Totales', 
-      value: `$${flujoCaja?.totalEgresos.toLocaleString() || '0'}`, 
-      icon: ArrowDownRight, 
-      color: 'text-red-500', 
-      bg: 'bg-red-500/10' 
+      label: 'Egresos (30d)', 
+      value: `Bs. ${flujoCaja?.totalEgresos.toLocaleString() || '0'}`,
+
+      icon: TrendingDown, 
+      color: 'text-red-400', 
+      bg: 'bg-red-400/10' 
     },
     { 
       label: 'Utilidad Neta', 
-      value: `$${flujoCaja?.utilidadNeta.toLocaleString() || '0'}`, 
+      value: `Bs. ${flujoCaja?.utilidadNeta.toLocaleString() || '0'}`, 
       icon: DollarSign, 
       color: 'text-primary', 
       bg: 'bg-primary/10' 
     },
     { 
       label: 'Por Cobrar', 
-      value: `$${flujoProyectado?.totalCuentasPorCobrar.toLocaleString() || '0'}`, 
-      icon: Wallet, 
-      color: 'text-amber-500', 
-      bg: 'bg-amber-500/10' 
+      value: `Bs. ${flujoProyectado?.totalCuentasPorCobrar.toLocaleString() || '0'}`, 
+      icon: Clock, 
+      color: 'text-amber-400', 
+      bg: 'bg-amber-400/10' 
     },
   ];
 
@@ -154,12 +156,12 @@ export default function FinanzasPage() {
                     columns={[
                       { header: 'Fecha', accessor: (item) => new Date(item.fecha).toLocaleDateString() },
                       { header: 'Lote', accessor: 'lote' },
-                      { header: 'Monto', accessor: (item) => <span className="font-black text-emerald-400">${item.monto.toLocaleString()}</span> }
+                      { header: 'Monto', accessor: (item) => <span className="font-black text-emerald-400">Bs. {item.monto.toLocaleString()}</span> }
                     ]}
                     renderMobileCard={(item) => (
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-foreground">Lote {item.lote}</span>
-                        <span className="font-black text-emerald-400">${item.monto.toLocaleString()}</span>
+                        <span className="font-black text-emerald-400">Bs. {item.monto.toLocaleString()}</span>
                       </div>
                     )}
                    />
@@ -179,12 +181,12 @@ export default function FinanzasPage() {
                     columns={[
                       { header: 'Fecha', accessor: (item) => new Date(item.fecha).toLocaleDateString() },
                       { header: 'Descripción', accessor: 'descripcion' },
-                      { header: 'Monto', accessor: (item) => <span className="font-black text-red-400">${item.monto.toLocaleString()}</span> }
+                      { header: 'Monto', accessor: (item) => <span className="font-black text-red-400">Bs. {item.monto.toLocaleString()}</span> }
                     ]}
                     renderMobileCard={(item) => (
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-foreground truncate max-w-[150px]">{item.descripcion}</span>
-                        <span className="font-black text-red-400">${item.monto.toLocaleString()}</span>
+                        <span className="font-black text-red-400">Bs. {item.monto.toLocaleString()}</span>
                       </div>
                     )}
                    />
@@ -203,7 +205,7 @@ export default function FinanzasPage() {
                   {gastosPorCategoria.map((cat, i) => (
                     <div key={i} className="p-4 glass rounded-2xl border border-border flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-300 uppercase">{cat.categoria}</span>
-                      <span className="text-sm font-black text-foreground">${cat.total.toLocaleString()}</span>
+                      <span className="text-sm font-black text-foreground">Bs. {cat.total.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -220,13 +222,13 @@ export default function FinanzasPage() {
                       { header: 'Fecha', accessor: (item) => new Date(item.fecha).toLocaleDateString() },
                       { header: 'Categoría', accessor: 'tipoGasto' },
                       { header: 'Descripción', accessor: 'descripcion' },
-                      { header: 'Monto', accessor: (item) => <span className="font-black text-foreground">${item.monto.toLocaleString()}</span> }
+                      { header: 'Monto', accessor: (item) => <span className="font-black text-foreground">Bs. {item.monto.toLocaleString()}</span> }
                     ]}
                     renderMobileCard={(item) => (
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] font-black text-muted-foreground uppercase">{item.tipoGasto}</span>
-                          <span className="font-black text-foreground">${item.monto.toLocaleString()}</span>
+                          <span className="font-black text-foreground">Bs. {item.monto.toLocaleString()}</span>
                         </div>
                         <p className="text-xs text-muted-foreground">{item.descripcion}</p>
                       </div>
@@ -243,7 +245,7 @@ export default function FinanzasPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                <div className="p-8 bg-gradient-to-br from-primary/20 to-transparent rounded-[2.5rem] border border-primary/10">
                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Flujo Neto 30 Días</p>
-                  <h2 className="text-4xl font-black text-foreground mb-4">${flujoProyectado?.flujoNetoProyectado30Dias.toLocaleString()}</h2>
+                  <h2 className="text-4xl font-black text-foreground mb-4">Bs. {flujoProyectado?.flujoNetoProyectado30Dias.toLocaleString()}</h2>
                   <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
                     <Clock size={16} />
                     <span>Proyección basada en CxC y Alimento</span>
@@ -253,11 +255,11 @@ export default function FinanzasPage() {
                <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-6 glass rounded-3xl border border-border flex flex-col justify-between">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Costo Alimento (Proyectado)</p>
-                    <p className="text-2xl font-black text-red-400">-${flujoProyectado?.costoProyectadoAlimento30Dias.toLocaleString()}</p>
+                    <p className="text-2xl font-black text-red-400">-Bs. {flujoProyectado?.costoProyectadoAlimento30Dias.toLocaleString()}</p>
                   </div>
                   <div className="p-6 glass rounded-3xl border border-border flex flex-col justify-between">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cuentas por Cobrar</p>
-                    <p className="text-2xl font-black text-emerald-400">+${flujoProyectado?.totalCuentasPorCobrar.toLocaleString()}</p>
+                    <p className="text-2xl font-black text-emerald-400">+Bs. {flujoProyectado?.totalCuentasPorCobrar.toLocaleString()}</p>
                   </div>
                </div>
             </div>
@@ -288,7 +290,7 @@ export default function FinanzasPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-xs text-muted-foreground font-medium">{new Date(d.fechaEstimada).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 text-right font-black text-foreground tracking-tighter">${d.monto.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-black text-foreground tracking-tighter">Bs. {d.monto.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>

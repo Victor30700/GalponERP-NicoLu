@@ -75,7 +75,8 @@ public class Producto : Entity
         Guid categoriaProductoId, 
         Guid unidadMedidaId, 
         decimal pesoUnitarioKg,
-        decimal umbralMinimo)
+        decimal umbralMinimo,
+        decimal stockInicial)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto no puede estar vacío.");
@@ -89,8 +90,8 @@ public class Producto : Entity
         PesoUnitarioKg = pesoUnitarioKg;
         UmbralMinimo = umbralMinimo;
 
-        // Al actualizar el peso unitario, sincronizamos el stock en Kg
-        SincronizarStockKg(StockActual);
+        // Al actualizar el peso unitario o el stock inicial, sincronizamos el stock en Kg
+        SincronizarStockKg(stockInicial);
     }
 
     /// <summary>
@@ -120,6 +121,25 @@ public class Producto : Entity
         
         if (StockActual < 0) StockActual = 0;
         if (StockActualKg < 0) StockActualKg = 0;
+    }
+
+    /// <summary>
+    /// Convierte una cantidad de unidades físicas (bolsas, frascos, etc.) a kilogramos.
+    /// Basado en el PesoUnitarioKg actual del producto.
+    /// </summary>
+    public decimal CalcularKg(decimal unidades)
+    {
+        return Math.Round(unidades * PesoUnitarioKg, 6);
+    }
+
+    /// <summary>
+    /// Convierte una cantidad de kilogramos a unidades físicas.
+    /// Si el PesoUnitarioKg es 0, retorna 0 para evitar división por cero.
+    /// </summary>
+    public decimal CalcularUnidades(decimal kg)
+    {
+        if (PesoUnitarioKg == 0) return 0;
+        return Math.Round(kg / PesoUnitarioKg, 6);
     }
 
     /// <summary>

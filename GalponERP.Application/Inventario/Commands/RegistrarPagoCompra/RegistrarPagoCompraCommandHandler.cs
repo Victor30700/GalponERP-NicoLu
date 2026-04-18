@@ -38,7 +38,8 @@ public class RegistrarPagoCompraCommandHandler : IRequestHandler<RegistrarPagoCo
             request.MetodoPago,
             request.UsuarioId);
 
-        _compraRepository.Actualizar(compra);
+        // Al estar la entidad rastreada, no es necesario llamar a Actualizar.
+        // Esto previene errores de concurrencia al actualizar el grafo de pagos.
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -33,27 +33,49 @@ public class ObtenerComparativaLotesQueryHandler : IRequestHandler<ObtenerCompar
     {
         var lotes = await _loteRepository.ObtenerTodosAsync();
         var productos = await _productoRepository.ObtenerTodosAsync();
+        var todosLosMovimientos = await _inventarioRepository.ObtenerTodosAsync();
         var alimentoIds = productos.Where(p => p.Categoria?.Nombre == "Alimento").Select(p => p.Id).ToList();
+
+        // Calcular Precios Promedios para valoraciÃ³n de consumo
+        var preciosPromedios = todosLosMovimientos
+            .Where(m => (m.Tipo == TipoMovimiento.Entrada || m.Tipo == TipoMovimiento.Compra) && m.CostoTotal != null)
+            .GroupBy(m => m.ProductoId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Sum(m => m.CostoTotal!.Monto) / g.Sum(m => m.Cantidad)
+            );
 
         var comparativa = new List<LoteComparativoResponse>();
 
-        foreach (var lote in lotes.OrderByDescending(l => l.FechaIngreso).Take(5)) // Comparar los últimos 5
+        foreach (var lote in lotes.OrderByDescending(l => l.FechaIngreso).Take(5)) // Comparar los Ãºltimos 5
         {
             var ventas = await _ventaRepository.ObtenerPorLoteAsync(lote.Id);
             var gastos = await _gastoRepository.ObtenerPorLoteAsync(lote.Id);
             var pesajes = await _pesajeRepository.ObtenerPorLoteIdAsync(lote.Id);
-            var movimientos = await _inventarioRepository.ObtenerPorLoteIdAsync(lote.Id);
+            var movimientosLote = todosLosMovimientos.Where(m => m.LoteId == lote.Id).ToList();
 
             var totalVentas = ventas.Sum(v => v.Total.Monto);
             var totalGastos = gastos.Sum(g => g.Monto.Monto);
             var costoPollitos = lote.CantidadInicial * lote.CostoUnitarioPollito.Monto;
-            var utilidadNeta = totalVentas - totalGastos - costoPollitos;
+            
+            // Calcular costo de insumos consumidos (Alimento, Medicinas, etc.)
+            decimal costoInsumosConsumidos = 0;
+            var salidasLote = movimientosLote.Where(m => m.Tipo == TipoMovimiento.Salida || m.Tipo == TipoMovimiento.AjusteSalida).ToList();
+            foreach (var s in salidasLote)
+            {
+                if (preciosPromedios.TryGetValue(s.ProductoId, out decimal precio))
+                {
+                    costoInsumosConsumidos += s.Cantidad * precio;
+                }
+            }
+
+            var utilidadNeta = totalVentas - totalGastos - costoPollitos - costoInsumosConsumidos;
 
             var ultimoPesaje = pesajes.OrderByDescending(p => p.Fecha).FirstOrDefault();
             decimal fcr = 0;
             if (ultimoPesaje != null)
             {
-                var alimentoConsumidoKg = movimientos
+                var alimentoConsumidoKg = movimientosLote
                     .Where(m => alimentoIds.Contains(m.ProductoId) && m.Tipo == TipoMovimiento.Salida)
                     .Sum(m => m.Cantidad);
 
@@ -72,7 +94,7 @@ public class ObtenerComparativaLotesQueryHandler : IRequestHandler<ObtenerCompar
                 Math.Round(fcr, 2),
                 totalVentas,
                 totalGastos,
-                utilidadNeta));
+                Math.Round(utilidadNeta, 2)));
         }
 
         return comparativa;

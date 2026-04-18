@@ -121,11 +121,13 @@ export function useInventario() {
       const data = await api.get<StockProducto[]>('/api/Inventario/stock');
       return data.map(item => ({ ...item, id: item.id || item.productoId }));
     },
+    refetchInterval: 5000,
   });
 
   const valoracion = useQuery({
     queryKey: ['inventario', 'valoracion'],
     queryFn: () => api.get<ValoracionInventario>('/api/Inventario/valoracion'),
+    refetchInterval: 30000, // La valoración no necesita ser tan frecuente
   });
 
   const proyecciones = useQuery({
@@ -134,21 +136,25 @@ export function useInventario() {
       const data = await api.get<ProyeccionInventario[]>('/api/Inventario/proyecciones');
       return data.map(item => ({ ...item, id: item.id || item.productoId }));
     },
+    refetchInterval: 60000,
   });
 
   const movimientos = useQuery({
     queryKey: ['inventario', 'movimientos'],
     queryFn: () => api.get<Movimiento[]>('/api/Inventario/movimientos'),
+    refetchInterval: 5000,
   });
 
   const compras = useQuery({
     queryKey: ['inventario', 'compras'],
     queryFn: () => api.get<Compra[]>('/api/Inventario/compras'),
+    refetchInterval: 5000,
   });
 
   const nivelesAlimento = useQuery({
     queryKey: ['inventario', 'niveles-alimento'],
     queryFn: () => api.get<NivelesAlimento>('/api/Inventario/niveles-alimento'),
+    refetchInterval: 5000,
   });
 
   const registrarCompra = useMutation({
@@ -187,6 +193,12 @@ export function useInventario() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
   });
 
+  const ajustarStock = useMutation({
+    mutationFn: (data: { productoId: string; cantidadFisica: number; nota?: string }) => 
+      api.post('/api/Inventario/ajustar-stock', data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
+  });
+
   return {
     stock: stock.data || [],
     isLoadingStock: stock.isLoading,
@@ -206,6 +218,7 @@ export function useInventario() {
     eliminarMovimiento,
     actualizarMovimiento,
     realizarConciliacion,
+    ajustarStock,
   };
 }
 
