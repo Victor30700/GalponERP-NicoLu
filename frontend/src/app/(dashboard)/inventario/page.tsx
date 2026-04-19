@@ -45,6 +45,7 @@ import {
 } from '@/hooks/useInventario'
 import { useAuth } from '@/context/AuthContext'
 import { UserRole } from '@/lib/rbac'
+import { ReportButton } from '@/components/shared/ReportButton'
 
 // --- Interfaces (Existing ones from hook are imported) ---
 
@@ -621,6 +622,16 @@ export default function InventarioPage() {
 
         {activeTab === 'reportes' && (
           <motion.div key="reportes" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-black text-foreground uppercase tracking-widest">Informes Gerenciales</h2>
+                <ReportButton 
+                    label="Descargar Stock PDF" 
+                    url="/api/inventario/reportes/stock" 
+                    fileName={`Stock_Inventario_${new Date().toISOString().split('T')[0]}.pdf`}
+                    className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                />
+            </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Valoración por Categoría */}
                 <div className="glass rounded-[2.5rem] border border-border p-8">

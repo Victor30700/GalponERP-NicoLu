@@ -2,6 +2,9 @@ using GalponERP.Application.Sanidad.Commands.RegistrarBienestar;
 using GalponERP.Application.Sanidad.Commands.EliminarBienestar;
 using GalponERP.Application.Sanidad.Commands.ActualizarBienestar;
 using GalponERP.Application.Sanidad.Queries.ObtenerHistorialBienestar;
+using GalponERP.Application.Sanidad.Queries.ObtenerCalendarioSanitarioPdf;
+using GalponERP.Application.Sanidad.Queries.ObtenerReporteBienestarPdf;
+using GalponERP.Application.Sanidad.Queries.ObtenerControlAguaPdf;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -67,5 +70,27 @@ public class SanidadController : ControllerBase
     {
         var result = await _mediator.Send(new ObtenerHistorialBienestarQuery(loteId));
         return Ok(result);
+    }
+
+    [HttpGet("reportes/calendario/{loteId}")]
+    public async Task<IActionResult> ObtenerReporteCalendario(Guid loteId)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerCalendarioSanitarioPdfQuery(loteId));
+        return File(pdfBytes, "application/pdf", $"SAVCO-05_Calendario_Sanitario_Lote_{loteId}.pdf");
+    }
+
+    [HttpGet("reportes/bienestar/{registroId}")]
+    public async Task<IActionResult> ObtenerReporteBienestar(Guid registroId)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerReporteBienestarPdfQuery(registroId));
+        return File(pdfBytes, "application/pdf", $"SAVCO-06_Bienestar_Animal_{registroId}.pdf");
+    }
+
+    [HttpGet("reportes/agua/{loteId}")]
+    public async Task<IActionResult> ObtenerReporteAgua(Guid loteId, [FromQuery] DateTime? fecha = null)
+    {
+        var mes = fecha ?? DateTime.Now;
+        var pdfBytes = await _mediator.Send(new ObtenerControlAguaPdfQuery(loteId, mes));
+        return File(pdfBytes, "application/pdf", $"SAVCO-07_Control_Agua_Lote_{loteId}_{mes:yyyyMM}.pdf");
     }
 }

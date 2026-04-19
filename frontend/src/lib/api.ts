@@ -33,6 +33,21 @@ export const api = {
     return response.json();
   },
 
+  async getBlob(endpoint: string): Promise<Blob> {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: await getHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || errorData.title || `API error ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    return response.blob();
+  },
+
   async post<T>(endpoint: string, body: any): Promise<T> {
     console.log(`FETCH POST: ${BASE_URL}${endpoint}`, body);
     const response = await fetch(`${BASE_URL}${endpoint}`, {

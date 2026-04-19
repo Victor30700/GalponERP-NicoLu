@@ -16,6 +16,7 @@ import { confirmDestructiveAction } from '@/lib/swal'
 import { SanitaryEventModal } from '@/components/production/SanitaryEventModal'
 import { useAuth } from '@/context/AuthContext'
 import { UserRole } from '@/lib/rbac'
+import { ReportButton } from '@/components/shared/ReportButton'
 
 export default function SanidadPage() {
   const { profile } = useAuth()
@@ -295,19 +296,26 @@ export default function SanidadPage() {
           </div>
 
           <div className="p-6 glass rounded-[2rem] border border-border">
-            <h4 className="text-foreground font-black uppercase tracking-widest text-xs mb-4">Lotes Activos</h4>
+            <h4 className="text-foreground font-black uppercase tracking-widest text-xs mb-4">Lotes Activos - Reportes</h4>
             <div className="space-y-3">
                {lotesActivos.map((lote: any) => (
-                 <div key={lote.id} className="p-4 bg-muted/50 rounded-2xl border border-border flex items-center justify-between group cursor-pointer hover:bg-muted/50 transition-all"
-                    onClick={() => window.location.href = `/lotes/${lote.id}`}
-                 >
-                    <div>
-                      <p className="text-xs font-black text-foreground uppercase">{lote.nombre || lote.nombreLote}</p>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase">{lote.galponNombre}</p>
+                 <div key={lote.id} className="p-4 bg-muted/50 rounded-2xl border border-border space-y-3 group transition-all">
+                    <div className="flex items-center justify-between cursor-pointer" onClick={() => window.location.href = `/lotes/${lote.id}`}>
+                      <div>
+                        <p className="text-xs font-black text-foreground uppercase">{lote.nombre || lote.nombreLote}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">{lote.galponNombre}</p>
+                      </div>
+                      <div className="p-2 bg-slate-800 rounded-lg text-muted-foreground group-hover:text-primary transition-colors">
+                        <ChevronRight size={16} />
+                      </div>
                     </div>
-                    <div className="p-2 bg-slate-800 rounded-lg text-muted-foreground group-hover:text-primary transition-colors">
-                      <ChevronRight size={16} />
-                    </div>
+                    
+                    <ReportButton 
+                        label="SAVCO-07 Agua" 
+                        url={`/api/sanidad/reportes/agua/${lote.id}`} 
+                        fileName={`SAVCO-07_Agua_${lote.nombre || lote.id}.pdf`}
+                        className="w-full justify-center bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 py-1.5"
+                    />
                  </div>
                ))}
                {lotesActivos.length === 0 && (

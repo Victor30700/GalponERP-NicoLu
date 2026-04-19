@@ -7,8 +7,13 @@ using GalponERP.Application.Lotes.Commands.CancelarLote;
 using GalponERP.Application.Lotes.Commands.TrasladarLote;
 using GalponERP.Application.Lotes.Queries.ListarLotes;
 using GalponERP.Application.Lotes.Queries.ObtenerDetalleLote;
-using GalponERP.Application.Lotes.Queries.ObtenerRendimientoVivo;
+using GalponERP.Application.Lotes.Queries.ObtenerConsumoAlimentoPdf;
+using GalponERP.Application.Lotes.Queries.ObtenerFichaSemanalPdf;
+using GalponERP.Application.Lotes.Queries.ObtenerIngresoLotePdf;
+using GalponERP.Application.Lotes.Queries.ObtenerMortalidadPdf;
+using GalponERP.Application.Lotes.Queries.ObtenerLiquidacionLotePdf;
 using GalponERP.Application.Lotes.Queries.ObtenerReporteCierrePdf;
+using GalponERP.Application.Lotes.Queries.ObtenerRendimientoVivo;
 using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -120,6 +125,41 @@ public class LotesController : ControllerBase
     {
         var pdfBytes = await _mediator.Send(new ObtenerReporteCierreLotePdfQuery(id));
         return File(pdfBytes, "application/pdf", $"Liquidacion_Lote_{id}.pdf");
+    }
+
+    [HttpGet("{id}/reportes/ingreso")]
+    public async Task<IActionResult> ObtenerReporteIngreso(Guid id)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerIngresoLotePdfQuery(id));
+        return File(pdfBytes, "application/pdf", $"SAVCO-01_Ingreso_Lote_{id}.pdf");
+    }
+
+    [HttpGet("{id}/reportes/mortalidad")]
+    public async Task<IActionResult> ObtenerReporteMortalidad(Guid id)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerMortalidadPdfQuery(id));
+        return File(pdfBytes, "application/pdf", $"SAVCO-02_Mortalidad_Lote_{id}.pdf");
+    }
+
+    [HttpGet("{id}/reportes/semanal")]
+    public async Task<IActionResult> ObtenerReporteSemanal(Guid id)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerFichaSemanalPdfQuery(id));
+        return File(pdfBytes, "application/pdf", $"SAVCO-03_Ficha_Semanal_Lote_{id}.pdf");
+    }
+
+    [HttpGet("{id}/reportes/consumo")]
+    public async Task<IActionResult> ObtenerReporteConsumo(Guid id)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerConsumoAlimentoPdfQuery(id));
+        return File(pdfBytes, "application/pdf", $"SAVCO-04_Consumo_Alimento_Lote_{id}.pdf");
+    }
+
+    [HttpGet("{id}/reportes/liquidacion")]
+    public async Task<IActionResult> ObtenerReporteLiquidacion(Guid id)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerLiquidacionLotePdfQuery(id));
+        return File(pdfBytes, "application/pdf", $"SAVCO-09_Liquidacion_Lote_{id}.pdf");
     }
 
     [HttpPost("{id}/trasladar")]

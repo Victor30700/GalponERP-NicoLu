@@ -12,6 +12,8 @@ public record BienestarResponse(
     decimal? Temperatura,
     decimal? Humedad,
     decimal? ConsumoAgua,
+    decimal? Ph,
+    decimal? CloroPpm,
     string? Observaciones);
 
 public class ObtenerUltimoRegistroBienestarQueryHandler : IRequestHandler<ObtenerUltimoRegistroBienestarQuery, BienestarResponse?>
@@ -37,6 +39,8 @@ public class ObtenerUltimoRegistroBienestarQueryHandler : IRequestHandler<Obtene
             ultimo.Temperatura,
             ultimo.Humedad,
             ultimo.ConsumoAgua,
+            ultimo.Ph,
+            ultimo.CloroPpm,
             ultimo.Observaciones);
     }
 }

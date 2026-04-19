@@ -29,6 +29,7 @@ import { useSanidad } from '@/hooks/useSanidad'
 import { useInventario, useMovimientosLote } from '@/hooks/useInventario'
 import { api } from '@/lib/api' // Keeping it for trends if needed, though we could create a hook for it
 import { useQuery } from '@tanstack/react-query'
+import { MenuReportesLote } from '@/components/production/MenuReportesLote'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 
 // --- Main Page Component ---
@@ -195,6 +196,9 @@ export default function LoteDashboard() {
 
       {activeTab === 'overview' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          {/* Menú de Reportes SAVCO */}
+          <MenuReportesLote loteId={id as string} />
+
           {/* KPI Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map((kpi, idx) => (
@@ -588,19 +592,6 @@ export default function LoteDashboard() {
                 </div>
               </button>
             )}
-
-            <button 
-              onClick={() => descargarReportePdf()}
-              className="p-6 glass rounded-2xl border border-border flex items-center gap-4 hover:border-primary/50 transition-all text-left group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h4 className="text-foreground font-black text-sm uppercase">Reporte PDF</h4>
-                <p className="text-muted-foreground text-[10px] uppercase font-bold">Descargar informe de cierre</p>
-              </div>
-            </button>
 
             <button 
               onClick={() => setIsTransferModalOpen(true)}

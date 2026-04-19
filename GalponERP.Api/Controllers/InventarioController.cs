@@ -3,6 +3,9 @@ using GalponERP.Application.Inventario.Commands.RegistrarConsumoAlimento;
 using GalponERP.Application.Inventario.Commands.RegistrarIngresoMercaderia;
 using GalponERP.Application.Inventario.Commands.RegistrarPagoCompra;
 using GalponERP.Application.Inventario.Commands.RegistrarConciliacion;
+using GalponERP.Application.Inventario.Commands;
+using GalponERP.Application.Inventario.Commands.ActualizarMovimiento;
+using GalponERP.Application.Inventario.Commands.EliminarMovimiento;
 using GalponERP.Application.Inventario.Queries.ObtenerStockActual;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientos;
 using GalponERP.Application.Inventario.Queries.ObtenerMovimientosLote;
@@ -13,6 +16,7 @@ using GalponERP.Application.Inventario.Queries.ObtenerKardexProducto;
 using GalponERP.Application.Inventario.Queries.ObtenerValoracionInventario;
 using GalponERP.Application.Inventario.Queries.ObtenerProyeccionStock;
 using GalponERP.Application.Inventario.Queries.ListarPagosCompra;
+using GalponERP.Application.Inventario.Queries.ObtenerInventarioPdf;
 using GalponERP.Application.Inventario.Commands.AnularPagoCompra;
 using GalponERP.Application.Inventario.Queries.ObtenerComprasInventario;
 using GalponERP.Domain.Entities;
@@ -20,10 +24,6 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-using GalponERP.Application.Inventario.Commands.EliminarMovimiento;
-using GalponERP.Application.Inventario.Commands.ActualizarMovimiento;
-using GalponERP.Application.Inventario.Commands;
 
 namespace GalponERP.Api.Controllers;
 
@@ -39,6 +39,13 @@ public class InventarioController : ControllerBase
     {
         _mediator = mediator;
         _currentUserContext = currentUserContext;
+    }
+
+    [HttpGet("reportes/stock")]
+    public async Task<IActionResult> ObtenerReporteStock([FromQuery] Guid? categoriaId = null)
+    {
+        var pdfBytes = await _mediator.Send(new ObtenerInventarioPdfQuery(categoriaId));
+        return File(pdfBytes, "application/pdf", $"SAVCO-08_Inventario_Stock_{DateTime.Now:yyyyMMdd}.pdf");
     }
 
     [HttpPost("ajustar-stock")]

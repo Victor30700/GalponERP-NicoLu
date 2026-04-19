@@ -13,10 +13,12 @@ public class RegistroBienestar : Entity
     public decimal? Temperatura { get; private set; }
     public decimal? Humedad { get; private set; }
     public decimal? ConsumoAgua { get; private set; } // Litros
+    public decimal? Ph { get; private set; }
+    public decimal? CloroPpm { get; private set; }
     public string? Observaciones { get; private set; }
     public Guid UsuarioId { get; private set; }
 
-    public RegistroBienestar(Guid id, Guid loteId, DateTime fecha, decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, Guid usuarioId) 
+    public RegistroBienestar(Guid id, Guid loteId, DateTime fecha, decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, Guid usuarioId, decimal? ph = null, decimal? cloroPpm = null) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -30,15 +32,19 @@ public class RegistroBienestar : Entity
         Temperatura = temperatura;
         Humedad = humedad;
         ConsumoAgua = consumoAgua;
+        Ph = ph;
+        CloroPpm = cloroPpm;
         Observaciones = observaciones;
         UsuarioId = usuarioId;
     }
 
-    public void Actualizar(decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones)
+    public void Actualizar(decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, decimal? ph = null, decimal? cloroPpm = null)
     {
         Temperatura = temperatura;
         Humedad = humedad;
         ConsumoAgua = consumoAgua;
+        Ph = ph;
+        CloroPpm = cloroPpm;
         Observaciones = observaciones;
     }
 

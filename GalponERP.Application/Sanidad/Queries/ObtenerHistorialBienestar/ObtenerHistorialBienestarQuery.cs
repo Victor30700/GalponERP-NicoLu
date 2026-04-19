@@ -12,6 +12,8 @@ public record BienestarHistorialResponse(
     decimal? Temperatura,
     decimal? Humedad,
     decimal? ConsumoAgua,
+    decimal? Ph,
+    decimal? CloroPpm,
     string? Observaciones);
 
 public class ObtenerHistorialBienestarQueryHandler : IRequestHandler<ObtenerHistorialBienestarQuery, IEnumerable<BienestarHistorialResponse>>
@@ -34,6 +36,8 @@ public class ObtenerHistorialBienestarQueryHandler : IRequestHandler<ObtenerHist
             r.Temperatura,
             r.Humedad,
             r.ConsumoAgua,
+            r.Ph,
+            r.CloroPpm,
             r.Observaciones));
     }
 }
