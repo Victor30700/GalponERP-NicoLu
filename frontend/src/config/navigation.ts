@@ -15,7 +15,8 @@ import {
   Truck,
   Ruler,
   FileText,
-  HelpCircle
+  HelpCircle,
+  Beaker
 } from 'lucide-react'
 import { UserRole } from '@/lib/rbac'
 
@@ -43,6 +44,7 @@ export const navigationSections: NavigationSection[] = [
     title: 'Producción',
     items: [
       { name: 'Lotes', href: '/lotes', icon: Bird },
+      { name: 'Fórmulas', href: '/formulas', icon: Beaker },
       { name: 'Sanidad', href: '/sanidad', icon: ShieldCheck },
       { name: 'Galpones', href: '/galpones', icon: Warehouse },
       { name: 'Planificación', href: '/planificacion', icon: ClipboardList },

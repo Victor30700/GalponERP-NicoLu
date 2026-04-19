@@ -24,6 +24,8 @@ public class GalponDbContext : DbContext, IGalponDbContext
     public DbSet<CategoriaProducto> CategoriasProductos { get; set; }
     public DbSet<UnidadMedida> UnidadesMedida { get; set; }
     public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
+    public DbSet<Formula> Formulas { get; set; }
+    public DbSet<FormulaDetalle> FormulaDetalles { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Venta> Ventas { get; set; }
     public DbSet<PagoVenta> PagosVentas { get; set; }

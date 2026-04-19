@@ -1,33 +1,43 @@
+# ROL Y CONTEXTO
+Eres un Arquitecto de Software Senior y Especialista en .NET/React, experto en Clean Architecture, Patrón CQRS (MediatR) y Domain-Driven Design (DDD). Tu misión es la IMPLEMENTACIÓN TOTAL del "Módulo de Nutrición y Fórmulas (Recetas)" para el ecosistema "GalponERP". Debes asegurar que el sistema soporte el consumo compuesto de insumos (Alimento + Medicinas) mediante proporciones dinámicas.
+
 # OBJETIVO
-Implementar de principio a fin la generación, exposición y consumo de 9 reportes operativos y gerenciales. Esto abarca desde la refactorización de la infraestructura de PDFs en el backend (.NET), la creación de flujos de lectura granulares (Queries/Handlers), hasta la integración de la descarga segura de archivos binarios (Blobs) en el frontend (Next.js).
+Implementar de principio a fin la gestión de Fórmulas de Alimentación y su integración con el registro diario de consumo. Esto implica crear las nuevas entidades de dominio, el CRUD de Fórmulas mediante CQRS, y refactorizar el flujo de alimentación para que, al registrar el consumo total de una receta, el backend descuente automáticamente la proporción exacta de múltiples productos del inventario y registre automáticamente las aplicaciones médicas en el calendario sanitario.
 
 # REGLAS DE FLUJO DE TRABAJO (ESTRICTO)
-1. **Auditoría de Componentes:** Debes analizar el estado actual de `GalponERP.Infrastructure/Reporting/PdfService.cs`, `IPdfService.cs` y los controladores de la API relacionados con Lotes, Inventario y Sanidad.
-2. **Generación del Plan:** En `D:\\scripts-csharp\\Pollos_NicoLu\\Pollos-NicoLu\\agent\\plan_reportes_ejecucion.md`, crea un checklist técnico detallado separando la implementación por Fases (Infraestructura, CQRS Backend, API, Frontend), indicando los nombres exactos de los archivos que vas a crear o modificar.
+1. **Auditoría de Componentes:** Analiza la estructura actual de `GalponERP.Domain/Entities`, `GalponERP.Infrastructure/Persistence/GalponDbContext.cs`, y los comandos actuales en `GalponERP.Application/Inventario/Commands/RegistrarConsumoAlimento/`.
+2. **Generación del Plan:** En `D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\plan_formulas_nutricion.md`, crea un checklist técnico detallado separando la implementación por Fases (Dominio/Infra, CQRS, API, Frontend Next.js).
 3. **ESPERA:** Una vez generado el plan, DETENTE y espera mi aprobación para proceder.
-4. **Implementación Real:** No solo describas los cambios. Usa tus herramientas para SOBREESCRIBIR y CREAR los archivos `.cs`, `.ts` y `.tsx` correspondientes, inyectando la lógica completa de generación, cálculo de métricas y descarga.
-5. **Documentación:** Al finalizar, detalla en `D:\\scripts-csharp\\Pollos_NicoLu\\Pollos-NicoLu\\agent\\docs_reportes.md` la estructura de los DTOs creados, cómo se manejan los estilos compartidos en QuestPDF y cómo funciona la utilidad de descarga en el frontend.
+4. **Implementación Real:** Usa tus herramientas para CREAR y SOBREESCRIBIR los archivos `.cs`, `.ts` y `.tsx`. Asegúrate de generar la migración de Entity Framework Core al finalizar la fase de Infraestructura.
+5. **Documentación:** Al finalizar, detalla en `D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\docs_formulas.md` cómo funciona el algoritmo de deducción de inventario compuesto y cómo se integra con Sanidad.
 
 # ALCANCE TÉCNICO POR CAPA
 
-## 1. Refactorización de Infraestructura (Motor QuestPDF)
-* **`PdfService.cs` y `IPdfService.cs`:** Modificar el servicio actual para extraer la lógica repetitiva. Crear submétodos privados como `ComposeHeader` (Logo, NIT, Título dinámico) y `ComposeFooter` (Paginación, Fecha, Marca de agua).
-* **Tipado Estricto:** Reemplazar cualquier uso de objetos anónimos (`object` o reflexión) por DTOs fuertemente tipados en las firmas de la interfaz para los 9 reportes previstos.
+## 1. Capa de Dominio e Infraestructura
+- **Nuevas Entidades:** - `Formula.cs`: Debe contener `Id`, `Nombre` (ej. Mezcla Inicio), `Etapa`, `CantidadBase` (ej. 100 Kg), `Activo`.
+  - `FormulaDetalle.cs`: Relaciona la fórmula con los insumos. `Id`, `FormulaId`, `ProductoId`, `CantidadPorBase` (ej. 60 kg de maíz, 0.5 L de vacuna).
+- **Persistencia:** Agregar los `DbSet` a `GalponDbContext.cs`, crear las configuraciones (`FormulaConfiguration.cs`) y sus respectivos Repositorios (`IFormulaRepository`, `FormulaRepository`).
 
-## 2. Desarrollo de Casos de Uso (CQRS Backend)
-* **Queries y Handlers:** Implementar los flujos de lectura aislados para los 3 grupos de reportes (A: Ciclo de Vida, B: Sanidad/Bienestar, C: Inventario/Cierre).
-* **Lógica de Negocio en Handlers:** Los Handlers deben ser responsables de cruzar la información necesaria (ej. sumar salidas de alimento del `IInventarioRepository` en el reporte de consumo, o calcular la Mortalidad Acumulada y el FCR). El `PdfService` SOLO debe encargarse de dibujar (maquetar) los datos recibidos.
+## 2. Capa de Aplicación (CQRS)
+- **CRUD de Fórmulas:** Crear comandos y queries estándar para gestionar las Fórmulas y sus Detalles (Crear, Editar, Listar).
+- **Nuevo Comando de Consumo (`RegistrarConsumoFormulaCommand`):** - Recibe: `LoteId`, `FormulaId`, `CantidadTotalPreparada`, `Fecha`.
+  - **Lógica Crítica en el Handler:**
+    1. Buscar la Fórmula con sus Detalles.
+    2. Calcular el Factor: `FactorMultiplicador = CantidadTotalPreparada / Formula.CantidadBase`.
+    3. Iterar los Detalles: `CantidadARestar = Detalle.CantidadPorBase * FactorMultiplicador`.
+    4. Ejecutar validación de stock y crear el `MovimientoInventario` (Salida) por cada ingrediente.
+  - **Integración con Sanidad:** Dentro de la iteración, si el `Producto` asociado al detalle pertenece a la categoría "Medicamentos" o "Vacunas", se debe crear automáticamente un registro en `CalendarioSanitario` (o registrar el evento) indicando que se aplicó en el alimento.
 
-## 3. Exposición (Controladores API)
-* **Endpoints de Descarga:** Crear o extender `LotesController`, `InventarioController`, etc., añadiendo endpoints GET (ej. `api/lotes/{id}/reportes/ingreso`).
-* **Retorno Binario:** Asegurar que los controladores retornen un `FileContentResult` (o `File`) con el MIME type `application/pdf` y un nombre de archivo dinámico estructurado.
+## 3. Capa de Exposición (API)
+- **`FormulasController.cs`:** Exponer los endpoints CRUD.
+- **`InventarioController.cs` o `LotesController.cs`:** Exponer el nuevo endpoint `POST /api/lotes/{id}/consumo-formula`.
 
-## 4. Integración Frontend (Next.js)
-* **Utilidad Blob:** Implementar en `src/lib/api.ts` una función robusta para procesar respuestas HTTP con `responseType: 'blob'`, previniendo la corrupción de caracteres en la descarga del PDF.
-* **Componentes UI:** Integrar botones de descarga (ej. `<BotonReporte />`) en las vistas correspondientes (`lotes/[id]`, inventario, sanidad) manejando estados de carga (loading spinners) mientras el backend procesa el documento.
+## 4. Capa Frontend (Next.js)
+- **Vistas y Hooks:** Crear `useFormulas.ts` y una nueva página `app/(dashboard)/formulas/page.tsx` para administrar las recetas.
+- **Refactorización de `QuickRecordModal.tsx` o Componente de Alimentación:** Modificar la UI de registro rápido de alimento en la vista del lote. Debe permitir al usuario alternar entre "Insumo Individual" (flujo antiguo) y "Por Fórmula" (nuevo flujo). En "Por Fórmula", solo selecciona del dropdown la receta y digita la cantidad total preparada.
 
-# INSTRUCCIÓN DE RENDIMIENTO Y CALIDAD
-NO asumas cálculos simplificados. Si el reporte exige "Conversión Alimenticia" o "Mortalidad Acumulada", la lógica matemática en C# debe ser precisa. La generación de la tabla visual en QuestPDF debe manejar correctamente el salto de página (`PageBreak`) para tablas largas (ej. bitácoras o historiales de mortalidad). Todo componente visual generado en PDF debe utilizar una paleta de colores y fuentes estandarizadas (Azul SAVCO).
+# INSTRUCCIÓN DE RENDIMIENTO Y TRANSACCIONALIDAD
+El `RegistrarConsumoFormulaCommandHandler` ejecutará múltiples operaciones de escritura (varios movimientos de inventario, actualizaciones de stock de productos y posibles registros sanitarios). Todo este flujo DEBE estar envuelto en una transacción utilizando `_unitOfWork.CommitAsync()` una única vez al final del proceso para asegurar la integridad referencial (si falla la deducción de la vacuna, no debe descontarse el maíz).
 
 # INICIO
-Comienza auditando `GalponERP.Infrastructure/Reporting/PdfService.cs` y `IPdfService.cs`. Luego, genera el `plan.md` con los pasos exactos, reportes a construir y los archivos afectados para mi revisión.
+Comienza auditando el Dominio de GalponERP. Luego, genera el archivo `plan_formulas_nutricion.md` con los pasos exactos y los archivos afectados para mi revisión.

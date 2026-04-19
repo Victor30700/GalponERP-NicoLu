@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
         services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
         services.AddScoped<IConversacionRepository, ConversacionRepository>();
+        services.AddScoped<IFormulaRepository, FormulaRepository>();
         
         services.AddScoped<IGalponDbContext>(sp => sp.GetRequiredService<GalponDbContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();

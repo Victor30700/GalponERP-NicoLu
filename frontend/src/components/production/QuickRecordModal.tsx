@@ -4,10 +4,12 @@ import { useState, useEffect, useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, AlertCircle, Scale, Droplets, Ruler, Calendar, ChevronDown } from 'lucide-react'
+import { X, Save, AlertCircle, Scale, Droplets, Ruler, Calendar, ChevronDown, Beaker } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { useCatalogos, ProductoCatalogo } from '@/hooks/useCatalogos'
+import { useFormulas } from '@/hooks/useFormulas'
+import { cn } from '@/lib/utils'
 
 interface QuickRecordProps {
   isOpen: boolean
@@ -19,33 +21,42 @@ interface QuickRecordProps {
 }
 
 export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialData }: QuickRecordProps) {
+  const [recordMode, setRecordMode] = useState<'individual' | 'formula'>('individual')
   const [value, setValue] = useState('')
   const [secondaryValue, setSecondaryValue] = useState('') 
   const [tertiaryValue, setTertiaryValue] = useState('') 
   const [nota, setNota] = useState('')
   const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [selectedProductId, setSelectedProductId] = useState('')
+  const [selectedFormulaId, setSelectedFormulaId] = useState('')
   const [stockActual, setStockActual] = useState<number | null>(null)
   
   const queryClient = useQueryClient()
   const { productos } = useCatalogos()
+  const { formulas, registrarConsumo } = useFormulas()
   const isEditing = !!initialData
 
   // Obtener stock al seleccionar producto
   useEffect(() => {
-    if (selectedProductId && type === 'feed') {
+    if (selectedProductId && type === 'feed' && recordMode === 'individual') {
       api.get<any>(`/api/Inventario/productos/${selectedProductId}/stock`)
         .then(res => setStockActual(res.cantidad))
         .catch(() => setStockActual(null))
     } else {
       setStockActual(null)
     }
-  }, [selectedProductId, type])
+  }, [selectedProductId, type, recordMode])
 
   // Filtrar productos de alimento
   const alimentos = useMemo(() => 
     productos.filter(p => p.categoriaNombre === 'Alimento' && p.isActive),
     [productos]
+  )
+
+  // Filtrar fórmulas activas
+  const formulasActivas = useMemo(() => 
+    formulas.filter(f => f.isActive),
+    [formulas]
   )
 
   // Producto seleccionado actualmente
@@ -73,6 +84,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
         
         setValue(units?.toString() || '')
         setSecondaryValue(totalKg?.toString() || '')
+        setRecordMode('individual')
       } else {
         setValue(initialData[config.main]?.toString() || '')
       }
@@ -91,12 +103,18 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       setNota('')
       setFecha(format(new Date(), 'yyyy-MM-dd'))
       setSelectedProductId('')
+      setSelectedFormulaId('')
       setStockActual(null)
+      setRecordMode('individual')
     }
   }, [isEditing, initialData, isOpen, type, productos])
 
   const mutation = useMutation({
     mutationFn: (data: any) => {
+      if (type === 'feed' && recordMode === 'formula') {
+        return registrarConsumo.mutateAsync(data)
+      }
+
       let endpoint = '/api/Mortalidad'
       if (type === 'feed') endpoint = '/api/Inventario/consumo-diario'
       if (type === 'water') endpoint = '/api/Sanidad/bienestar'
@@ -121,7 +139,8 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
         ['mortalidad', 'lote', loteId],
         ['sanidad', 'bienestar', 'lote', loteId],
         ['inventario', 'lote', loteId, 'movimientos'],
-        ['catalogos', 'productos']
+        ['catalogos', 'productos'],
+        ['formulas']
       ]
       
       keysToInvalidate.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
@@ -137,9 +156,24 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
     if (!value) return
     
     // Validar stock antes de enviar (Se valida en unidades)
-    if (type === 'feed' && stockActual !== null && Number(value) > stockActual) {
+    if (type === 'feed' && recordMode === 'individual' && stockActual !== null && Number(value) > stockActual) {
         toast.error(`Stock insuficiente. Solo quedan ${stockActual} unidades.`)
         return
+    }
+
+    if (type === 'feed' && recordMode === 'formula') {
+      if (!selectedFormulaId) {
+        toast.error('Debe seleccionar una fórmula.')
+        return
+      }
+      mutation.mutate({
+        loteId,
+        formulaId: selectedFormulaId,
+        cantidadTotalPreparada: Number(value),
+        fecha: new Date(fecha).toISOString(),
+        justificacion: nota
+      })
+      return
     }
 
     let data: any = { loteId, fecha: new Date(fecha).toISOString() }
@@ -214,6 +248,31 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {type === 'feed' && !isEditing && (
+                <div className="flex p-1 bg-muted/50 rounded-2xl border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setRecordMode('individual')}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                      recordMode === 'individual' ? "bg-blue-500 text-white shadow-lg" : "text-muted-foreground"
+                    )}
+                  >
+                    <Scale size={14} /> Insumo Único
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRecordMode('formula')}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                      recordMode === 'formula' ? "bg-purple-500 text-white shadow-lg" : "text-muted-foreground"
+                    )}
+                  >
+                    <Beaker size={14} /> Por Fórmula
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Selector de Fecha */}
                 <div className="space-y-2">
@@ -228,26 +287,39 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                   />
                 </div>
 
-                {/* Selector de Producto para Alimento */}
+                {/* Selector de Producto o Fórmula */}
                 {type === 'feed' && (
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
-                      Producto de Alimento
+                      {recordMode === 'individual' ? 'Producto de Alimento' : 'Seleccionar Fórmula'}
                     </label>
                     <div className="relative">
-                      <select
-                        value={selectedProductId}
-                        onChange={(e) => setSelectedProductId(e.target.value)}
-                        className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
-                      >
-                        <option value="">Seleccionar...</option>
-                        {alimentos.map(p => (
-                          <option key={p.id} value={p.id}>{p.nombre}</option>
-                        ))}
-                      </select>
+                      {recordMode === 'individual' ? (
+                        <select
+                          value={selectedProductId}
+                          onChange={(e) => setSelectedProductId(e.target.value)}
+                          className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                        >
+                          <option value="">Seleccionar...</option>
+                          {alimentos.map(p => (
+                            <option key={p.id} value={p.id}>{p.nombre}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          value={selectedFormulaId}
+                          onChange={(e) => setSelectedFormulaId(e.target.value)}
+                          className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                        >
+                          <option value="">Seleccionar Receta...</option>
+                          {formulasActivas.map(f => (
+                            <option key={f.id} value={f.id}>{f.nombre} ({f.etapa})</option>
+                          ))}
+                        </select>
+                      )}
                       <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
-                    {selectedProduct && stockActual !== null && (
+                    {recordMode === 'individual' && selectedProduct && stockActual !== null && (
                         <p className={`text-[10px] font-black uppercase tracking-widest ml-1 mt-1 ${stockActual <= 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                            Stock Disponible: {stockActual} {selectedProduct.unidadMedidaNombre}(s) ≈ {(Number(stockActual) * Number(selectedProduct.pesoUnitarioKg)).toFixed(1)} Kg
                         </p>
@@ -256,10 +328,15 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={cn(
+                "grid grid-cols-1 gap-4",
+                type === 'feed' && recordMode === 'individual' ? "md:grid-cols-2" : "md:grid-cols-1"
+              )}>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                    {type === 'feed' ? 'Cantidad de Unidades (Sacos/Bolsas)' : config.label}
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 text-center block w-full">
+                    {type === 'feed' 
+                      ? (recordMode === 'individual' ? 'Cantidad de Unidades (Sacos/Bolsas)' : 'Cantidad Total de Mezcla Preparada') 
+                      : config.label}
                   </label>
                   <div className="relative">
                     <input
@@ -270,24 +347,26 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                       onChange={(e) => {
                         const val = e.target.value;
                         setValue(val);
-                        // Calcular Kg automáticamente si hay producto seleccionado
-                        if (type === 'feed' && selectedProduct) {
+                        // Calcular Kg automáticamente si hay producto seleccionado y modo individual
+                        if (type === 'feed' && recordMode === 'individual' && selectedProduct) {
                           const pesoUnit = Number(selectedProduct.pesoUnitarioKg) || 0;
-                          // Usamos 3 decimales para evitar error de 1 gramo (0.001 kg)
                           const calculatedKg = val ? (Number(val) * pesoUnit).toFixed(3) : '';
                           setSecondaryValue(calculatedKg);
                         }
                       }}
-                      className="w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all"
+                      className={cn(
+                        "w-full px-6 py-6 bg-muted/50 border border-border rounded-3xl text-4xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all",
+                        recordMode === 'formula' ? "border-purple-500/30" : ""
+                      )}
                       placeholder="0"
                     />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-xl uppercase">
-                        {type === 'feed' ? 'UNID' : config.unit}
+                        {type === 'feed' ? (recordMode === 'individual' ? 'UNID' : 'Kg') : config.unit}
                     </span>
                   </div>
                 </div>
 
-                {type === 'feed' && (
+                {type === 'feed' && recordMode === 'individual' && (
                   <div className="space-y-2 transition-all">
                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Equivalencia en Kilogramos (Kg)</label>
                     <div className="relative">
@@ -301,7 +380,6 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                           // Recalcular unidades si hay producto
                           if (selectedProduct) {
                              const pesoUnit = Number(selectedProduct.pesoUnitarioKg) || 1;
-                             // Usamos 3 decimales para mayor precisión en la conversión inversa
                              const calculatedUnits = valKg ? (Number(valKg) / pesoUnit).toFixed(3) : '';
                              setValue(calculatedUnits);
                           }
@@ -315,7 +393,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                 )}
               </div>
 
-              {type === 'feed' && selectedProduct && (
+              {type === 'feed' && recordMode === 'individual' && selectedProduct && (
                   <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 space-y-1">
                     <p className="text-[10px] text-primary font-black uppercase tracking-widest text-center">
                       Configuración: 1 {selectedProduct.unidadMedidaNombre} = {selectedProduct.pesoUnitarioKg} kg
@@ -323,9 +401,22 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                     <p className="text-sm text-muted-foreground font-bold text-center">
                       CONSUMO ESTIMADO: <span className="text-foreground">{value || 0} Unidades</span> × <span className="text-foreground">{selectedProduct.pesoUnitarioKg} Kg</span> = <span className="text-primary font-black text-lg">{(Number(value || 0) * Number(selectedProduct.pesoUnitarioKg)).toFixed(2)} Kg totales</span>
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-medium text-center italic">
-                      Se descontarán tanto unidades como Kg del inventario global.
+                  </div>
+              )}
+
+              {type === 'feed' && recordMode === 'formula' && selectedFormulaId && (
+                  <div className="bg-purple-500/5 p-4 rounded-2xl border border-purple-500/20 space-y-2">
+                    <p className="text-[10px] text-purple-400 font-black uppercase tracking-widest text-center">
+                      Se descontarán proporcionalmente todos los ingredientes de la receta
                     </p>
+                    {formulas.find(f => f.id === selectedFormulaId)?.detalles.map((d, i) => (
+                      <div key={i} className="flex justify-between text-[10px] font-bold uppercase">
+                        <span className="text-muted-foreground">{d.productoNombre}</span>
+                        <span className="text-purple-300">
+                          {((d.cantidadPorBase * Number(value)) / (formulas.find(f => f.id === selectedFormulaId)?.cantidadBase || 1)).toFixed(3)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
               )}
 
