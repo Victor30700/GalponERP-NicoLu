@@ -16,6 +16,7 @@ export interface DashboardResumen {
   saldoPorCobrarTotal: number;
   tareasSanitariasHoy: number;
   inversionTotalEnCurso: number;
+  fcrPromedioEmpresa: number;
   alertasStockMinimo: AlertaStockMinimo[];
 }
 

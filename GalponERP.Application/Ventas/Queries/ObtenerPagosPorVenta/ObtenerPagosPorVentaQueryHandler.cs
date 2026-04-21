@@ -25,7 +25,7 @@ public class ObtenerPagosPorVentaQueryHandler : IRequestHandler<ObtenerPagosPorV
             p.VentaId,
             p.Monto.Monto,
             p.FechaPago,
-            p.MetodoPago.ToString(),
+            (int)p.MetodoPago,
             p.UsuarioId,
             p.IsActive
         ));

@@ -51,12 +51,13 @@ interface CuentaPorCobrar {
   estadoPago: string
 }
 
-interface Lote {
+interface LoteVenta {
   id: string
   codigo: string
   nombre?: string
   nombreLote?: string
   avesVivas: number
+  fechaFinRetiro?: string
 }
 
 // --- Schemas ---
@@ -117,9 +118,9 @@ export default function VentasPage() {
 
   const { clientes } = useCatalogos()
 
-  const { data: lotes = [] } = useQuery({
+  const { data: lotes = [] } = useQuery<LoteVenta[]>({
     queryKey: ['lotes', 'activos'],
-    queryFn: () => api.get<Lote[]>('/api/Lotes?soloActivos=true'),
+    queryFn: () => api.get<LoteVenta[]>('/api/Lotes?soloActivos=true'),
   })
 
   // Selected Sale Details
@@ -136,6 +137,12 @@ export default function VentasPage() {
       precioPorKilo: 0
     }
   })
+
+  // Lógica de Retiro Sanitario
+  const selectedLoteId = ventaForm.watch('loteId')
+  const loteSeleccionado = lotes.find(l => l.id === selectedLoteId)
+  const enRetiro = loteSeleccionado?.fechaFinRetiro && new Date(loteSeleccionado.fechaFinRetiro) > new Date()
+
 
   const pagoForm = useForm<PagoFormValues>({
     resolver: zodResolver(pagoSchema),
@@ -546,8 +553,21 @@ export default function VentasPage() {
                   </span>
                 </div>
 
-                <button type="submit" disabled={registrarVenta.isPending} className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4 shadow-lg shadow-primary/20">
-                  <Save size={20} /> Registrar Venta
+                {enRetiro && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3">
+                    <AlertCircle className="text-red-500 shrink-0" size={20} />
+                    <p className="text-xs font-bold text-red-500 uppercase tracking-tighter">
+                      Bloqueo: El lote se encuentra en periodo de retiro sanitario hasta el {new Date(loteSeleccionado!.fechaFinRetiro!).toLocaleDateString()}.
+                    </p>
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  disabled={registrarVenta.isPending || enRetiro} 
+                  className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4 shadow-lg shadow-primary/20"
+                >
+                  <Save size={20} /> {enRetiro ? 'Venta Bloqueada' : 'Registrar Venta'}
                 </button>
               </form>
             </motion.div>
@@ -682,7 +702,7 @@ export default function VentasPage() {
                       )}
                     >
                       <ArrowRightLeft size={24} />
-                      <span className="text-xs font-bold uppercase">Transf.</span>
+                      <span className="text-xs font-bold uppercase">Transferencia</span>
                     </button>
                     <button 
                       type="button"

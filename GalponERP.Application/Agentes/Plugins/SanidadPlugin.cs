@@ -171,7 +171,12 @@ public class SanidadPlugin
             decimal? a = consumoAgua != 0 ? (decimal)consumoAgua : null;
 
             var command = new GalponERP.Application.Sanidad.Commands.RegistrarBienestar.RegistrarBienestarCommand(
-                lote.Id, fechaRegistro, t, h, a, observaciones);
+                LoteId: lote.Id, 
+                Fecha: fechaRegistro, 
+                Temperatura: t, 
+                Humedad: h, 
+                ConsumoAgua: a, 
+                Observaciones: observaciones);
             
             await _mediator.Send(command);
             

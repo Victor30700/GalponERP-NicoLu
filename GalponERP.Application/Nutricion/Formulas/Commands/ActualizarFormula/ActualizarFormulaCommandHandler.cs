@@ -8,11 +8,16 @@ namespace GalponERP.Application.Nutricion.Formulas.Commands.ActualizarFormula;
 public class ActualizarFormulaCommandHandler : IRequestHandler<ActualizarFormulaCommand, Unit>
 {
     private readonly IFormulaRepository _formulaRepository;
+    private readonly IProductoRepository _productoRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ActualizarFormulaCommandHandler(IFormulaRepository formulaRepository, IUnitOfWork unitOfWork)
+    public ActualizarFormulaCommandHandler(
+        IFormulaRepository formulaRepository, 
+        IProductoRepository productoRepository,
+        IUnitOfWork unitOfWork)
     {
         _formulaRepository = formulaRepository;
+        _productoRepository = productoRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -20,17 +25,46 @@ public class ActualizarFormulaCommandHandler : IRequestHandler<ActualizarFormula
     {
         var formula = await _formulaRepository.ObtenerPorIdAsync(request.Id);
         if (formula == null)
-            throw new FormulaDomainException("La fórmula no existe.");
+            throw new FormulaDomainException($"La fórmula con ID {request.Id} no existe.");
 
         formula.Actualizar(request.Nombre, request.Etapa, request.CantidadBase);
         
-        formula.LimpiarDetalles();
-        foreach (var detalle in request.Detalles)
+        // Obtener los IDs de productos actuales ACTIVOS en la fórmula
+        var productosActualesActivos = formula.Detalles
+            .Where(d => d.IsActive)
+            .Select(d => d.ProductoId)
+            .ToList();
+        
+        var productosNuevos = request.Detalles.Select(d => d.ProductoId).ToList();
+
+        // 1. Eliminar (soft delete) detalles que ya no están en la petición
+        foreach (var productoId in productosActualesActivos.Where(id => !productosNuevos.Contains(id)))
         {
-            formula.AgregarDetalle(detalle.ProductoId, detalle.CantidadPorBase);
+            formula.EliminarDetalle(productoId);
         }
 
-        _formulaRepository.Actualizar(formula);
+        // 2. Actualizar o añadir nuevos detalles
+        foreach (var detalleDto in request.Detalles)
+        {
+            if (productosActualesActivos.Contains(detalleDto.ProductoId))
+            {
+                // Actualizar existente
+                formula.ActualizarDetalle(detalleDto.ProductoId, detalleDto.CantidadPorBase);
+            }
+            else
+            {
+                // Validar que el producto existe antes de añadirlo
+                var producto = await _productoRepository.ObtenerPorIdAsync(detalleDto.ProductoId);
+                if (producto == null)
+                {
+                    throw new FormulaDomainException($"El ingrediente con ID {detalleDto.ProductoId} no existe. Por favor verifique el inventario.");
+                }
+
+                // Añadir nuevo
+                formula.AgregarDetalle(detalleDto.ProductoId, detalleDto.CantidadPorBase);
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

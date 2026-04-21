@@ -10,6 +10,11 @@ public class FormulaDetalle : Entity
     public Producto Producto { get; private set; } = null!;
     public decimal CantidadPorBase { get; private set; }
 
+    public void ActualizarCantidad(decimal nuevaCantidad)
+    {
+        CantidadPorBase = nuevaCantidad;
+    }
+
     public FormulaDetalle(Guid id, Guid formulaId, Guid productoId, decimal cantidadPorBase) : base(id)
     {
         FormulaId = formulaId;

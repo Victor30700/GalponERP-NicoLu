@@ -3,12 +3,15 @@ using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
 
+using GalponERP.Domain.Entities;
+
 namespace GalponERP.Application.Catalogos.Categorias.Commands.ActualizarCategoria;
 
 public record ActualizarCategoriaCommand(
     Guid Id,
     string Nombre,
-    string? Descripcion) : IRequest;
+    string? Descripcion,
+    TipoCategoria Tipo) : IRequest;
 
 public class ActualizarCategoriaCommandValidator : AbstractValidator<ActualizarCategoriaCommand>
 {
@@ -42,7 +45,7 @@ public class ActualizarCategoriaCommandHandler : IRequestHandler<ActualizarCateg
         if (categoria == null)
             throw new Exception("Categoría no encontrada");
 
-        categoria.Actualizar(request.Nombre, request.Descripcion);
+        categoria.Actualizar(request.Nombre, request.Descripcion, request.Tipo);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

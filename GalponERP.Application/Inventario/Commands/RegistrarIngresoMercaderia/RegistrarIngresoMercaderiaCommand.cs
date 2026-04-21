@@ -14,6 +14,8 @@ public record RegistrarIngresoMercaderiaCommand(
     decimal CostoTotalCompra,
     Guid ProveedorId,
     decimal MontoPagado,
+    string? NumeroLoteFabricante = null,
+    string? FechaVencimiento = null,
     string? Nota = null) : IRequest<Guid>
 {
     [JsonIgnore]
@@ -90,7 +92,26 @@ public class RegistrarIngresoMercaderiaCommandHandler : IRequestHandler<Registra
 
         _compraRepository.Agregar(compra);
 
-        // 3. Crear el Movimiento de Inventario (Kárdex)
+        // 3. Crear Lote de Fabricante si se proporciona
+        Guid? inventarioLoteId = null;
+        if (!string.IsNullOrWhiteSpace(request.NumeroLoteFabricante) && !string.IsNullOrWhiteSpace(request.FechaVencimiento))
+        {
+            if (DateTime.TryParse(request.FechaVencimiento, out DateTime vencimiento))
+            {
+                var nuevoLote = new InventarioLote(
+                    Guid.NewGuid(),
+                    request.ProductoId,
+                    request.NumeroLoteFabricante,
+                    vencimiento,
+                    request.Cantidad,
+                    DateTime.UtcNow
+                );
+                _inventarioRepository.RegistrarLote(nuevoLote);
+                inventarioLoteId = nuevoLote.Id;
+            }
+        }
+
+        // 4. Crear el Movimiento de Inventario (Kárdex)
         var movimiento = new MovimientoInventario(
             Guid.NewGuid(),
             request.ProductoId,
@@ -103,15 +124,16 @@ public class RegistrarIngresoMercaderiaCommandHandler : IRequestHandler<Registra
             request.Nota,
             new Moneda(request.CostoTotalCompra),
             proveedor.RazonSocial,
-            compraId);
+            compraId,
+            inventarioLoteId);
 
         _inventarioRepository.RegistrarMovimiento(movimiento);
 
-        // 4. Actualizar el stock en Kg cacheado en el Producto
+        // 5. Actualizar el stock en Kg cacheado en el Producto
         producto.ActualizarStock(request.Cantidad, TipoMovimiento.Compra);
         _productoRepository.Actualizar(producto);
 
-        // 5. Persistir todo en una sola transacción
+        // 6. Persistir todo en una sola transacción
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return compra.Id;

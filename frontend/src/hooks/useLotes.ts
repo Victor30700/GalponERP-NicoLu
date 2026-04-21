@@ -16,6 +16,7 @@ export interface Lote {
   mortalidadPorcentaje: number;
   pesoPromedioActual: number;
   costoUnitarioPollito: number;
+  fechaFinRetiro?: string;
 }
 
 export interface LoteDetalle extends Lote {

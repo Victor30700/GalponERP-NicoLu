@@ -50,10 +50,11 @@ public static class GalponDbSeeder
         if (!await context.CategoriasProductos.AnyAsync())
         {
             context.CategoriasProductos.AddRange(
-                new CategoriaProducto(Guid.NewGuid(), "Alimento", "Alimento balanceado para aves"),
-                new CategoriaProducto(Guid.NewGuid(), "Medicina", "Medicamentos en general"),
-                new CategoriaProducto(Guid.NewGuid(), "Vacuna", "Vacunas preventivas"),
-                new CategoriaProducto(Guid.NewGuid(), "Vitamina", "Vitaminas y suplementos")
+                new CategoriaProducto(Guid.NewGuid(), "Alimento", "Alimento balanceado para aves", TipoCategoria.Alimento),
+                new CategoriaProducto(Guid.NewGuid(), "Medicina", "Medicamentos en general", TipoCategoria.Medicamento),
+                new CategoriaProducto(Guid.NewGuid(), "Vacuna", "Vacunas preventivas", TipoCategoria.Vacuna),
+                new CategoriaProducto(Guid.NewGuid(), "Vitamina", "Vitaminas y suplementos", TipoCategoria.Medicamento),
+                new CategoriaProducto(Guid.NewGuid(), "Otros", "Otros insumos", TipoCategoria.Otros)
             );
         }
     }

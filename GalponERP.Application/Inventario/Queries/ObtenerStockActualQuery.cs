@@ -12,7 +12,8 @@ public record StockProductoResponse(
     string TipoProducto,
     decimal StockActual,
     decimal StockActualKg,
-    string UnidadMedida);
+    string UnidadMedida,
+    DateTime? FechaVencimientoProxima = null);
 
 public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActualQuery, IEnumerable<StockProductoResponse>>
 {
@@ -42,15 +43,20 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
             .Select(g => new
             {
                 ProductoId = g.Key,
-                // AuditorÃ­a Sprint 47: La fÃ³rmula debe coincidir exactamente con el KÃ¡rdex y Dashboard
-                // Entradas: Entrada, AjusteEntrada, Compra
-                // Salidas: Salida, AjusteSalida (y cualquier otro no contemplado en entradas)
                 Stock = g.Sum(m => (m.Tipo == TipoMovimiento.Entrada || 
                                    m.Tipo == TipoMovimiento.Compra || 
                                    m.Tipo == TipoMovimiento.AjusteEntrada) 
                                   ? m.Cantidad : -m.Cantidad)
             })
             .ToDictionary(x => x.ProductoId, x => x.Stock);
+
+        // Obtener vencimientos próximos
+        var vencimientos = new Dictionary<Guid, DateTime?>();
+        foreach (var prod in productos)
+        {
+            var lotes = await _inventarioRepository.ObtenerLotesActivosPorProductoAsync(prod.Id);
+            vencimientos[prod.Id] = lotes.OrderBy(l => l.FechaVencimiento).FirstOrDefault()?.FechaVencimiento;
+        }
 
         return productos.Select(p => {
             decimal stockActual = stockPorProducto.ContainsKey(p.Id) ? stockPorProducto[p.Id] : 0;
@@ -60,7 +66,8 @@ public class ObtenerStockActualQueryHandler : IRequestHandler<ObtenerStockActual
                 p.Categoria?.Nombre ?? "Sin Categoria",
                 stockActual,
                 Math.Round(stockActual * p.PesoUnitarioKg, 2),
-                p.Unidad?.Nombre ?? "Sin Unidad");
+                p.Unidad?.Nombre ?? "Sin Unidad",
+                vencimientos.ContainsKey(p.Id) ? vencimientos[p.Id] : null);
         });
     }
 }

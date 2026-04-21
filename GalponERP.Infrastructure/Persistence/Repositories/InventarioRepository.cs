@@ -53,4 +53,17 @@ public class InventarioRepository : IInventarioRepository
     {
         _context.MovimientosInventario.Add(movimiento);
     }
+
+    public void RegistrarLote(InventarioLote lote)
+    {
+        _context.InventarioLotes.Add(lote);
+    }
+
+    public async Task<IEnumerable<InventarioLote>> ObtenerLotesActivosPorProductoAsync(Guid productoId)
+    {
+        return await _context.InventarioLotes
+            .Where(l => l.ProductoId == productoId && l.StockActual > 0)
+            .OrderBy(l => l.FechaVencimiento)
+            .ToListAsync();
+    }
 }

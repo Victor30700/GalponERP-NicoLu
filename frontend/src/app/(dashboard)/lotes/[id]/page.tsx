@@ -194,6 +194,25 @@ export default function LoteDashboard() {
         ))}
       </div>
 
+      {/* Alerta de Retiro Sanitario */}
+      {lote?.fechaFinRetiro && new Date(lote.fechaFinRetiro) > new Date() && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4"
+        >
+          <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+            <AlertCircle size={24} className="animate-pulse" />
+          </div>
+          <div>
+            <p className="text-xs font-black text-red-500 uppercase tracking-widest">⚠️ BLOQUEO SANITARIO ACTIVO</p>
+            <p className="text-sm font-medium text-foreground">
+              Apto para venta después del <span className="font-bold">{new Date(lote.fechaFinRetiro).toLocaleDateString()}</span>
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {activeTab === 'overview' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           {/* Menú de Reportes SAVCO */}

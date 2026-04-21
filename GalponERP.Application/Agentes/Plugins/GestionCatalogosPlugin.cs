@@ -15,6 +15,7 @@ using GalponERP.Application.Clientes.Commands.EliminarCliente;
 using GalponERP.Application.Clientes.Queries.ListarClientes;
 using GalponERP.Application.Clientes.Queries.ObtenerClientePorId;
 using GalponERP.Application.Agentes.Confirmacion.Commands;
+using GalponERP.Domain.Entities;
 using GalponERP.Application.Common;
 using MediatR;
 using Microsoft.SemanticKernel;
@@ -33,20 +34,24 @@ public class GestionCatalogosPlugin
     }
 
     [KernelFunction]
-    [Description("Crea una nueva categorÃ­a de productos en el sistema.")]
+    [Description("Crea una nueva categoría de productos en el sistema.")]
     public async Task<string> CrearCategoria(
-        [Description("Nombre de la categorÃ­a (ej. 'Alimento', 'Medicamento', 'Insumos')")] string nombre,
-        [Description("Opcional: DescripciÃ³n de la categorÃ­a")] string? descripcion = null)
+        [Description("Nombre de la categoría (ej. 'Alimento', 'Medicamento', 'Insumos')")] string nombre,
+        [Description("Opcional: Descripción de la categoría")] string? descripcion = null,
+        [Description("Opcional: Tipo de categoría (Alimento, Medicamento, Vacuna, Insumo, Otros)")] string? tipo = "Otros")
     {
         try
         {
-            var command = new CrearCategoriaCommand(nombre, descripcion);
+            if (!Enum.TryParse<TipoCategoria>(tipo, true, out var tipoEnum))
+                tipoEnum = TipoCategoria.Otros;
+
+            var command = new CrearCategoriaCommand(nombre, descripcion, tipoEnum);
             var result = await _mediator.Send(command);
-            return $"CategorÃ­a '{nombre}' creada exitosamente con ID: {result}. Ya puedes asignar productos a esta categorÃ­a.";
+            return $"Categoría '{nombre}' (Tipo: {tipoEnum}) creada exitosamente. Ya puedes asignar productos a esta categoría.";
         }
         catch (Exception ex)
         {
-            return $"Error al crear la categorÃ­a: {ex.Message}";
+            return $"Error al crear la categoría: {ex.Message}";
         }
     }
 

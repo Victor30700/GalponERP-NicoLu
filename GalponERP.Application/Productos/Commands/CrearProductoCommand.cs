@@ -12,7 +12,8 @@ public record CrearProductoCommand(
     Guid UnidadMedidaId,
     decimal PesoUnitarioKg = 0,
     decimal UmbralMinimo = 0,
-    decimal StockInicial = 0) : IRequest<Guid>;
+    decimal StockInicial = 0,
+    int PeriodoRetiroDias = 0) : IRequest<Guid>;
 
 public class CrearProductoCommandValidator : AbstractValidator<CrearProductoCommand>
 {
@@ -98,7 +99,8 @@ public class CrearProductoCommandHandler : IRequestHandler<CrearProductoCommand,
             request.PesoUnitarioKg,
             request.UmbralMinimo,
             0, // Costo inicial
-            request.StockInicial);
+            request.StockInicial,
+            request.PeriodoRetiroDias);
 
         _productoRepository.Agregar(producto);
 

@@ -52,7 +52,10 @@ public class AnalisisDatosJob : BackgroundService
                     }
 
                     // 2. Analizar Mortalidad
-                    var lotesActivos = (await mediator.Send(new ListarLotesQuery(SoloActivos: true), stoppingToken)).ToList();
+                    var loteRepository = scope.ServiceProvider.GetRequiredService<ILoteRepository>();
+                    var allLotes = await loteRepository.ObtenerTodosAsync();
+                    var lotesActivos = allLotes.Where(l => l.Estado == EstadoLote.Activo).ToList();
+
                     foreach (var lote in lotesActivos)
                     {
                         var tendencias = await mediator.Send(new ObtenerTendenciasMortalidadQuery(lote.Id), stoppingToken);
@@ -61,7 +64,7 @@ public class AnalisisDatosJob : BackgroundService
                             var ultimaSemana = tendencias.Last();
                             if (ultimaSemana.Porcentaje > 2) // Umbral de ejemplo: 2% semanal
                             {
-                                anomaliasEncontradas.Add($"Mortalidad alta en {lote.NombreGalpon}: {ultimaSemana.Porcentaje}% en la semana {ultimaSemana.Semana}.");
+                                anomaliasEncontradas.Add($"Mortalidad alta en {lote.Nombre}: {ultimaSemana.Porcentaje}% en la semana {ultimaSemana.Semana}.");
                             }
                         }
 
@@ -72,15 +75,15 @@ public class AnalisisDatosJob : BackgroundService
                             // Lógica simplificada de rangos por edad
                             if (lote.EdadSemanas <= 1) // Pollitos BB
                             {
-                                if (bienestar.Temperatura < 30) anomaliasEncontradas.Add($"Frío detectado en {lote.NombreGalpon} (Semana 1): {bienestar.Temperatura}°C.");
+                                if (bienestar.Temperatura < 30) anomaliasEncontradas.Add($"Frío detectado en {lote.Nombre} (Semana 1): {bienestar.Temperatura}°C.");
                             }
                             else if (lote.EdadSemanas > 4) // Cerca de saca
                             {
-                                if (bienestar.Temperatura > 26) anomaliasEncontradas.Add($"Calor excesivo en {lote.NombreGalpon} (Semana {lote.EdadSemanas}): {bienestar.Temperatura}°C.");
+                                if (bienestar.Temperatura > 26) anomaliasEncontradas.Add($"Calor excesivo en {lote.Nombre} (Semana {lote.EdadSemanas}): {bienestar.Temperatura}°C.");
                             }
 
                             if (bienestar.ConsumoAgua < 10) // Umbral mínimo genérico para ejemplo
-                                anomaliasEncontradas.Add($"Bajo consumo de agua en {lote.NombreGalpon}: {bienestar.ConsumoAgua} L.");
+                                anomaliasEncontradas.Add($"Bajo consumo de agua en {lote.Nombre}: {bienestar.ConsumoAgua} L.");
                         }
                     }
 
@@ -101,7 +104,51 @@ public class AnalisisDatosJob : BackgroundService
                         anomaliasEncontradas.Add($"OC Retrasada: {oc.RazonSocialProveedor} (Pedida hace {(DateTime.Today - oc.Fecha).TotalDays:N0} días).");
                     }
 
-                    // 6. Generar y enviar mensajes proactivos
+                    // 6. Auditoría de Eficiencia Alimenticia (FCR) - NUEVO Fase 4
+                    var inventarioRepo = scope.ServiceProvider.GetRequiredService<IInventarioRepository>();
+                    var pesajeRepo = scope.ServiceProvider.GetRequiredService<IPesajeLoteRepository>();
+                    var productoRepo = scope.ServiceProvider.GetRequiredService<IProductoRepository>();
+                    var categoriaRepo = scope.ServiceProvider.GetRequiredService<ICategoriaProductoRepository>();
+
+                    // Obtener IDs de categorías tipo Alimento
+                    var todasCategorias = await categoriaRepo.ObtenerTodasAsync();
+                    var categoriasAlimentoIds = todasCategorias
+                        .Where(c => c.Tipo == TipoCategoria.Alimento)
+                        .Select(c => c.Id)
+                        .ToList();
+
+                    // Obtener productos que pertenecen a esas categorías
+                    var todosProductos = await productoRepo.ObtenerTodosAsync();
+                    var productosAlimentoIds = todosProductos
+                        .Where(p => categoriasAlimentoIds.Contains(p.CategoriaProductoId))
+                        .Select(p => p.Id)
+                        .ToHashSet();
+
+                    foreach (var lote in lotesActivos)
+                    {
+                        var movimientos = await inventarioRepo.ObtenerPorLoteIdAsync(lote.Id);
+                        // Sumar solo salidas de productos identificados como Alimento
+                        var totalAlimentoKg = movimientos
+                            .Where(m => m.Tipo == TipoMovimiento.Salida && productosAlimentoIds.Contains(m.ProductoId))
+                            .Sum(m => m.Cantidad * m.PesoUnitarioHistorico);
+
+                        var pesajes = await pesajeRepo.ObtenerPorLoteIdAsync(lote.Id);
+                        var ultimoPesaje = pesajes.OrderByDescending(p => p.Fecha).FirstOrDefault();
+
+                        if (totalAlimentoKg > 0 && ultimoPesaje != null)
+                        {
+                            // Convertir gramos a Kg para el cálculo de FCR
+                            decimal pesoKg = ultimoPesaje.PesoPromedioGramos / 1000m;
+                            var fcr = lote.CalcularFCRActual(totalAlimentoKg, pesoKg);
+                            var (esAlerta, mensajeFcr) = lote.ValidarEficienciaAlimenticia(fcr);
+                            if (esAlerta)
+                            {
+                                anomaliasEncontradas.Add($"Eficiencia en {lote.Nombre}: {mensajeFcr}");
+                            }
+                        }
+                    }
+
+                    // 7. Generar y enviar mensajes proactivos
                     if (anomaliasEncontradas.Any())
                     {
                         var contexto = string.Join(" | ", anomaliasEncontradas);

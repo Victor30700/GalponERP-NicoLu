@@ -36,6 +36,11 @@ public class Producto : Entity
     public decimal UmbralMinimo { get; private set; }
 
     /// <summary>
+    /// Días de espera requeridos tras el consumo de este producto antes del sacrificio (Seguridad Alimentaria).
+    /// </summary>
+    public int PeriodoRetiroDias { get; private set; }
+
+    /// <summary>
     /// Costo unitario promedio ponderado (PPP) del producto.
     /// Se actualiza con cada compra formal.
     /// </summary>
@@ -49,13 +54,17 @@ public class Producto : Entity
         decimal pesoUnitarioKg,
         decimal umbralMinimo = 0,
         decimal costoUnitarioActual = 0,
-        decimal stockInicial = 0) : base(id)
+        decimal stockInicial = 0,
+        int periodoRetiroDias = 0) : base(id)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto es obligatorio.");
         
         if (pesoUnitarioKg < 0)
             throw new ArgumentException("El peso unitario en Kg no puede ser negativo.");
+
+        if (periodoRetiroDias < 0)
+            throw new ArgumentException("El periodo de retiro no puede ser negativo.");
 
         Nombre = nombre;
         CategoriaProductoId = categoriaProductoId;
@@ -65,6 +74,7 @@ public class Producto : Entity
         CostoUnitarioActual = costoUnitarioActual;
         StockActual = stockInicial;
         StockActualKg = stockInicial * pesoUnitarioKg;
+        PeriodoRetiroDias = periodoRetiroDias;
     }
 
     // Constructor para EF Core
@@ -76,19 +86,24 @@ public class Producto : Entity
         Guid unidadMedidaId, 
         decimal pesoUnitarioKg,
         decimal umbralMinimo,
-        decimal stockInicial)
+        decimal stockInicial,
+        int periodoRetiroDias = 0)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new ArgumentException("El nombre del producto no puede estar vacío.");
         
         if (pesoUnitarioKg < 0)
             throw new ArgumentException("El peso unitario en Kg no puede ser negativo.");
+
+        if (periodoRetiroDias < 0)
+            throw new ArgumentException("El periodo de retiro no puede ser negativo.");
         
         Nombre = nombre;
         CategoriaProductoId = categoriaProductoId;
         UnidadMedidaId = unidadMedidaId;
         PesoUnitarioKg = pesoUnitarioKg;
         UmbralMinimo = umbralMinimo;
+        PeriodoRetiroDias = periodoRetiroDias;
 
         // Al actualizar el peso unitario o el stock inicial, sincronizamos el stock en Kg
         SincronizarStockKg(stockInicial);

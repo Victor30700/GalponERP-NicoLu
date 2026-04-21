@@ -14,15 +14,21 @@ import { confirmDestructiveAction, showSuccessAlert } from '@/lib/swal'
 import { useAuth } from '@/context/AuthContext'
 import { UserRole } from '@/lib/rbac'
 
+import { TipoCategoria } from '@/hooks/useCategorias'
+
 const categoriaSchema = z.object({
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   descripcion: z.string().optional().nullable(),
+  tipo: z.number().int().min(0).max(4).default(4),
 })
 
 type CategoriaFormValues = z.infer<typeof categoriaSchema>
 
-interface Categoria extends CategoriaFormValues {
+interface Categoria {
   id: string
+  nombre: string
+  descripcion?: string | null
+  tipo: TipoCategoria
 }
 
 export default function CategoriasPage() {
@@ -93,11 +99,12 @@ export default function CategoriasPage() {
       setEditingCategoria(cat)
       reset({
         nombre: cat.nombre,
-        descripcion: cat.descripcion || ''
+        descripcion: cat.descripcion || '',
+        tipo: cat.tipo
       })
     } else {
       setEditingCategoria(null)
-      reset({ nombre: '', descripcion: '' })
+      reset({ nombre: '', descripcion: '', tipo: 4 })
     }
     setIsFormOpen(true)
   }
@@ -108,8 +115,22 @@ export default function CategoriasPage() {
     reset()
   }
 
+  const getTipoBadge = (tipo: number) => {
+    const tipos = ['Otros', 'Alimento', 'Medicamento', 'Vacuna', 'Insumo', 'Activo Fijo']
+    const colors = [
+      'bg-slate-500/10 text-slate-400',
+      'bg-blue-500/10 text-blue-400',
+      'bg-red-500/10 text-red-400',
+      'bg-purple-500/10 text-purple-400',
+      'bg-amber-500/10 text-amber-400',
+      'bg-emerald-500/10 text-emerald-400'
+    ]
+    return <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${colors[tipo] || colors[0]}`}>{tipos[tipo] || 'Otros'}</span>
+  }
+
   const columns: Column<Categoria>[] = [
     { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Tipo', accessor: (item) => getTipoBadge(item.tipo) },
     { header: 'Descripción', accessor: 'descripcion' },
   ]
 
@@ -132,9 +153,10 @@ export default function CategoriasPage() {
           }
         }}
         renderMobileCard={(item) => (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-foreground">{(item as Categoria).nombre}</h3>
+              {getTipoBadge((item as Categoria).tipo)}
             </div>
             <p className="text-sm text-muted-foreground">{(item as Categoria).descripcion}</p>
           </div>
@@ -174,6 +196,24 @@ export default function CategoriasPage() {
                     placeholder="Ej. Alimento, Medicamento..."
                   />
                   {errors.nombre && <p className="text-xs text-red-400 mt-1">{errors.nombre.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                    <Info size={16} className="text-primary" /> Tipo de Categoría
+                  </label>
+                  <select
+                    {...register('tipo', { valueAsNumber: true })}
+                    className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none"
+                  >
+                    <option value={0}>Otros</option>
+                    <option value={1}>Alimento (Calcula FCR)</option>
+                    <option value={2}>Medicamento (Activa Retiro)</option>
+                    <option value={3}>Vacuna (Activa Retiro)</option>
+                    <option value={4}>Insumo (General)</option>
+                    <option value={5}>Activo Fijo</option>
+                  </select>
+                  <p className="text-[10px] text-muted-foreground italic ml-1">El tipo define comportamientos automáticos del sistema (ej. bloqueo de ventas).</p>
                 </div>
 
                 <div className="space-y-2">

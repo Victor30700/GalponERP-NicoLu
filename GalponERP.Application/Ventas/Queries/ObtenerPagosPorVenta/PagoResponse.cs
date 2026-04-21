@@ -5,7 +5,7 @@ public record PagoResponse(
     Guid VentaId,
     decimal Monto,
     DateTime FechaPago,
-    string MetodoPago,
+    int MetodoPago,
     Guid UsuarioId,
     bool IsActive
 );

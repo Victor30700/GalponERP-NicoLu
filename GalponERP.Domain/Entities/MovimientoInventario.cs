@@ -19,7 +19,11 @@ public enum TipoMovimiento
 public class MovimientoInventario : Entity
 {
     public Guid ProductoId { get; private set; }
-    public Guid? LoteId { get; private set; } // Puede ser nulo si no está asociado a un lote específico
+    public Producto Producto { get; private set; } = null!;
+    public Guid? LoteId { get; private set; } // Lote de pollos asociado
+    public Lote? Lote { get; private set; }
+    public Guid? InventarioLoteId { get; private set; } // Lote de fabricante
+    public InventarioLote? InventarioLote { get; private set; }
     public decimal Cantidad { get; private set; }
     public TipoMovimiento Tipo { get; private set; }
     public DateTime Fecha { get; private set; }
@@ -52,7 +56,8 @@ public class MovimientoInventario : Entity
         string? justificacion = null,
         Moneda? costoTotal = null,
         string? proveedor = null,
-        Guid? compraId = null) 
+        Guid? compraId = null,
+        Guid? inventarioLoteId = null) 
         : base(id)
     {
         if (productoId == Guid.Empty)
@@ -66,6 +71,7 @@ public class MovimientoInventario : Entity
 
         ProductoId = productoId;
         LoteId = loteId;
+        InventarioLoteId = inventarioLoteId;
         Cantidad = cantidad;
         Tipo = tipo;
         Fecha = fecha;

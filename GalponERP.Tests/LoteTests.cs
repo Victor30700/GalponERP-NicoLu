@@ -70,7 +70,7 @@ public class LoteTests
         var lote = new Lote(Guid.NewGuid(), "Lote Test", Guid.NewGuid(), DateTime.UtcNow, 1000, new Moneda(1.50m));
 
         // Act
-        lote.RegistrarVenta(500);
+        lote.RegistrarVenta(500, DateTime.UtcNow);
 
         // Assert
         Assert.Equal(500, lote.CantidadActual);
@@ -85,7 +85,7 @@ public class LoteTests
         lote.CerrarLote(1.60m, new Moneda(1000), new Moneda(500), 5.0m);
 
         // Act & Assert
-        Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(100));
+        Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(100, DateTime.UtcNow));
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class LoteTests
         lote.RegistrarBajas(10); // Quedan 90
 
         // Act & Assert
-        Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(91));
+        Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(91, DateTime.UtcNow));
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class LoteTests
     {
         // Arrange
         var lote = new Lote(Guid.NewGuid(), "Lote Test", Guid.NewGuid(), DateTime.UtcNow, 100, new Moneda(1.50m));
-        lote.RegistrarVenta(50); // Quedan 50
+        lote.RegistrarVenta(50, DateTime.UtcNow); // Quedan 50
 
         // Act
         lote.AnularVenta(20);
@@ -112,5 +112,40 @@ public class LoteTests
         // Assert
         Assert.Equal(70, lote.CantidadActual);
         Assert.Equal(30, lote.PollosVendidos);
+    }
+
+    [Fact]
+    public void BlindajeSanitario_DebeBloquearVenta_SiEstaEnPeriodoRetiro()
+    {
+        // Arrange
+        var lote = new Lote(Guid.NewGuid(), "Lote Blindaje", Guid.NewGuid(), DateTime.UtcNow.AddDays(-30), 1000, new Moneda(1.50m));
+        
+        // Aplicar medicamento con 7 días de retiro hoy
+        lote.RegistrarAplicacionMedica(DateTime.UtcNow, 7);
+
+        // Act & Assert
+        // Intentar vender hoy mismo
+        Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(100, DateTime.UtcNow));
+        
+        // Intentar vender en 5 días (todavía bloqueado)
+        Assert.Throws<LoteDomainException>(() => lote.RegistrarVenta(100, DateTime.UtcNow.AddDays(5)));
+    }
+
+    [Fact]
+    public void BlindajeSanitario_DebePermitirVenta_SiTerminoPeriodoRetiro()
+    {
+        // Arrange
+        var lote = new Lote(Guid.NewGuid(), "Lote Blindaje OK", Guid.NewGuid(), DateTime.UtcNow.AddDays(-30), 1000, new Moneda(1.50m));
+        
+        // Aplicar medicamento con 7 días de retiro hoy
+        lote.RegistrarAplicacionMedica(DateTime.UtcNow, 7);
+
+        // Act
+        // Intentar vender en 8 días (ya liberado)
+        lote.RegistrarVenta(100, DateTime.UtcNow.AddDays(8));
+
+        // Assert
+        Assert.Equal(100, lote.PollosVendidos);
+        Assert.Equal(900, lote.CantidadActual);
     }
 }

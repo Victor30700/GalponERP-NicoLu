@@ -1,15 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
+export enum TipoCategoria {
+  Otros = 0,
+  Alimento = 1,
+  Medicamento = 2,
+  Vacuna = 3,
+  Insumo = 4,
+  ActivoFijo = 5
+}
+
 export interface Categoria {
   id: string;
   nombre: string;
   descripcion?: string;
+  tipo: TipoCategoria;
 }
 
 export interface CategoriaRequest {
   nombre: string;
   descripcion?: string;
+  tipo: TipoCategoria;
 }
 
 export function useCategorias() {

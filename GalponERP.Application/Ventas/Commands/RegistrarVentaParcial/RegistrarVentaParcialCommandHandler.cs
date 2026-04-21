@@ -1,6 +1,7 @@
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
+using GalponERP.Domain.Exceptions;
 using GalponERP.Application.Interfaces;
 using MediatR;
 
@@ -29,14 +30,14 @@ public class RegistrarVentaParcialCommandHandler : IRequestHandler<RegistrarVent
     {
         var lote = await _loteRepository.ObtenerPorIdAsync(request.LoteId);
         if (lote == null)
-            throw new Exception($"Lote con ID {request.LoteId} no encontrado.");
+            throw new LoteDomainException($"Lote con ID {request.LoteId} no encontrado.");
 
         var cliente = await _clienteRepository.ObtenerPorIdAsync(request.ClienteId);
         if (cliente == null)
-            throw new Exception($"Cliente con ID {request.ClienteId} no encontrado.");
+            throw new LoteDomainException($"Cliente con ID {request.ClienteId} no encontrado.");
 
-        // Regla de negocio encapsulada en la entidad Lote
-        lote.RegistrarVenta(request.CantidadPollos);
+        // Regla de negocio encapsulada en la entidad Lote (Blindaje Fase 1 incluido)
+        lote.RegistrarVenta(request.CantidadPollos, request.Fecha);
 
         // Asegurar que la fecha sea UTC para PostgreSQL
         var fechaUtc = request.Fecha.Kind == DateTimeKind.Unspecified 

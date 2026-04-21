@@ -25,6 +25,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
   const [value, setValue] = useState('')
   const [secondaryValue, setSecondaryValue] = useState('') 
   const [tertiaryValue, setTertiaryValue] = useState('') 
+  const [quaternaryValue, setQuaternaryValue] = useState('') 
   const [nota, setNota] = useState('')
   const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [selectedProductId, setSelectedProductId] = useState('')
@@ -94,6 +95,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       
       if (config.sec) setSecondaryValue(initialData[config.sec]?.toString() || '')
       if (config.ter) setTertiaryValue(initialData[config.ter]?.toString() || '')
+      if (type === 'water') setQuaternaryValue(initialData.lecturaMedidor?.toString() || '')
       if (config.prod && !selectedProductId) setSelectedProductId(initialData[config.prod] || '')
     } else if (!isOpen) {
       // Limpiar al cerrar
@@ -208,6 +210,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
           consumoAgua: Number(value),
           temperatura: Number(secondaryValue) || 0,
           humedad: Number(tertiaryValue) || 0,
+          lecturaMedidor: Number(quaternaryValue) || 0,
           observaciones: nota 
       }
     } else if (type === 'weight') {
@@ -466,6 +469,24 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
                       <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-sm uppercase">%</span>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {type === 'water' && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Lectura del Medidor (m³ o L)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.001"
+                      value={quaternaryValue}
+                      onChange={(e) => setQuaternaryValue(e.target.value)}
+                      className="w-full px-6 py-4 bg-muted/50 border border-border rounded-2xl text-2xl font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-center transition-all border-amber-500/30"
+                      placeholder="0.000"
+                    />
+                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground font-black text-sm uppercase font-mono">Lectura</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic ml-1">Se recomienda registrar la lectura diaria para auditar el consumo real.</p>
                 </div>
               )}
 

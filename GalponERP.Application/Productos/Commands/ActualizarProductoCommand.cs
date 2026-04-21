@@ -13,7 +13,8 @@ public record ActualizarProductoCommand(
     Guid UnidadMedidaId,
     decimal PesoUnitarioKg = 0,
     decimal UmbralMinimo = 0,
-    decimal StockInicial = 0) : IRequest;
+    decimal StockInicial = 0,
+    int PeriodoRetiroDias = 0) : IRequest;
 
 public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarProductoCommand>
 {
@@ -98,7 +99,8 @@ public class ActualizarProductoCommandHandler : IRequestHandler<ActualizarProduc
             request.UnidadMedidaId, 
             request.PesoUnitarioKg,
             request.UmbralMinimo,
-            request.StockInicial);
+            request.StockInicial,
+            request.PeriodoRetiroDias);
 
         _productoRepository.Actualizar(producto);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

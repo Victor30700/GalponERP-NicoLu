@@ -19,6 +19,7 @@ public class GalponDbContext : DbContext, IGalponDbContext
 
     public DbSet<Galpon> Galpones { get; set; }
     public DbSet<Lote> Lotes { get; set; }
+    public DbSet<InventarioLote> InventarioLotes { get; set; }
     public DbSet<MortalidadDiaria> Mortalidades { get; set; }
     public DbSet<Producto> Productos { get; set; }
     public DbSet<CategoriaProducto> CategoriasProductos { get; set; }

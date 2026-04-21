@@ -11,6 +11,7 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
     private readonly ICalendarioSanitarioRepository _calendarioRepository;
     private readonly IInventarioRepository _inventarioRepository;
     private readonly IProductoRepository _productoRepository;
+    private readonly ILoteRepository _loteRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserContext _currentUserContext;
 
@@ -18,12 +19,14 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
         ICalendarioSanitarioRepository calendarioRepository,
         IInventarioRepository inventarioRepository,
         IProductoRepository productoRepository,
+        ILoteRepository loteRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserContext currentUserContext)
     {
         _calendarioRepository = calendarioRepository;
         _inventarioRepository = inventarioRepository;
         _productoRepository = productoRepository;
+        _loteRepository = loteRepository;
         _unitOfWork = unitOfWork;
         _currentUserContext = currentUserContext;
     }
@@ -35,6 +38,12 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
         if (actividad == null)
         {
             throw new Exception("Actividad del calendario no encontrada.");
+        }
+
+        var lote = await _loteRepository.ObtenerPorIdAsync(actividad.LoteId);
+        if (lote == null)
+        {
+            throw new Exception("El lote asociado a la actividad no existe.");
         }
 
         if (actividad.Estado == EstadoCalendario.Aplicado)
@@ -88,6 +97,13 @@ public class MarcarVacunaAplicadaCommandHandler : IRequestHandler<MarcarVacunaAp
         // 4. Actualizar el stock en Kg cacheado en el Producto
         producto.ActualizarStock(request.CantidadConsumida, TipoMovimiento.Salida);
         _productoRepository.Actualizar(producto);
+
+        // Blindaje Fase 1: Si el producto tiene periodo de retiro, actualizar el lote
+        if (producto.PeriodoRetiroDias > 0)
+        {
+            lote.RegistrarAplicacionMedica(DateTime.UtcNow, producto.PeriodoRetiroDias);
+            _loteRepository.Actualizar(lote);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

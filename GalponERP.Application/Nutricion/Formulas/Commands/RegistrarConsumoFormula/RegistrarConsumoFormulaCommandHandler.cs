@@ -102,9 +102,13 @@ public class RegistrarConsumoFormulaCommandHandler : IRequestHandler<RegistrarCo
                 );
                 registroSanitario.MarcarComoAplicado();
                 _calendarioRepository.Agregar(registroSanitario);
+
+                // Blindaje Fase 1: Actualizar periodo de retiro en el lote
+                lote.RegistrarAplicacionMedica(request.Fecha, producto.PeriodoRetiroDias);
             }
         }
 
+        _loteRepository.Actualizar(lote);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return consumoId;
     }
@@ -113,9 +117,7 @@ public class RegistrarConsumoFormulaCommandHandler : IRequestHandler<RegistrarCo
     {
         if (producto.Categoria == null) return false;
         
-        string nombreCat = producto.Categoria.Nombre.ToLower();
-        return nombreCat.Contains("medicamento") || 
-               nombreCat.Contains("vacuna") || 
-               nombreCat.Contains("sanidad");
+        return producto.Categoria.Tipo == TipoCategoria.Medicamento || 
+               producto.Categoria.Tipo == TipoCategoria.Vacuna;
     }
 }

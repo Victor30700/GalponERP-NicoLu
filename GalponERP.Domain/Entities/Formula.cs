@@ -55,11 +55,40 @@ public class Formula : Entity
         if (cantidadPorBase <= 0)
             throw new FormulaDomainException("La cantidad del ingrediente debe ser mayor a cero.");
 
-        if (_detalles.Any(d => d.ProductoId == productoId))
-            throw new FormulaDomainException("El producto ya existe en los detalles de la fórmula.");
+        // Buscar si ya existe (incluso si está inactivo para reactivarlo si fuera necesario, 
+        // pero por ahora lanzamos error si hay uno ACTIVO)
+        if (_detalles.Any(d => d.ProductoId == productoId && d.IsActive))
+            throw new FormulaDomainException("El producto ya existe en los detalles activos de la fórmula.");
 
         _detalles.Add(new FormulaDetalle(Guid.NewGuid(), Id, productoId, cantidadPorBase));
     }
 
-    public void LimpiarDetalles() => _detalles.Clear();
+    public void LimpiarDetalles() 
+    {
+        foreach(var detalle in _detalles.Where(d => d.IsActive))
+        {
+            detalle.Eliminar(); // Soft delete
+        }
+    }
+
+    public void EliminarDetalle(Guid productoId)
+    {
+        var detalle = _detalles.FirstOrDefault(d => d.ProductoId == productoId && d.IsActive);
+        if (detalle != null)
+        {
+            detalle.Eliminar(); // Soft delete en lugar de _detalles.Remove() para asegurar que EF lo vea como Modified -> IsActive=false
+        }
+    }
+
+    public void ActualizarDetalle(Guid productoId, decimal nuevaCantidad)
+    {
+        var detalle = _detalles.FirstOrDefault(d => d.ProductoId == productoId && d.IsActive);
+        if (detalle == null)
+            throw new FormulaDomainException("El producto no existe o no está activo en los detalles de la fórmula.");
+
+        if (nuevaCantidad <= 0)
+            throw new FormulaDomainException("La cantidad debe ser mayor a cero.");
+
+        detalle.ActualizarCantidad(nuevaCantidad);
+    }
 }

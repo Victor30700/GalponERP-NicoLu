@@ -29,6 +29,11 @@ public class Lote : Entity
     public EstadoLote Estado { get; private set; }
     public string? JustificacionCancelacion { get; private set; }
 
+    /// <summary>
+    /// Fecha hasta la cual el lote no puede ser sacrificado o vendido debido a tratamientos médicos.
+    /// </summary>
+    public DateTime? FechaFinRetiro { get; private set; }
+
     public int EdadSemanas => (DateTime.Now - FechaIngreso).Days / 7;
 
     // Snapshots Contables
@@ -152,10 +157,14 @@ public class Lote : Entity
     /// Registra la venta de pollos del lote.
     /// </summary>
     /// <param name="cantidad">Cantidad de pollos a vender.</param>
-    public void RegistrarVenta(int cantidad)
+    /// <param name="fechaVenta">Fecha en la que se realiza la venta.</param>
+    public void RegistrarVenta(int cantidad, DateTime fechaVenta)
     {
         if (Estado != EstadoLote.Activo)
             throw new LoteDomainException("Solo se pueden registrar ventas en lotes activos.");
+
+        if (!EsAptoParaVenta(fechaVenta))
+            throw new LoteDomainException($"El lote no es apto para la venta en la fecha seleccionada ({fechaVenta.ToShortDateString()}) debido al periodo de retiro sanitario activo.");
 
         if (cantidad <= 0)
             throw new LoteDomainException("La cantidad a vender debe ser un número positivo.");
@@ -229,6 +238,74 @@ public class Lote : Entity
 
         PollosVendidos -= cantidad;
         CantidadActual += cantidad;
+    }
+
+    /// <summary>
+    /// Registra la aplicación de un medicamento o vacuna y actualiza la fecha de fin de retiro si es necesario.
+    /// </summary>
+    /// <param name="fechaAplicacion">Fecha en que se aplica el producto.</param>
+    /// <param name="periodoRetiroDias">Días de retiro requeridos por el producto.</param>
+    public void RegistrarAplicacionMedica(DateTime fechaAplicacion, int periodoRetiroDias)
+    {
+        if (Estado != EstadoLote.Activo)
+            throw new LoteDomainException("Solo se pueden registrar aplicaciones médicas en lotes activos.");
+
+        if (periodoRetiroDias <= 0) return;
+
+        DateTime fechaFinSugerida = fechaAplicacion.Date.AddDays(periodoRetiroDias);
+
+        if (FechaFinRetiro == null || fechaFinSugerida > FechaFinRetiro)
+        {
+            FechaFinRetiro = fechaFinSugerida;
+        }
+    }
+
+    /// <summary>
+    /// Valida si el lote es apto para la venta en una fecha determinada.
+    /// </summary>
+    public bool EsAptoParaVenta(DateTime fechaConsulta)
+    {
+        if (FechaFinRetiro == null) return true;
+        return fechaConsulta.Date > FechaFinRetiro.Value.Date;
+    }
+
+    /// <summary>
+    /// Calcula el FCR (Food Conversion Ratio) actual del lote.
+    /// FCR = Alimento Consumido (kg) / Ganancia de Peso (kg).
+    /// </summary>
+    public decimal CalcularFCRActual(decimal totalAlimentoConsumidoKg, decimal pesoPromedioActualKg)
+    {
+        if (pesoPromedioActualKg <= 0) return 0;
+        
+        // Ganancia de peso total estimada = (Pollos Vivos * Peso Promedio) + Peso de los ya vendidos (si los hay)
+        // Simplificado para el monitoreo diario:
+        decimal biomasaActualKg = CantidadActual * pesoPromedioActualKg;
+        
+        if (biomasaActualKg <= 0) return 0;
+
+        return Math.Round(totalAlimentoConsumidoKg / biomasaActualKg, 2);
+    }
+
+    /// <summary>
+    /// Determina si el FCR actual está fuera de los rangos esperados para la edad del lote.
+    /// </summary>
+    public (bool EsAlerta, string? Mensaje) ValidarEficienciaAlimenticia(decimal fcrActual)
+    {
+        // Rangos de referencia simplificados:
+        // Semana 1-2: 1.0 - 1.2
+        // Semana 3-4: 1.3 - 1.5
+        // Semana 5-6: 1.6 - 1.8
+        
+        decimal limiteSuperior = 1.2m;
+        if (EdadSemanas > 2) limiteSuperior = 1.5m;
+        if (EdadSemanas > 4) limiteSuperior = 1.9m;
+
+        if (fcrActual > limiteSuperior)
+        {
+            return (true, $"FCR alto ({fcrActual}). El lote está consumiendo más alimento de lo que gana en peso.");
+        }
+
+        return (false, null);
     }
 
     public void ActualizarDatosIniciales(string nombre, Guid galponId, DateTime fechaIngreso, int cantidadInicial, Moneda costoUnitario)

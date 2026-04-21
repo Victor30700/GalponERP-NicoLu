@@ -23,6 +23,7 @@ const getProductoSchema = (categorias: Categoria[]) => z.object({
   equivalenciaEnKg: z.number().min(0, 'No puede ser negativo').optional(),
   umbralMinimo: z.number().min(0, 'No puede ser negativo'),
   stockInicial: z.number().min(0, 'No puede ser negativo').optional().default(0),
+  periodoRetiroDias: z.number().int().min(0, 'No puede ser negativo').default(0),
 }).refine(data => {
     const categoria = categorias.find(c => c.id === data.categoriaProductoId)
     if (categoria?.nombre.toLowerCase().includes('alimento')) {
@@ -66,7 +67,8 @@ export default function ProductosPage() {
       pesoUnitarioKg: 1,
       umbralMinimo: 0,
       stockInicial: 0,
-      equivalenciaEnKg: 0
+      equivalenciaEnKg: 0,
+      periodoRetiroDias: 0
     }
   })
 
@@ -86,6 +88,7 @@ export default function ProductosPage() {
       pesoUnitarioKg: esAlimento ? Number(data.pesoUnitarioKg) : 0,
       umbralMinimo: Number(data.umbralMinimo),
       stockInicial: Number(data.stockInicial),
+      periodoRetiroDias: Number(data.periodoRetiroDias),
       equivalenciaEnKg: (!editingProductoId && esAlimento) ? equivalenciaCalculada : 0
     }
     if (editingProductoId) {
@@ -116,11 +119,20 @@ export default function ProductosPage() {
         unidadMedidaId: prod.unidadMedidaId,
         pesoUnitarioKg: prod.pesoUnitarioKg,
         umbralMinimo: prod.umbralMinimo,
-        stockInicial: prod.stockActual
+        stockInicial: prod.stockActual,
+        periodoRetiroDias: prod.periodoRetiroDias || 0
       })
     } else {
       setEditingProductoId(null)
-      reset({ nombre: '', categoriaProductoId: '', unidadMedidaId: '', pesoUnitarioKg: 0, umbralMinimo: 0, stockInicial: 0 })
+      reset({ 
+        nombre: '', 
+        categoriaProductoId: '', 
+        unidadMedidaId: '', 
+        pesoUnitarioKg: 0, 
+        umbralMinimo: 0, 
+        stockInicial: 0,
+        periodoRetiroDias: 0
+      })
     }
     setIsFormOpen(true)
   }
@@ -328,6 +340,16 @@ export default function ProductosPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground ml-1">Periodo de Retiro (Días)</label>
+                  <div className="relative">
+                    <AlertCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <input type="number" {...register('periodoRetiroDias', { valueAsNumber: true })} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="0" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground ml-1">Días de seguridad antes de poder vender el lote tras aplicar este producto (Medicamentos/Vacunas).</p>
+                  {errors.periodoRetiroDias && <p className="text-xs text-red-400 ml-1">{errors.periodoRetiroDias.message}</p>}
+                </div>
 
                 <button type="submit" disabled={isPending} className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-8 shadow-lg shadow-blue-500/20" >
                   <Save size={20} />

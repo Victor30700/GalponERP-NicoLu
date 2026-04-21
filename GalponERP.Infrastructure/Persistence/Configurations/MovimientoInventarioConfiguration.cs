@@ -42,12 +42,12 @@ public class MovimientoInventarioConfiguration : IEntityTypeConfiguration<Movimi
         builder.Property(m => m.Proveedor)
             .HasMaxLength(200);
 
-        builder.HasOne<Producto>()
+        builder.HasOne(m => m.Producto)
             .WithMany()
             .HasForeignKey(m => m.ProductoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Lote>()
+        builder.HasOne(m => m.Lote)
             .WithMany()
             .HasForeignKey(m => m.LoteId)
             .OnDelete(DeleteBehavior.SetNull);

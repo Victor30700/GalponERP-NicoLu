@@ -16,6 +16,7 @@ public class FormulaRepository : IFormulaRepository
     public async Task<Formula?> ObtenerPorIdAsync(Guid id)
     {
         return await _context.Formulas
+            .IgnoreQueryFilters()
             .Include(f => f.Detalles)
             .ThenInclude(d => d.Producto)
             .FirstOrDefaultAsync(f => f.Id == id);

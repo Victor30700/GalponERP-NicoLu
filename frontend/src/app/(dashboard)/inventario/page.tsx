@@ -67,6 +67,8 @@ const compraSchema = z.object({
   cantidad: z.number().positive('La cantidad debe ser mayor a 0'),
   costoTotalCompra: z.number().min(0, 'El costo no puede ser negativo'),
   montoPagado: z.number().min(0, 'El monto pagado no puede ser negativo'),
+  numeroLoteFabricante: z.string().optional(),
+  fechaVencimiento: z.string().optional(),
   nota: z.string().optional(),
 })
 
@@ -335,6 +337,28 @@ export default function InventarioPage() {
                       )}
                     </div>
                   )
+                },
+                {
+                    header: 'Próximo Vencimiento',
+                    accessor: (item) => (
+                      item.fechaVencimientoProxima ? (
+                        <div className="flex flex-col gap-1">
+                          <span className={cn(
+                            "px-2 py-1 rounded text-[10px] font-bold uppercase w-fit",
+                            new Date(item.fechaVencimientoProxima) < new Date() ? "bg-red-500/20 text-red-400" : 
+                            new Date(item.fechaVencimientoProxima) < new Date(Date.now() + 30*24*60*60*1000) ? "bg-amber-500/20 text-amber-400" :
+                            "bg-blue-500/10 text-blue-400"
+                          )}>
+                            {new Date(item.fechaVencimientoProxima).toLocaleDateString()}
+                          </span>
+                          {new Date(item.fechaVencimientoProxima) < new Date() && (
+                             <span className="text-[9px] text-red-500 font-black uppercase">¡CADUCADO!</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">No registrado</span>
+                      )
+                    )
                 },
                 {
                   header: 'Estado',
@@ -756,6 +780,23 @@ export default function InventarioPage() {
                   {compraForm.formState.errors.montoPagado && <p className="text-xs text-red-400">{compraForm.formState.errors.montoPagado.message}</p>}
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Lote Fabricante</label>
+                    <div className="relative">
+                      <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                      <input type="text" {...compraForm.register('numeroLoteFabricante')} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" placeholder="Ej. L-5432" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Vencimiento</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                      <input type="date" {...compraForm.register('fechaVencimiento')} className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground ml-1">Nota (Opcional)</label>
                   <textarea {...compraForm.register('nota')} rows={2} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground" placeholder="Ej. Factura #1234..." />
@@ -1024,7 +1065,8 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
                                             <select {...form.register('metodoPago', { valueAsNumber: true })} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground appearance-none">
                                                 <option value={1}>Efectivo</option>
                                                 <option value={2}>Transferencia</option>
-                                                <option value={3}>Cheque</option>
+                                                <option value={3}>Depósito</option>
+                                                <option value={4}>QR</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">
@@ -1048,7 +1090,14 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
                                             </div>
                                             <div>
                                             <p className="text-lg font-black text-foreground">Bs. {(pago.monto ?? 0).toLocaleString()}</p>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase">{new Date(pago.fechaPago).toLocaleDateString()} • {pago.metodoPago}</p>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase">
+                                                    {new Date(pago.fechaPago).toLocaleDateString()} • {
+                                                        pago.metodoPago === 1 ? 'Efectivo' : 
+                                                        pago.metodoPago === 2 ? 'Transferencia' : 
+                                                        pago.metodoPago === 3 ? 'Depósito' : 
+                                                        pago.metodoPago === 4 ? 'QR' : pago.metodoPago
+                                                    }
+                                                </p>
                                             </div>
                                         </div>
                                         <button 

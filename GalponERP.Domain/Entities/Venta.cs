@@ -21,7 +21,17 @@ public class Venta : Entity
     private readonly List<PagoVenta> _pagos = new();
     public IReadOnlyCollection<PagoVenta> Pagos => _pagos.AsReadOnly();
 
-    public Moneda SaldoPendiente => Total - new Moneda(_pagos.Where(p => p.IsActive).Sum(p => p.Monto.Monto));
+    public Moneda SaldoPendiente
+    {
+        get
+        {
+            decimal pagado = _pagos
+                .Where(p => p.IsActive)
+                .Sum(p => p.Monto.Monto);
+            
+            return new Moneda(Total.Monto - pagado);
+        }
+    }
 
     public Venta(Guid id, Guid loteId, Guid clienteId, DateTime fecha, int cantidadPollos, decimal pesoTotalVendido, Moneda precioPorKilo, Guid usuarioId, EstadoPago estadoPago = EstadoPago.Pendiente) 
         : base(id)

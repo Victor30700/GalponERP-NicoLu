@@ -41,12 +41,12 @@ export default function DashboardPage() {
       description: 'Actividades programadas'
     },
     { 
-      name: 'Mortalidad Mes', 
-      value: resumen?.mortalidadMesActual || '0', 
-      icon: AlertTriangle, 
-      color: 'text-red-500', 
-      bg: 'bg-red-500/10',
-      description: 'Bajas registradas'
+      name: 'FCR Global', 
+      value: resumen?.fcrPromedioEmpresa?.toFixed(2) || '0.00', 
+      icon: TrendingUp, 
+      color: 'text-indigo-500', 
+      bg: 'bg-indigo-500/10',
+      description: 'Índice de Conversión Alimenticia'
     },
     { 
       name: 'Inversión Activa', 

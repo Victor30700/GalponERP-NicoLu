@@ -28,6 +28,11 @@ public class RegistroBienestarRepository : IRegistroBienestarRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<RegistroBienestar>> ObtenerHistorialPorLoteAsync(Guid loteId)
+    {
+        return await ObtenerPorLoteAsync(loteId);
+    }
+
     public void Agregar(RegistroBienestar registro)
     {
         _context.RegistroBienestar.Add(registro);

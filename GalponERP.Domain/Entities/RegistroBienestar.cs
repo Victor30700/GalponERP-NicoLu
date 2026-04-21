@@ -12,13 +12,14 @@ public class RegistroBienestar : Entity
     public DateTime Fecha { get; private set; }
     public decimal? Temperatura { get; private set; }
     public decimal? Humedad { get; private set; }
-    public decimal? ConsumoAgua { get; private set; } // Litros
+    public decimal? LecturaMedidor { get; private set; } // Lectura del contador de agua
+    public decimal? ConsumoAgua { get; private set; } // Litros (calculado o directo)
     public decimal? Ph { get; private set; }
     public decimal? CloroPpm { get; private set; }
     public string? Observaciones { get; private set; }
     public Guid UsuarioId { get; private set; }
 
-    public RegistroBienestar(Guid id, Guid loteId, DateTime fecha, decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, Guid usuarioId, decimal? ph = null, decimal? cloroPpm = null) 
+    public RegistroBienestar(Guid id, Guid loteId, DateTime fecha, decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, Guid usuarioId, decimal? ph = null, decimal? cloroPpm = null, decimal? lecturaMedidor = null) 
         : base(id)
     {
         if (loteId == Guid.Empty)
@@ -32,20 +33,30 @@ public class RegistroBienestar : Entity
         Temperatura = temperatura;
         Humedad = humedad;
         ConsumoAgua = consumoAgua;
+        LecturaMedidor = lecturaMedidor;
         Ph = ph;
         CloroPpm = cloroPpm;
         Observaciones = observaciones;
         UsuarioId = usuarioId;
     }
 
-    public void Actualizar(decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, decimal? ph = null, decimal? cloroPpm = null)
+    public void Actualizar(decimal? temperatura, decimal? humedad, decimal? consumoAgua, string? observaciones, decimal? ph = null, decimal? cloroPpm = null, decimal? lecturaMedidor = null)
     {
         Temperatura = temperatura;
         Humedad = humedad;
         ConsumoAgua = consumoAgua;
+        LecturaMedidor = lecturaMedidor;
         Ph = ph;
         CloroPpm = cloroPpm;
         Observaciones = observaciones;
+    }
+
+    public void CalcularConsumo(decimal lecturaAnterior)
+    {
+        if (LecturaMedidor.HasValue && LecturaMedidor.Value >= lecturaAnterior)
+        {
+            ConsumoAgua = LecturaMedidor.Value - lecturaAnterior;
+        }
     }
 
     // Constructor para EF Core

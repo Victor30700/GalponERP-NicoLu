@@ -38,9 +38,6 @@ public class RegistrarPagoVentaCommandHandler : IRequestHandler<RegistrarPagoVen
             request.MetodoPago,
             request.UsuarioId);
 
-        // Forzar el estado de la venta como modificado para asegurar la actualización de saldos y auditoría
-        _ventaRepository.Actualizar(venta);
-        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return pagoId;

@@ -3,6 +3,8 @@ using GalponERP.Application.Exceptions;
 using GalponERP.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace GalponERP.Api.Middleware;
 
@@ -41,6 +43,16 @@ public class GlobalExceptionHandler : IExceptionHandler
                 StatusCodes.Status404NotFound,
                 "Not Found",
                 keyNotFoundException.Message,
+                null),
+            DbUpdateConcurrencyException => (
+                StatusCodes.Status409Conflict,
+                "Concurrency Error",
+                "El registro fue modificado o eliminado por otro usuario. Por favor, recargue los datos e intente nuevamente.",
+                null),
+            DbUpdateException dbUpdateException => (
+                StatusCodes.Status400BadRequest,
+                "Database Error",
+                "Ocurrió un error al persistir los cambios en la base de datos. Verifique que todos los registros relacionados existan y que no haya duplicados.",
                 null),
             _ => (
                 StatusCodes.Status500InternalServerError,

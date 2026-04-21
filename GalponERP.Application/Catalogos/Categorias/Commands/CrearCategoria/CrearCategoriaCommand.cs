@@ -8,7 +8,8 @@ namespace GalponERP.Application.Catalogos.Categorias.Commands.CrearCategoria;
 
 public record CrearCategoriaCommand(
     string Nombre,
-    string? Descripcion) : IRequest<Guid>;
+    string? Descripcion,
+    TipoCategoria Tipo) : IRequest<Guid>;
 
 public class CrearCategoriaCommandValidator : AbstractValidator<CrearCategoriaCommand>
 {
@@ -39,7 +40,8 @@ public class CrearCategoriaCommandHandler : IRequestHandler<CrearCategoriaComman
         var categoria = new CategoriaProducto(
             Guid.NewGuid(),
             request.Nombre,
-            request.Descripcion);
+            request.Descripcion,
+            request.Tipo);
 
         _categoriaRepository.Agregar(categoria);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

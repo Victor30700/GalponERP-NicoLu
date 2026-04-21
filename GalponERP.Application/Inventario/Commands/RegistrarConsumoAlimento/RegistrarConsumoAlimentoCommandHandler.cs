@@ -11,17 +11,20 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
 {
     private readonly IInventarioRepository _inventarioRepository;
     private readonly IProductoRepository _productoRepository;
+    private readonly ILoteRepository _loteRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserContext _currentUserContext;
 
     public RegistrarConsumoAlimentoCommandHandler(
         IInventarioRepository inventarioRepository,
         IProductoRepository productoRepository,
+        ILoteRepository loteRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserContext currentUserContext)
     {
         _inventarioRepository = inventarioRepository;
         _productoRepository = productoRepository;
+        _loteRepository = loteRepository;
         _unitOfWork = unitOfWork;
         _currentUserContext = currentUserContext;
     }
@@ -32,6 +35,12 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
         if (producto == null)
         {
             throw new Exception("El producto no existe.");
+        }
+
+        var lote = await _loteRepository.ObtenerPorIdAsync(request.LoteId);
+        if (lote == null)
+        {
+            throw new Exception("El lote no existe.");
         }
 
         var usuarioId = _currentUserContext.UsuarioId;
@@ -83,6 +92,13 @@ public class RegistrarConsumoAlimentoCommandHandler : IRequestHandler<RegistrarC
         // 3. Actualizar el stock en Kg cacheado en el Producto
         producto.ActualizarStock(unidadesAConsumir, TipoMovimiento.Salida);
         _productoRepository.Actualizar(producto);
+
+        // Blindaje Fase 1: Si el producto tiene periodo de retiro, actualizar el lote
+        if (producto.PeriodoRetiroDias > 0)
+        {
+            lote.RegistrarAplicacionMedica(DateTime.UtcNow, producto.PeriodoRetiroDias);
+            _loteRepository.Actualizar(lote);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

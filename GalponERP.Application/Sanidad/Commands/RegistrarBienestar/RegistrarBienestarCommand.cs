@@ -4,6 +4,9 @@ using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
 
+using GalponERP.Domain.Interfaces.Services;
+using Microsoft.Extensions.Logging;
+
 namespace GalponERP.Application.Sanidad.Commands.RegistrarBienestar;
 
 public record RegistrarBienestarCommand(
@@ -12,6 +15,7 @@ public record RegistrarBienestarCommand(
     decimal? Temperatura = null,
     decimal? Humedad = null,
     decimal? ConsumoAgua = null,
+    decimal? LecturaMedidor = null,
     string? Observaciones = null) : IRequest<Guid>;
 
 public class RegistrarBienestarCommandValidator : AbstractValidator<RegistrarBienestarCommand>
@@ -27,19 +31,25 @@ public class RegistrarBienestarCommandHandler : IRequestHandler<RegistrarBienest
 {
     private readonly IRegistroBienestarRepository _bienestarRepository;
     private readonly ILoteRepository _loteRepository;
+    private readonly ISanidadService _sanidadService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserContext _currentUserContext;
+    private readonly ILogger<RegistrarBienestarCommandHandler> _logger;
 
     public RegistrarBienestarCommandHandler(
         IRegistroBienestarRepository bienestarRepository,
         ILoteRepository loteRepository,
+        ISanidadService sanidadService,
         IUnitOfWork unitOfWork,
-        ICurrentUserContext currentUserContext)
+        ICurrentUserContext currentUserContext,
+        ILogger<RegistrarBienestarCommandHandler> logger)
     {
         _bienestarRepository = bienestarRepository;
         _loteRepository = loteRepository;
+        _sanidadService = sanidadService;
         _unitOfWork = unitOfWork;
         _currentUserContext = currentUserContext;
+        _logger = logger;
     }
 
     public async Task<Guid> Handle(RegistrarBienestarCommand request, CancellationToken cancellationToken)
@@ -51,6 +61,7 @@ public class RegistrarBienestarCommandHandler : IRequestHandler<RegistrarBienest
         var usuarioId = _currentUserContext.UsuarioId ?? Guid.Empty;
 
         var registroExistente = await _bienestarRepository.ObtenerPorLoteYFechaAsync(request.LoteId, request.Fecha);
+        RegistroBienestar registroAAnalizar;
 
         if (registroExistente != null)
         {
@@ -58,11 +69,11 @@ public class RegistrarBienestarCommandHandler : IRequestHandler<RegistrarBienest
                 request.Temperatura ?? registroExistente.Temperatura,
                 request.Humedad ?? registroExistente.Humedad,
                 request.ConsumoAgua ?? registroExistente.ConsumoAgua,
-                request.Observaciones ?? registroExistente.Observaciones);
+                request.Observaciones ?? registroExistente.Observaciones,
+                lecturaMedidor: request.LecturaMedidor ?? registroExistente.LecturaMedidor);
             
             _bienestarRepository.Actualizar(registroExistente);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return registroExistente.Id;
+            registroAAnalizar = registroExistente;
         }
         else
         {
@@ -74,11 +85,42 @@ public class RegistrarBienestarCommandHandler : IRequestHandler<RegistrarBienest
                 request.Humedad,
                 request.ConsumoAgua,
                 request.Observaciones,
-                usuarioId);
+                usuarioId,
+                lecturaMedidor: request.LecturaMedidor);
+
+            // Si se proporciona lectura del medidor pero no el consumo, intentar calcularlo
+            if (request.LecturaMedidor.HasValue && !request.ConsumoAgua.HasValue)
+            {
+                var historialLectura = await _bienestarRepository.ObtenerHistorialPorLoteAsync(request.LoteId);
+                var ultimoRegistro = historialLectura.OrderByDescending(h => h.Fecha).FirstOrDefault(h => h.Fecha < request.Fecha.Date);
+                
+                if (ultimoRegistro != null && ultimoRegistro.LecturaMedidor.HasValue)
+                {
+                    nuevoRegistro.CalcularConsumo(ultimoRegistro.LecturaMedidor.Value);
+                }
+            }
 
             _bienestarRepository.Agregar(nuevoRegistro);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return nuevoRegistro.Id;
+            registroAAnalizar = nuevoRegistro;
         }
+
+        // Blindaje Fase 2: Análisis de Alerta Sanitaria Proactiva
+        if (registroAAnalizar.ConsumoAgua.HasValue && registroAAnalizar.ConsumoAgua > 0)
+        {
+            var historialParaAnalisis = await _bienestarRepository.ObtenerHistorialPorLoteAsync(request.LoteId);
+            var (esAlerta, mensaje) = _sanidadService.AnalizarDesviacionConsumoAgua(
+                request.LoteId, 
+                registroAAnalizar.ConsumoAgua.Value, 
+                historialParaAnalisis.Where(h => h.Id != registroAAnalizar.Id));
+
+            if (esAlerta)
+            {
+                _logger.LogWarning(mensaje);
+                // Aquí se podría integrar un servicio de notificaciones (WhatsApp, Email)
+            }
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return registroAAnalizar.Id;
     }
 }

@@ -7,6 +7,7 @@ export interface BienestarRequest {
   temperatura: number;
   humedad: number;
   consumoAgua: number;
+  lecturaMedidor?: number;
   observaciones: string;
 }
 
@@ -17,6 +18,7 @@ export interface BienestarItem {
   temperatura: number | null;
   humedad: number | null;
   consumoAgua: number | null;
+  lecturaMedidor: number | null;
   observaciones: string | null;
 }
 
