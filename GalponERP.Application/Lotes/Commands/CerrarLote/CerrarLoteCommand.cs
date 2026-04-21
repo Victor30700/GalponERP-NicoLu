@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Lotes.Commands.CerrarLote;
@@ -10,4 +11,4 @@ public record CerrarLoteResponse(
     decimal FCR,
     decimal PorcentajeMortalidad);
 
-public record CerrarLoteCommand(Guid LoteId) : IRequest<CerrarLoteResponse>;
+public record CerrarLoteCommand(Guid LoteId) : IRequest<CerrarLoteResponse>, IAuditableCommand;

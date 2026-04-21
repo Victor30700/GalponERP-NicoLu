@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using System.Text.Json.Serialization;
 using MediatR;
 
@@ -7,7 +8,7 @@ public record ActualizarPesajeCommand(
     Guid Id,
     DateTime Fecha,
     decimal PesoPromedioGramos,
-    int CantidadMuestreada) : IRequest<Unit>
+    int CantidadMuestreada) : IRequest<Unit>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

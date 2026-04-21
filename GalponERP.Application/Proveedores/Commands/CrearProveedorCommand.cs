@@ -10,7 +10,7 @@ public record CrearProveedorCommand(
     string NitRuc,
     string? Telefono,
     string? Email,
-    string? Direccion) : IRequest<Guid>;
+    string? Direccion) : IRequest<Guid>, IAuditableCommand;
 
 public class CrearProveedorCommandHandler : IRequestHandler<CrearProveedorCommand, Guid>
 {

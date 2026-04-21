@@ -25,20 +25,29 @@ public class AuditoriaBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
-
-        // Solo auditamos comandos de actualización o eliminación
-        if (requestName.Contains("Actualizar") || requestName.Contains("Eliminar") || requestName.Contains("Reabrir"))
+        // Solo auditamos comandos que implementen IAuditableCommand
+        if (request is IAuditableCommand auditableRequest)
         {
+            var requestName = typeof(TRequest).Name;
             var response = await next();
 
             var usuarioId = _currentUserContext.UsuarioId ?? Guid.Empty;
-            var accion = requestName.Contains("Actualizar") ? "Actualizar" : 
-                         requestName.Contains("Eliminar") ? "Eliminar" : "Reabrir";
+            
+            // Determinar la acción basándose en el prefijo del comando (convención)
+            var accion = "Ejecutar";
+            if (requestName.StartsWith("Actualizar")) accion = "Actualizar";
+            else if (requestName.StartsWith("Eliminar")) accion = "Eliminar";
+            else if (requestName.StartsWith("Reabrir")) accion = "Reabrir";
+            else if (requestName.StartsWith("Crear")) accion = "Crear";
+            else if (requestName.StartsWith("Registrar")) accion = "Registrar";
             
             // Intentar extraer el ID de la entidad del request usando reflexión
             var entidadId = Guid.Empty;
-            var idProp = typeof(TRequest).GetProperty("Id") ?? typeof(TRequest).GetProperty("LoteId");
+            var idProp = typeof(TRequest).GetProperty("Id") ?? 
+                         typeof(TRequest).GetProperty("LoteId") ??
+                         typeof(TRequest).GetProperty("VentaId") ??
+                         typeof(TRequest).GetProperty("ProductoId");
+
             if (idProp != null)
             {
                 var val = idProp.GetValue(request);
@@ -49,23 +58,23 @@ public class AuditoriaBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest
                 .Replace("Actualizar", "")
                 .Replace("Eliminar", "")
                 .Replace("Reabrir", "")
+                .Replace("Crear", "")
+                .Replace("Registrar", "")
                 .Replace("Command", "");
 
             var log = new AuditoriaLog(
                 Guid.NewGuid(),
                 usuarioId,
-                "Sistema", // Placeholder ya que no tenemos Nombre en el contexto
+                "Sistema", 
                 accion,
                 entidad,
-                entidad, // Usamos el nombre de la clase como nombre de la entidad
+                entidad, 
                 entidadId,
-                $"Ejecución de {requestName}",
+                $"Ejecución de {requestName} vía IAuditableCommand",
                 JsonSerializer.Serialize(request)
             );
 
             _auditoriaRepository.Agregar(log);
-            // El IUnitOfWork.SaveChangesAsync() se llamará en el handler del comando, 
-            // pero como esto es un pipeline, los cambios se guardarán juntos.
             
             return response;
         }

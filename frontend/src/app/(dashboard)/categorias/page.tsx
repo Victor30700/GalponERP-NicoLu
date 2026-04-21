@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
 import { UniversalGrid, Column } from '@/components/shared/UniversalGrid'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,22 +12,16 @@ import { confirmDestructiveAction, showSuccessAlert } from '@/lib/swal'
 import { useAuth } from '@/context/AuthContext'
 import { UserRole } from '@/lib/rbac'
 
-import { TipoCategoria } from '@/hooks/useCategorias'
+import { useCategorias, TipoCategoria, type Categoria } from '@/hooks/useCategorias'
 
 const categoriaSchema = z.object({
   nombre: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   descripcion: z.string().optional().nullable(),
-  tipo: z.number().int().min(0).max(4).default(4),
+  tipo: z.number().int().min(0).max(5),
+  version: z.string().optional(),
 })
 
 type CategoriaFormValues = z.infer<typeof categoriaSchema>
-
-interface Categoria {
-  id: string
-  nombre: string
-  descripcion?: string | null
-  tipo: TipoCategoria
-}
 
 export default function CategoriasPage() {
   const { profile } = useAuth()
@@ -38,44 +30,14 @@ export default function CategoriasPage() {
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null)
-  const queryClient = useQueryClient()
 
-  // Queries
-  const { data: categorias = [], isLoading } = useQuery({
-    queryKey: ['categorias'],
-    queryFn: () => api.get<Categoria[]>('/api/Categorias'),
-  })
-
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: (newCat: CategoriaFormValues) => api.post('/api/Categorias', newCat),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categorias'] })
-      showSuccessAlert('¡Éxito!', 'Categoría creada correctamente')
-      closeForm()
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (data: { id: string; values: CategoriaFormValues }) => 
-      api.put(`/api/Categorias/${data.id}`, { id: data.id, ...data.values }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categorias'] })
-      showSuccessAlert('¡Actualizado!', 'La categoría se ha actualizado correctamente')
-      closeForm()
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/Categorias/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categorias'] })
-      showSuccessAlert('¡Eliminado!', 'La categoría ha sido eliminada')
-    },
-    onError: (err: any) => toast.error(err.message),
-  })
+  const { 
+    categorias, 
+    isLoading, 
+    crearCategoria, 
+    actualizarCategoria, 
+    eliminarCategoria 
+  } = useCategorias()
 
   const {
     register,
@@ -84,13 +46,32 @@ export default function CategoriasPage() {
     formState: { errors },
   } = useForm<CategoriaFormValues>({
     resolver: zodResolver(categoriaSchema),
+    defaultValues: {
+      tipo: 4
+    }
   })
 
   const onSubmit = (data: CategoriaFormValues) => {
     if (editingCategoria) {
-      updateMutation.mutate({ id: editingCategoria.id, values: data })
+      actualizarCategoria.mutate({ id: editingCategoria.id, ...data }, {
+        onSuccess: () => {
+          showSuccessAlert('¡Actualizado!', 'La categoría se ha actualizado correctamente')
+          closeForm()
+        },
+        onError: (err: any) => {
+          if (err.message !== 'CONCURRENCY_ERROR') {
+            toast.error(err.message)
+          }
+        }
+      })
     } else {
-      createMutation.mutate(data)
+      crearCategoria.mutate(data, {
+        onSuccess: () => {
+          showSuccessAlert('¡Éxito!', 'Categoría creada correctamente')
+          closeForm()
+        },
+        onError: (err: any) => toast.error(err.message)
+      })
     }
   }
 
@@ -100,11 +81,12 @@ export default function CategoriasPage() {
       reset({
         nombre: cat.nombre,
         descripcion: cat.descripcion || '',
-        tipo: cat.tipo
+        tipo: cat.tipo,
+        version: cat.version || ''
       })
     } else {
       setEditingCategoria(null)
-      reset({ nombre: '', descripcion: '', tipo: 4 })
+      reset({ nombre: '', descripcion: '', tipo: 4, version: '' })
     }
     setIsFormOpen(true)
   }
@@ -131,7 +113,7 @@ export default function CategoriasPage() {
   const columns: Column<Categoria>[] = [
     { header: 'Nombre', accessor: 'nombre' },
     { header: 'Tipo', accessor: (item) => getTipoBadge(item.tipo) },
-    { header: 'Descripción', accessor: 'descripcion' },
+    { header: 'Descripción', accessor: (item) => item.descripcion || 'Sin descripción' },
   ]
 
   return (
@@ -149,7 +131,10 @@ export default function CategoriasPage() {
             `¿Estás seguro de que deseas eliminar la categoría "${(item as Categoria).nombre}"? Esta acción no se puede deshacer.`
           )
           if (result.isConfirmed) {
-            deleteMutation.mutate((item as Categoria).id)
+            eliminarCategoria.mutate((item as Categoria).id, {
+              onSuccess: () => showSuccessAlert('¡Eliminado!', 'La categoría ha sido eliminada'),
+              onError: (err: any) => toast.error(err.message)
+            })
           }
         }}
         renderMobileCard={(item) => (
@@ -238,7 +223,7 @@ export default function CategoriasPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={createMutation.isPending || updateMutation.isPending}
+                    disabled={crearCategoria.isPending || actualizarCategoria.isPending}
                     className="flex-[2] bg-primary text-primary-foreground px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
                   >
                     <Save size={20} />
@@ -253,5 +238,3 @@ export default function CategoriasPage() {
     </div>
   )
 }
-
-

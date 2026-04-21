@@ -1,6 +1,8 @@
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using MediatR;
 
 namespace GalponERP.Application.Ventas.Commands.RegistrarPago;
@@ -9,13 +11,16 @@ public class RegistrarPagoVentaCommandHandler : IRequestHandler<RegistrarPagoVen
 {
     private readonly IVentaRepository _ventaRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
     public RegistrarPagoVentaCommandHandler(
         IVentaRepository ventaRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IHubContext<NotificationHub> hubContext)
     {
         _ventaRepository = ventaRepository;
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     public async Task<Guid> Handle(RegistrarPagoVentaCommand request, CancellationToken cancellationToken)
@@ -37,6 +42,10 @@ public class RegistrarPagoVentaCommandHandler : IRequestHandler<RegistrarPagoVen
             fechaPagoUtc,
             request.MetodoPago,
             request.UsuarioId);
+
+        // Notificar ingreso financiero
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Finanzas", 
+            $"PAGO RECIBIDO: Se ha registrado un pago de {request.Monto:C} para la venta {venta.Id}.", cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

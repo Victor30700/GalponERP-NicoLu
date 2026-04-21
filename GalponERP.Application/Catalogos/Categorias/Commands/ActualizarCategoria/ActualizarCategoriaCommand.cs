@@ -1,4 +1,5 @@
 using FluentValidation;
+using GalponERP.Application.Exceptions;
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
@@ -11,7 +12,8 @@ public record ActualizarCategoriaCommand(
     Guid Id,
     string Nombre,
     string? Descripcion,
-    TipoCategoria Tipo) : IRequest;
+    TipoCategoria Tipo,
+    string? Version = null) : IRequest, IAuditableCommand;
 
 public class ActualizarCategoriaCommandValidator : AbstractValidator<ActualizarCategoriaCommand>
 {
@@ -44,6 +46,11 @@ public class ActualizarCategoriaCommandHandler : IRequestHandler<ActualizarCateg
         var categoria = await _categoriaRepository.ObtenerPorIdAsync(request.Id);
         if (categoria == null)
             throw new Exception("Categoría no encontrada");
+
+        if (!string.IsNullOrEmpty(request.Version) && categoria.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
+        }
 
         categoria.Actualizar(request.Nombre, request.Descripcion, request.Tipo);
         

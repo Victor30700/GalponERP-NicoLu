@@ -9,7 +9,7 @@ namespace GalponERP.Application.Catalogos.Categorias.Commands.CrearCategoria;
 public record CrearCategoriaCommand(
     string Nombre,
     string? Descripcion,
-    TipoCategoria Tipo) : IRequest<Guid>;
+    TipoCategoria Tipo) : IRequest<Guid>, IAuditableCommand;
 
 public class CrearCategoriaCommandValidator : AbstractValidator<CrearCategoriaCommand>
 {

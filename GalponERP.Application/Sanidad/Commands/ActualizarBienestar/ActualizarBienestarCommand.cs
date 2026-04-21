@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Sanidad.Commands.ActualizarBienestar;
@@ -9,4 +10,4 @@ public record ActualizarBienestarCommand(
     decimal Humedad,
     decimal ConsumoAgua,
     string? Observaciones,
-    Guid UsuarioId) : IRequest;
+    Guid UsuarioId) : IRequest, IAuditableCommand;

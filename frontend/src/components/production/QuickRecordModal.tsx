@@ -90,7 +90,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
         setValue(initialData[config.main]?.toString() || '')
       }
 
-      setNota(initialData[config.note] || '')
+      if (config.note) setNota(initialData[config.note] || '')
       setFecha(format(new Date(initialData.fecha), 'yyyy-MM-dd'))
       
       if (config.sec) setSecondaryValue(initialData[config.sec]?.toString() || '')
@@ -191,7 +191,8 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       }
       
       // Enviar el valor en Kilogramos (secundaryValue) si existe, de lo contrario calcularlo
-      const cantidadKg = Number(secondaryValue) || (Number(value) * (Number(selectedProduct.pesoUnitarioKg) || 0))
+      const pesoUnit = selectedProduct ? (Number(selectedProduct.pesoUnitarioKg) || 0) : 0
+      const cantidadKg = Number(secondaryValue) || (Number(value) * pesoUnit)
 
       if (cantidadKg <= 0) {
         toast.error('Debe ingresar una cantidad válida.')

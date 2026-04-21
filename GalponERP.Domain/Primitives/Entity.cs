@@ -8,6 +8,31 @@ public abstract class Entity
 {
     public Guid Id { get; protected init; }
     public bool IsActive { get; protected set; } = true;
+    
+    // Concurrencia Optimista (Mapeado a xmin en PostgreSQL)
+    public uint Version { get; private set; }
+
+    public void SetVersion(string versionBase64)
+    {
+        if (!string.IsNullOrEmpty(versionBase64))
+        {
+            if (uint.TryParse(versionBase64, out uint version))
+            {
+                Version = version;
+            }
+            else
+            {
+                // Si viene como base64 de un byte[] (legacy), intentamos convertirlo
+                try 
+                {
+                    byte[] bytes = Convert.FromBase64String(versionBase64);
+                    if (bytes.Length == 4)
+                        Version = BitConverter.ToUInt32(bytes, 0);
+                }
+                catch { /* ignore */ }
+            }
+        }
+    }
 
     // Propiedades de Auditoría
     public DateTime FechaCreacion { get; private set; }

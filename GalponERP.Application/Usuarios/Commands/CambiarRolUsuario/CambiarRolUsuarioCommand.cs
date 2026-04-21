@@ -5,7 +5,7 @@ using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.CambiarRolUsuario;
 
-public record CambiarRolUsuarioCommand(Guid UsuarioId, RolGalpon NuevoRol) : IRequest<Unit>;
+public record CambiarRolUsuarioCommand(Guid UsuarioId, RolGalpon NuevoRol) : IRequest<Unit>, IAuditableCommand;
 
 public class CambiarRolUsuarioCommandHandler : IRequestHandler<CambiarRolUsuarioCommand, Unit>
 {

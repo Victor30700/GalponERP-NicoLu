@@ -9,7 +9,7 @@ namespace GalponERP.Application.Catalogos.UnidadesMedida.Commands.CrearUnidadMed
 public record CrearUnidadMedidaCommand(
     string Nombre,
     string Abreviatura,
-    TipoUnidad Tipo) : IRequest<Guid>;
+    TipoUnidad Tipo) : IRequest<Guid>, IAuditableCommand;
 
 public class CrearUnidadMedidaCommandValidator : AbstractValidator<CrearUnidadMedidaCommand>
 {

@@ -4,7 +4,7 @@ using GalponERP.Domain.Interfaces.Repositories;
 
 namespace GalponERP.Application.Usuarios.Commands.DesvincularWhatsApp;
 
-public record DesvincularWhatsAppCommand() : IRequest;
+public record DesvincularWhatsAppCommand() : IRequest, IAuditableCommand;
 
 public class DesvincularWhatsAppCommandHandler : IRequestHandler<DesvincularWhatsAppCommand>
 {

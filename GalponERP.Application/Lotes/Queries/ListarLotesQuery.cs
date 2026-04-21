@@ -28,7 +28,8 @@ public record LoteResponse(
     int EdadSemanas,
     string Estado,
     decimal FcrActual,
-    decimal MortalidadPorcentaje);
+    decimal MortalidadPorcentaje,
+    string? Version);
 
 public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumerable<LoteResponse>>
 {
@@ -61,6 +62,7 @@ public class ListarLotesQueryHandler : IRequestHandler<ListarLotesQuery, IEnumer
             l.EdadSemanas,
             l.Estado.ToString(),
             0, // FCR placeholder
-            l.CantidadInicial > 0 ? Math.Round((decimal)l.MortalidadAcumulada / l.CantidadInicial * 100, 1) : 0));
+            l.CantidadInicial > 0 ? Math.Round((decimal)l.MortalidadAcumulada / l.CantidadInicial * 100, 1) : 0,
+            l.Version.ToString()));
     }
 }

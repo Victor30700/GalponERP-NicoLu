@@ -36,6 +36,7 @@ public class ObtenerMovimientosQueryHandler : IRequestHandler<ObtenerMovimientos
                 m.Cantidad,
                 m.Tipo.ToString(),
                 m.Fecha,
-                m.Justificacion));
+                m.Justificacion,
+                m.Version.ToString()));
     }
 }

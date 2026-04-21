@@ -16,7 +16,7 @@ public record RegistrarIngresoMercaderiaCommand(
     decimal MontoPagado,
     string? NumeroLoteFabricante = null,
     string? FechaVencimiento = null,
-    string? Nota = null) : IRequest<Guid>
+    string? Nota = null) : IRequest<Guid>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

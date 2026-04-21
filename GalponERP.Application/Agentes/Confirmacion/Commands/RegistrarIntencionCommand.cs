@@ -4,7 +4,7 @@ using GalponERP.Domain.Entities;
 
 namespace GalponERP.Application.Agentes.Confirmacion.Commands;
 
-public record RegistrarIntencionCommand(Guid ConversacionId, string PluginNombre, string FuncionNombre, string ParametrosJson) : IRequest<Guid>;
+public record RegistrarIntencionCommand(Guid ConversacionId, string PluginNombre, string FuncionNombre, string ParametrosJson) : IRequest<Guid>, IAuditableCommand;
 
 public class RegistrarIntencionCommandHandler : IRequestHandler<RegistrarIntencionCommand, Guid>
 {

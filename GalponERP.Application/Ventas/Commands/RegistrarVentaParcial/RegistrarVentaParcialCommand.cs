@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using System.Text.Json.Serialization;
 using MediatR;
 
@@ -12,7 +13,7 @@ public record RegistrarVentaParcialCommand(
     DateTime Fecha,
     int CantidadPollos,
     decimal PesoTotalVendido,
-    decimal PrecioPorKilo) : IRequest<Guid>
+    decimal PrecioPorKilo) : IRequest<Guid>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

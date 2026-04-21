@@ -1,5 +1,6 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Ventas.Commands.AnularVenta;
 
-public record AnularVentaCommand(Guid VentaId, Guid UsuarioId) : IRequest<Unit>;
+public record AnularVentaCommand(Guid VentaId, Guid UsuarioId) : IRequest<Unit>, IAuditableCommand;

@@ -22,8 +22,9 @@ const getProductoSchema = (categorias: Categoria[]) => z.object({
   pesoUnitarioKg: z.number().min(0, 'El peso unitario no puede ser negativo'),
   equivalenciaEnKg: z.number().min(0, 'No puede ser negativo').optional(),
   umbralMinimo: z.number().min(0, 'No puede ser negativo'),
-  stockInicial: z.number().min(0, 'No puede ser negativo').optional().default(0),
-  periodoRetiroDias: z.number().int().min(0, 'No puede ser negativo').default(0),
+  stockInicial: z.number().min(0, 'No puede ser negativo'),
+  periodoRetiroDias: z.number().int().min(0, 'No puede ser negativo'),
+  version: z.string().optional(),
 }).refine(data => {
     const categoria = categorias.find(c => c.id === data.categoriaProductoId)
     if (categoria?.nombre.toLowerCase().includes('alimento')) {
@@ -97,10 +98,15 @@ export default function ProductosPage() {
           toast.success('Producto actualizado')
           closeForm()
         },
-        onError: (err: any) => toast.error(err.message)
+        onError: (err: any) => {
+          if (err.message !== 'CONCURRENCY_ERROR') {
+            toast.error(err.message)
+          }
+        }
       })
     } else {
-      crearProducto.mutate(values as any, {
+      const { version, ...createData } = values
+      crearProducto.mutate(createData as any, {
         onSuccess: () => {
           toast.success('Producto creado correctamente')
           closeForm()
@@ -120,7 +126,8 @@ export default function ProductosPage() {
         pesoUnitarioKg: prod.pesoUnitarioKg,
         umbralMinimo: prod.umbralMinimo,
         stockInicial: prod.stockActual,
-        periodoRetiroDias: prod.periodoRetiroDias || 0
+        periodoRetiroDias: prod.periodoRetiroDias || 0,
+        version: prod.version || ''
       })
     } else {
       setEditingProductoId(null)
@@ -131,7 +138,8 @@ export default function ProductosPage() {
         pesoUnitarioKg: 0, 
         umbralMinimo: 0, 
         stockInicial: 0,
-        periodoRetiroDias: 0
+        periodoRetiroDias: 0,
+        version: ''
       })
     }
     setIsFormOpen(true)

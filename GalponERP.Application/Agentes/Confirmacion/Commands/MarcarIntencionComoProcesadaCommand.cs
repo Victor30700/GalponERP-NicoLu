@@ -4,7 +4,7 @@ using GalponERP.Domain.Entities;
 
 namespace GalponERP.Application.Agentes.Confirmacion.Commands;
 
-public record MarcarIntencionComoProcesadaCommand(Guid IntencionId) : IRequest;
+public record MarcarIntencionComoProcesadaCommand(Guid IntencionId) : IRequest, IAuditableCommand;
 
 public class MarcarIntencionComoProcesadaCommandHandler : IRequestHandler<MarcarIntencionComoProcesadaCommand>
 {

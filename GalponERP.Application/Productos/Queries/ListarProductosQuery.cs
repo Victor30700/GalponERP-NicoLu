@@ -51,7 +51,8 @@ public class ListarProductosQueryHandler : IRequestHandler<ListarProductosQuery,
                 stockUnidades,
                 p.StockActualKg,
                 p.IsActive,
-                p.Unidad?.Tipo ?? TipoUnidad.UnidadFisica);
+                p.Unidad?.Tipo ?? TipoUnidad.UnidadFisica,
+                p.Version.ToString());
         });
     }
 }

@@ -74,7 +74,7 @@ public class VentasController : ControllerBase
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
             return Unauthorized("Usuario no identificado.");
 
-        if (id != command.VentaId)
+        if (id != command.Id)
             return BadRequest("El ID de la venta en la URL no coincide con el del cuerpo de la solicitud.");
 
         command.UsuarioId = _currentUserContext.UsuarioId.Value;

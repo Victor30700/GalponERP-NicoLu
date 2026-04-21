@@ -13,4 +13,5 @@ public record MovimientoResponse(
     decimal Cantidad,
     string Tipo,
     DateTime Fecha,
-    string? Justificacion);
+    string? Justificacion,
+    string? Version);

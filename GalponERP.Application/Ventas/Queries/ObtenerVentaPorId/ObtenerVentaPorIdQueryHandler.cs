@@ -35,6 +35,7 @@ public class ObtenerVentaPorIdQueryHandler : IRequestHandler<ObtenerVentaPorIdQu
             venta.PrecioPorKilo.Monto,
             venta.Total.Monto,
             venta.SaldoPendiente.Monto,
-            venta.EstadoPago.ToString());
+            venta.EstadoPago.ToString(),
+            venta.Version.ToString());
     }
 }

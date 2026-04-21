@@ -13,14 +13,16 @@ export enum TipoCategoria {
 export interface Categoria {
   id: string;
   nombre: string;
-  descripcion?: string;
+  descripcion?: string | null;
   tipo: TipoCategoria;
+  version?: string;
 }
 
 export interface CategoriaRequest {
   nombre: string;
-  descripcion?: string;
+  descripcion?: string | null;
   tipo: TipoCategoria;
+  version?: string;
 }
 
 export function useCategorias() {
@@ -36,10 +38,22 @@ export function useCategorias() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
   });
 
+  const actualizarCategoria = useMutation({
+    mutationFn: (data: CategoriaRequest & { id: string }) => api.put(`/api/Categorias/${data.id}`, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
+  });
+
+  const eliminarCategoria = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/Categorias/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
+  });
+
   return {
     categorias: categorias.data || [],
     isLoading: categorias.isLoading,
     crearCategoria,
+    actualizarCategoria,
+    eliminarCategoria,
     refresh: () => categorias.refetch(),
   };
 }
@@ -53,23 +67,8 @@ export function useCategoria(id: string) {
     enabled: !!id,
   });
 
-  const actualizarCategoria = useMutation({
-    mutationFn: (data: CategoriaRequest & { id: string }) => api.put(`/api/Categorias/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categorias'] });
-      queryClient.invalidateQueries({ queryKey: ['categorias', id] });
-    },
-  });
-
-  const eliminarCategoria = useMutation({
-    mutationFn: () => api.delete(`/api/Categorias/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
-  });
-
   return {
     categoria: categoria.data,
     isLoading: categoria.isLoading,
-    actualizarCategoria,
-    eliminarCategoria,
   };
 }

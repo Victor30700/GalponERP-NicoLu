@@ -43,33 +43,3 @@ export function usePlantillas() {
     refresh: () => plantillas.refetch(),
   };
 }
-
-export function usePlantilla(id: string) {
-  const queryClient = useQueryClient();
-
-  const plantilla = useQuery({
-    queryKey: ['plantillas', id],
-    queryFn: () => api.get<PlantillaSanitaria>(`/api/Plantillas/${id}`),
-    enabled: !!id,
-  });
-
-  const actualizarPlantilla = useMutation({
-    mutationFn: (data: CrearPlantillaRequest & { id: string }) => api.put(`/api/Plantillas/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plantillas'] });
-      queryClient.invalidateQueries({ queryKey: ['plantillas', id] });
-    },
-  });
-
-  const eliminarPlantilla = useMutation({
-    mutationFn: () => api.delete(`/api/Plantillas/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plantillas'] }),
-  });
-
-  return {
-    plantilla: plantilla.data,
-    isLoading: plantilla.isLoading,
-    actualizarPlantilla,
-    eliminarPlantilla,
-  };
-}

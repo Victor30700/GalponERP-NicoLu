@@ -11,7 +11,7 @@ public record AgregarActividadManualCommand(
     TipoActividad Tipo,
     DateTime FechaProgramada,
     string Descripcion,
-    Guid? ProductoId = null) : IRequest<Guid>;
+    Guid? ProductoId = null) : IRequest<Guid>, IAuditableCommand;
 
 public class AgregarActividadManualCommandValidator : AbstractValidator<AgregarActividadManualCommand>
 {

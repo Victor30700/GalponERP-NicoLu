@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using System.Text.Json.Serialization;
 using GalponERP.Domain.ValueObjects;
 using MediatR;
@@ -10,7 +11,7 @@ public record RegistrarGastoOperativoCommand(
     string Descripcion,
     decimal Monto,
     DateTime Fecha,
-    string TipoGasto) : IRequest<Guid>
+    string TipoGasto) : IRequest<Guid>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

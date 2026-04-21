@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Configuracion.Commands.ActualizarConfiguracion;
@@ -9,4 +10,4 @@ public record ActualizarConfiguracionCommand(
     string? Email,
     string? Direccion,
     string MonedaPorDefecto,
-    string? LogoUrl) : IRequest;
+    string? LogoUrl) : IRequest, IAuditableCommand;

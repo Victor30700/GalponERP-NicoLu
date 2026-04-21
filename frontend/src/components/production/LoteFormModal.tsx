@@ -27,7 +27,8 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
     fechaIngreso: new Date().toISOString().split('T')[0],
     cantidadInicial: '',
     costoUnitarioPollito: '',
-    plantillaSanitariaId: ''
+    plantillaSanitariaId: '',
+    version: ''
   })
 
   useEffect(() => {
@@ -38,7 +39,8 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
         fechaIngreso: lote.fechaIngreso ? lote.fechaIngreso.split('T')[0] : new Date().toISOString().split('T')[0],
         cantidadInicial: lote.cantidadInicial?.toString() || '',
         costoUnitarioPollito: lote.costoUnitarioPollito?.toString() || '',
-        plantillaSanitariaId: lote.plantillaSanitariaId || ''
+        plantillaSanitariaId: lote.plantillaSanitariaId || '',
+        version: lote.version || ''
       })
     } else {
       setFormData({
@@ -47,7 +49,8 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
         fechaIngreso: new Date().toISOString().split('T')[0],
         cantidadInicial: '',
         costoUnitarioPollito: '',
-        plantillaSanitariaId: ''
+        plantillaSanitariaId: '',
+        version: ''
       })
     }
   }, [lote, isOpen])
@@ -59,7 +62,7 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
       return
     }
 
-    const payload = {
+    const payload: any = {
       ...formData,
       cantidadInicial: Number(formData.cantidadInicial),
       costoUnitarioPollito: Number(formData.costoUnitarioPollito),
@@ -74,10 +77,15 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
           toast.success('Lote actualizado correctamente')
           onClose()
         },
-        onError: (err: any) => toast.error(err.message || 'Error al actualizar lote')
+        onError: (err: any) => {
+          if (err.message !== 'CONCURRENCY_ERROR') {
+            toast.error(err.message || 'Error al actualizar lote')
+          }
+        }
       })
     } else {
-      crearLote.mutate(payload, {
+      const { version, ...createData } = payload
+      crearLote.mutate(createData, {
         onSuccess: () => {
           toast.success('Lote creado correctamente')
           onClose()

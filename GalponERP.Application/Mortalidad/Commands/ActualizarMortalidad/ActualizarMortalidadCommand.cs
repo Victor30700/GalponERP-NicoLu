@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using System.Text.Json.Serialization;
 using MediatR;
 
@@ -7,7 +8,7 @@ public record ActualizarMortalidadCommand(
     Guid Id,
     int Cantidad,
     string Causa,
-    DateTime Fecha) : IRequest<Unit>
+    DateTime Fecha) : IRequest<Unit>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

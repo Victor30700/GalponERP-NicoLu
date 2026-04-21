@@ -15,4 +15,5 @@ public record VentaResponse(
     decimal PrecioPorKilo,
     decimal Total,
     decimal SaldoPendiente,
-    string EstadoPago);
+    string EstadoPago,
+    string? Version);

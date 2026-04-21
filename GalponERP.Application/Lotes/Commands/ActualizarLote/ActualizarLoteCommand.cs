@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using GalponERP.Application.Interfaces;
 using GalponERP.Domain.ValueObjects;
 using MediatR;
 
@@ -10,7 +11,8 @@ public record ActualizarLoteCommand(
     Guid GalponId,
     DateTime FechaIngreso,
     int CantidadInicial,
-    decimal CostoUnitarioPollito) : IRequest<Unit>
+    decimal CostoUnitarioPollito,
+    string? Version = null) : IRequest<Unit>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

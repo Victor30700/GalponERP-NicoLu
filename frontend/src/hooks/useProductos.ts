@@ -16,6 +16,7 @@ export interface Producto {
   tipoUnidad: number;
   equivalenciaEnKg: number;
   periodoRetiroDias: number;
+  version?: string;
 }
 
 export interface CrearProductoRequest {
@@ -37,6 +38,7 @@ export interface ActualizarProductoRequest {
   umbralMinimo: number;
   stockInicial: number;
   periodoRetiroDias: number;
+  version?: string;
 }
 
 export function useProductos() {

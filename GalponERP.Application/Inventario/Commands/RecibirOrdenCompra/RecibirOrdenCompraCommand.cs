@@ -9,7 +9,7 @@ namespace GalponERP.Application.Inventario.Commands.RecibirOrdenCompra;
 public record RecibirOrdenCompraCommand(
     Guid OrdenCompraId,
     decimal MontoPagado,
-    string? NotaRecibo = null) : IRequest<Guid>;
+    string? NotaRecibo = null) : IRequest<Guid>, IAuditableCommand;
 
 public class RecibirOrdenCompraCommandHandler : IRequestHandler<RecibirOrdenCompraCommand, Guid>
 {

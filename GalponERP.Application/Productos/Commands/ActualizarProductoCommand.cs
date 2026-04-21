@@ -1,5 +1,6 @@
 using FluentValidation;
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
@@ -14,7 +15,8 @@ public record ActualizarProductoCommand(
     decimal PesoUnitarioKg = 0,
     decimal UmbralMinimo = 0,
     decimal StockInicial = 0,
-    int PeriodoRetiroDias = 0) : IRequest;
+    int PeriodoRetiroDias = 0,
+    string? Version = null) : IRequest, IAuditableCommand;
 
 public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarProductoCommand>
 {
@@ -91,6 +93,13 @@ public class ActualizarProductoCommandHandler : IRequestHandler<ActualizarProduc
         if (producto == null)
         {
             throw new Exception("Producto no encontrado.");
+        }
+
+        // Chequeo de concurrencia optimista
+        if (!string.IsNullOrEmpty(request.Version) && 
+            producto.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         producto.Actualizar(

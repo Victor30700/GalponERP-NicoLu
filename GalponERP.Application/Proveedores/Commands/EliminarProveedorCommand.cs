@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Proveedores.Commands.EliminarProveedor;
 
-public record EliminarProveedorCommand(Guid Id) : IRequest;
+public record EliminarProveedorCommand(Guid Id) : IRequest, IAuditableCommand;
 
 public class EliminarProveedorCommandHandler : IRequestHandler<EliminarProveedorCommand>
 {

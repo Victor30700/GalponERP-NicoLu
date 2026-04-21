@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using System.Text.Json.Serialization;
 using GalponERP.Domain.Entities;
 using MediatR;
@@ -10,7 +11,7 @@ public record RegistrarMovimientoInventarioCommand(
     decimal Cantidad,
     TipoMovimiento Tipo,
     DateTime Fecha,
-    string? Justificacion = null) : IRequest<Guid>
+    string? Justificacion = null) : IRequest<Guid>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

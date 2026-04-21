@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Catalogos.Categorias.Commands.EliminarCategoria;
 
-public record EliminarCategoriaCommand(Guid Id) : IRequest;
+public record EliminarCategoriaCommand(Guid Id) : IRequest, IAuditableCommand;
 
 public class EliminarCategoriaCommandHandler : IRequestHandler<EliminarCategoriaCommand>
 {

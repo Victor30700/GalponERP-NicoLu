@@ -16,7 +16,7 @@ public record RegistrarBienestarCommand(
     decimal? Humedad = null,
     decimal? ConsumoAgua = null,
     decimal? LecturaMedidor = null,
-    string? Observaciones = null) : IRequest<Guid>;
+    string? Observaciones = null) : IRequest<Guid>, IAuditableCommand;
 
 public class RegistrarBienestarCommandValidator : AbstractValidator<RegistrarBienestarCommand>
 {

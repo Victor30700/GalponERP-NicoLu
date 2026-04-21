@@ -41,6 +41,7 @@ public class ObtenerProductoPorIdQueryHandler : IRequestHandler<ObtenerProductoP
             stock,
             p.StockActualKg,
             p.IsActive,
-            p.Unidad?.Tipo ?? Domain.Entities.TipoUnidad.UnidadFisica);
+            p.Unidad?.Tipo ?? Domain.Entities.TipoUnidad.UnidadFisica,
+            p.Version.ToString());
     }
 }

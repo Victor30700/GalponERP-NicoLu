@@ -5,7 +5,7 @@ using MediatR;
 
 namespace GalponERP.Application.Auditoria.Commands.RestaurarEntidad;
 
-public record RestaurarEntidadCommand(string Entidad, Guid Id) : IRequest;
+public record RestaurarEntidadCommand(string Entidad, Guid Id) : IRequest, IAuditableCommand;
 
 public class RestaurarEntidadCommandHandler : IRequestHandler<RestaurarEntidadCommand>
 {

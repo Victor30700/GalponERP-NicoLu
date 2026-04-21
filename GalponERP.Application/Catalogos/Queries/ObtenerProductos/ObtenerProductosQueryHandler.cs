@@ -42,6 +42,7 @@ public class ObtenerProductosQueryHandler : IRequestHandler<ObtenerProductosQuer
             stockPorProducto.ContainsKey(p.Id) ? stockPorProducto[p.Id] : 0,
             p.StockActualKg,
             p.IsActive,
-            p.Unidad?.Tipo ?? TipoUnidad.UnidadFisica));
+            p.Unidad?.Tipo ?? TipoUnidad.UnidadFisica,
+            p.Version.ToString()));
     }
 }

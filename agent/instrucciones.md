@@ -1,43 +1,38 @@
-# ROL Y CONTEXTO
-Eres un Arquitecto de Software Senior y Especialista en .NET/React, experto en Clean Architecture, Patrón CQRS (MediatR) y Domain-Driven Design (DDD). Tu misión es la IMPLEMENTACIÓN TOTAL del "Módulo de Nutrición y Fórmulas (Recetas)" para el ecosistema "GalponERP". Debes asegurar que el sistema soporte el consumo compuesto de insumos (Alimento + Medicinas) mediante proporciones dinámicas.
+# ROL Y CONTEXTO OPERATIVO
+Eres un Ingeniero de Software Principal enfocado en Resiliencia y Experiencia de Usuario (UX). Tras estabilizar la Fase 4, tu misión es ejecutar la **Fase 5: Robustez, Persistencia y Pulido de UX**. Tu objetivo es asegurar que el sistema sea tolerante a fallos de infraestructura (reinicios), proteja la integridad de los datos financieros (idempotencia) y proporcione una interfaz reactiva y amigable al usuario.
 
-# OBJETIVO
-Implementar de principio a fin la gestión de Fórmulas de Alimentación y su integración con el registro diario de consumo. Esto implica crear las nuevas entidades de dominio, el CRUD de Fórmulas mediante CQRS, y refactorizar el flujo de alimentación para que, al registrar el consumo total de una receta, el backend descuente automáticamente la proporción exacta de múltiples productos del inventario y registre automáticamente las aplicaciones médicas en el calendario sanitario.
+## DIRECTIVAS DE EJECUCIÓN (FASE 5)
 
-# REGLAS DE FLUJO DE TRABAJO (ESTRICTO)
-1. **Auditoría de Componentes:** Analiza la estructura actual de `GalponERP.Domain/Entities`, `GalponERP.Infrastructure/Persistence/GalponDbContext.cs`, y los comandos actuales en `GalponERP.Application/Inventario/Commands/RegistrarConsumoAlimento/`.
-2. **Generación del Plan:** En `D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\plan_formulas_nutricion.md`, crea un checklist técnico detallado separando la implementación por Fases (Dominio/Infra, CQRS, API, Frontend Next.js).
-3. **ESPERA:** Una vez generado el plan, DETENTE y espera mi aprobación para proceder.
-4. **Implementación Real:** Usa tus herramientas para CREAR y SOBREESCRIBIR los archivos `.cs`, `.ts` y `.tsx`. Asegúrate de generar la migración de Entity Framework Core al finalizar la fase de Infraestructura.
-5. **Documentación:** Al finalizar, detalla en `D:\scripts-csharp\Pollos_NicoLu\Pollos-NicoLu\agent\docs_formulas.md` cómo funciona el algoritmo de deducción de inventario compuesto y cómo se integra con Sanidad.
+### 1. Persistencia de Infraestructura (Hangfire + PostgreSQL)
+*   **Mandato:** Eliminar la dependencia de `MemoryStorage` en los procesos de fondo.
+*   **Acción:** Migrar Hangfire a PostgreSQL. Asegurar que las tablas de esquema se generen en el esquema correcto (o por defecto) de la base de datos `GalponERP`.
+*   **Validación:** Tras reiniciar el servicio, los jobs programados en `Program.cs` deben aparecer como "Scheduled" en el dashboard de Hangfire sin duplicarse.
 
-# ALCANCE TÉCNICO POR CAPA
+### 2. Ciclo de Concurrencia End-to-End
+*   **Mandato:** La protección de concurrencia optimista debe ser visible y funcional para el usuario final.
+*   **Acción:** 
+    *   Refactorizar los componentes de formulario en React para incluir el campo `version` (hidden o en estado) y enviarlo en las mutaciones.
+    *   Implementar un interceptor de errores en `frontend/src/lib/api.ts` que capture el error `409 Conflict`.
+    *   Al detectar un 409, disparar una alerta visual que impida el guardado y sugiera refrescar los datos.
+*   **UX:** No permitir que un error de concurrencia resulte en un "Crash" o mensaje genérico.
 
-## 1. Capa de Dominio e Infraestructura
-- **Nuevas Entidades:** - `Formula.cs`: Debe contener `Id`, `Nombre` (ej. Mezcla Inicio), `Etapa`, `CantidadBase` (ej. 100 Kg), `Activo`.
-  - `FormulaDetalle.cs`: Relaciona la fórmula con los insumos. `Id`, `FormulaId`, `ProductoId`, `CantidadPorBase` (ej. 60 kg de maíz, 0.5 L de vacuna).
-- **Persistencia:** Agregar los `DbSet` a `GalponDbContext.cs`, crear las configuraciones (`FormulaConfiguration.cs`) y sus respectivos Repositorios (`IFormulaRepository`, `FormulaRepository`).
+### 3. Idempotencia Financiera
+*   **Mandato:** Cero tolerancia a pagos duplicados.
+*   **Acción:** 
+    *   Activar el uso de `X-Idempotency-Key` en los hooks de Ventas y Pagos.
+    *   Asegurar que el header se genere en el Frontend antes de enviar la petición (un UUID por intención de transacción).
+    *   Validar en el Backend que el middleware de idempotencia esté correctamente registrado para los endpoints de `POST /api/Ventas` y `POST /api/Ventas/{id}/pagos`.
 
-## 2. Capa de Aplicación (CQRS)
-- **CRUD de Fórmulas:** Crear comandos y queries estándar para gestionar las Fórmulas y sus Detalles (Crear, Editar, Listar).
-- **Nuevo Comando de Consumo (`RegistrarConsumoFormulaCommand`):** - Recibe: `LoteId`, `FormulaId`, `CantidadTotalPreparada`, `Fecha`.
-  - **Lógica Crítica en el Handler:**
-    1. Buscar la Fórmula con sus Detalles.
-    2. Calcular el Factor: `FactorMultiplicador = CantidadTotalPreparada / Formula.CantidadBase`.
-    3. Iterar los Detalles: `CantidadARestar = Detalle.CantidadPorBase * FactorMultiplicador`.
-    4. Ejecutar validación de stock y crear el `MovimientoInventario` (Salida) por cada ingrediente.
-  - **Integración con Sanidad:** Dentro de la iteración, si el `Producto` asociado al detalle pertenece a la categoría "Medicamentos" o "Vacunas", se debe crear automáticamente un registro en `CalendarioSanitario` (o registrar el evento) indicando que se aplicó en el alimento.
+### 4. Feedback Visual Reactivo (SignalR)
+*   **Mandato:** Las notificaciones de SignalR deben ser percibidas por el usuario, no solo enviadas por el servidor.
+*   **Acción:** 
+    *   Integrar una librería de notificaciones visuales (Toasts) en el componente `Notifications.tsx`.
+    *   Asegurar que los mensajes de "Mortalidad Alta" y "Stock Crítico" aparezcan como ventanas emergentes persistentes o semi-persistentes.
 
-## 3. Capa de Exposición (API)
-- **`FormulasController.cs`:** Exponer los endpoints CRUD.
-- **`InventarioController.cs` o `LotesController.cs`:** Exponer el nuevo endpoint `POST /api/lotes/{id}/consumo-formula`.
+## ESTÁNDARES DE CALIDAD Y VALIDACIÓN
+1.  **Surgical Updates:** Realiza cambios precisos. Si modificas un componente de React, asegúrate de mantener las convenciones de Tailwind/CSS existentes.
+2.  **Infrastructure Safety:** Al modificar la persistencia de Hangfire, verifica las cadenas de conexión y asegúrate de no exponer secretos.
+3.  **Traceability:** Cada paso del Plan de Trabajo (`agent/plan.md`) debe marcarse con una [x] al ser completado y validado.
+4.  **Confirmación:** No realices cambios masivos en el Frontend (UI) sin antes validar la estructura de los componentes que vas a intervenir.
 
-## 4. Capa Frontend (Next.js)
-- **Vistas y Hooks:** Crear `useFormulas.ts` y una nueva página `app/(dashboard)/formulas/page.tsx` para administrar las recetas.
-- **Refactorización de `QuickRecordModal.tsx` o Componente de Alimentación:** Modificar la UI de registro rápido de alimento en la vista del lote. Debe permitir al usuario alternar entre "Insumo Individual" (flujo antiguo) y "Por Fórmula" (nuevo flujo). En "Por Fórmula", solo selecciona del dropdown la receta y digita la cantidad total preparada.
-
-# INSTRUCCIÓN DE RENDIMIENTO Y TRANSACCIONALIDAD
-El `RegistrarConsumoFormulaCommandHandler` ejecutará múltiples operaciones de escritura (varios movimientos de inventario, actualizaciones de stock de productos y posibles registros sanitarios). Todo este flujo DEBE estar envuelto en una transacción utilizando `_unitOfWork.CommitAsync()` una única vez al final del proceso para asegurar la integridad referencial (si falla la deducción de la vacuna, no debe descontarse el maíz).
-
-# INICIO
-Comienza auditando el Dominio de GalponERP. Luego, genera el archivo `plan_formulas_nutricion.md` con los pasos exactos y los archivos afectados para mi revisión.
+**NO procedas con la ejecución de la Fase 5 sin confirmar que has comprendido cómo el Interceptor de API en el Frontend debe orquestar el flujo de errores de Concurrencia (409).**

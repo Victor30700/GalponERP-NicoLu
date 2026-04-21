@@ -1,4 +1,5 @@
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
 using MediatR;
@@ -28,6 +29,12 @@ public class ActualizarMovimientoCommandHandler : IRequestHandler<ActualizarMovi
         if (movimiento == null)
         {
             throw new Exception("El movimiento de inventario no existe.");
+        }
+
+        // Chequeo de concurrencia optimista
+        if (!string.IsNullOrEmpty(request.Version) && movimiento.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         var producto = await _productoRepository.ObtenerPorIdAsync(request.ProductoId);

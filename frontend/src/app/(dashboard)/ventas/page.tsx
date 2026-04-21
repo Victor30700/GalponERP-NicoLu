@@ -141,7 +141,9 @@ export default function VentasPage() {
   // Lógica de Retiro Sanitario
   const selectedLoteId = ventaForm.watch('loteId')
   const loteSeleccionado = lotes.find(l => l.id === selectedLoteId)
-  const enRetiro = loteSeleccionado?.fechaFinRetiro && new Date(loteSeleccionado.fechaFinRetiro) > new Date()
+  const enRetiro = loteSeleccionado?.fechaFinRetiro 
+    ? new Date(loteSeleccionado.fechaFinRetiro) > new Date() 
+    : false
 
 
   const pagoForm = useForm<PagoFormValues>({
@@ -154,7 +156,8 @@ export default function VentasPage() {
   })
 
   const onVentaSubmit = (data: VentaFormValues) => {
-    registrarVenta.mutate(data, {
+    const idempotencyKey = crypto.randomUUID()
+    registrarVenta.mutate({ data, idempotencyKey }, {
       onSuccess: () => {
         toast.success('Venta registrada con éxito')
         setIsVentaModalOpen(false)
@@ -166,7 +169,8 @@ export default function VentasPage() {
 
   const onPagoSubmit = (data: PagoFormValues) => {
     if (selectedVenta) {
-      registrarPago.mutate({ id: selectedVenta, data }, {
+      const idempotencyKey = crypto.randomUUID()
+      registrarPago.mutate({ id: selectedVenta, data, idempotencyKey }, {
         onSuccess: () => {
           toast.success('Pago registrado correctamente')
           setIsPagoModalOpen(false)

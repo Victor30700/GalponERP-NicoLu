@@ -27,13 +27,13 @@ public class GlobalExceptionHandler : IExceptionHandler
             "Exception occurred: {Message}",
             exception.Message);
 
-        var (statusCode, title, detail, errors) = exception switch
+        (int statusCode, string title, string detail, object? errors) = exception switch
         {
             ValidationException validationException => (
                 StatusCodes.Status422UnprocessableEntity,
                 "Validation Error",
                 validationException.Message,
-                validationException.Errors),
+                (object?)validationException.Errors),
             DomainException domainException => (
                 StatusCodes.Status400BadRequest,
                 "Domain Error",
@@ -43,6 +43,11 @@ public class GlobalExceptionHandler : IExceptionHandler
                 StatusCodes.Status404NotFound,
                 "Not Found",
                 keyNotFoundException.Message,
+                null),
+            GalponERP.Application.Exceptions.ConcurrencyException concurrencyException => (
+                StatusCodes.Status409Conflict,
+                "Concurrency Error",
+                concurrencyException.Message,
                 null),
             DbUpdateConcurrencyException => (
                 StatusCodes.Status409Conflict,

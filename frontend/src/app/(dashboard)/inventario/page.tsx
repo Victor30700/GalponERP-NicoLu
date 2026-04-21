@@ -41,11 +41,13 @@ import {
   type Movimiento,
   type Compra,
   type PagoCompra,
-  type KardexItem
+  type KardexItem,
+  type AjusteInventario
 } from '@/hooks/useInventario'
 import { useAuth } from '@/context/AuthContext'
 import { UserRole } from '@/lib/rbac'
 import { ReportButton } from '@/components/shared/ReportButton'
+import { useUsuarios } from '@/hooks/useUsuarios'
 
 // --- Interfaces (Existing ones from hook are imported) ---
 
@@ -108,7 +110,7 @@ export default function InventarioPage() {
   const userRole = profile?.rol !== undefined ? Number(profile.rol) : null
   const isEmpleado = userRole === UserRole.Empleado
 
-  const [activeTab, setActiveTab] = useState<'stock' | 'movimientos' | 'compras' | 'reportes'>('stock')
+  const [activeTab, setActiveTab] = useState<'stock' | 'movimientos' | 'compras' | 'reportes' | 'ajustes'>('stock')
   const [isCompraModalOpen, setIsCompraModalOpen] = useState(false)
   const [isAjusteModalOpen, setIsAjusteModalOpen] = useState(false)
   const [isConciliacionModalOpen, setIsConciliacionModalOpen] = useState(false)
@@ -119,12 +121,16 @@ export default function InventarioPage() {
   const { 
     stock, isLoadingStock, 
     movimientos, isLoadingMovimientos, 
+    ajustes, isLoadingAjustes,
     compras, isLoadingCompras,
     valoracion, isLoadingValoracion,
     proyecciones, isLoadingProyecciones,
     nivelesAlimento, isLoadingNiveles,
     registrarCompra, registrarAjuste, realizarConciliacion, ajustarStock
   } = useInventario()
+
+  const { usuarios } = useUsuarios()
+  const usuariosMap = Object.fromEntries(usuarios.map(u => [u.id, `${u.nombre} ${u.apellidos}`]))
 
   const { data: productos = [] } = useQuery({
     queryKey: ['productos'],
@@ -167,7 +173,8 @@ export default function InventarioPage() {
   })
 
   const onCompraSubmit = (data: CompraFormValues) => {
-    registrarCompra.mutate(data, {
+    const idempotencyKey = crypto.randomUUID()
+    registrarCompra.mutate({ data, idempotencyKey }, {
       onSuccess: () => {
         toast.success('Compra registrada con éxito')
         setIsCompraModalOpen(false)
@@ -263,8 +270,22 @@ export default function InventarioPage() {
         >
           <ArrowLeftRight size={18} />
           Movimientos
-        </button>
-        <button
+          </button>
+
+          {!isEmpleado && (
+          <button
+            onClick={() => setActiveTab('ajustes')}
+            className={cn(
+              "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all",
+              activeTab === 'ajustes' ? "bg-blue-500 text-white shadow-lg" : "text-muted-foreground hover:text-slate-200"
+            )}
+          >
+            <History size={18} />
+            Ajustes Manuales
+          </button>
+          )}
+          <button
+
           onClick={() => setActiveTab('compras')}
           className={cn(
             "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all",
@@ -545,6 +566,67 @@ export default function InventarioPage() {
           </motion.div>
         )}
 
+        {activeTab === 'ajustes' && (
+          <motion.div key="ajustes" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <UniversalGrid
+              title="Auditoría de Ajustes Manuales"
+              items={ajustes}
+              isLoading={isLoadingAjustes}
+              searchPlaceholder="Filtrar por producto o motivo..."
+              columns={[
+                {
+                  header: 'Fecha',
+                  accessor: (item) => (
+                    <div className="flex flex-col">
+                      <span className="text-foreground font-medium">{new Date(item.fecha).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(item.fecha).toLocaleTimeString()}</span>
+                    </div>
+                  )
+                },
+                { header: 'Producto', accessor: 'nombreProducto' },
+                { 
+                  header: 'Cantidad', 
+                  accessor: (item) => (
+                    <span className={cn(
+                        "font-mono font-bold",
+                        item.tipo.includes('Entrada') ? "text-emerald-400" : "text-red-400"
+                    )}>
+                      {item.tipo.includes('Entrada') ? '+' : '-'}{item.cantidad.toLocaleString()}
+                    </span>
+                  ) 
+                },
+                { header: 'Motivo', accessor: 'justificacion', className: 'max-w-[200px] truncate' },
+                { 
+                    header: 'Usuario', 
+                    accessor: (item) => (
+                        <span className="text-xs font-semibold text-blue-400 uppercase">
+                            {usuariosMap[item.usuarioId] || 'Sistema/Otro'}
+                        </span>
+                    )
+                }
+              ]}
+              renderMobileCard={(item) => (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs font-bold text-muted-foreground">{new Date(item.fecha).toLocaleString()}</span>
+                    <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">{usuariosMap[item.usuarioId] || 'Sistema'}</span>
+                  </div>
+                  <h3 className="font-bold text-foreground text-lg">{item.nombreProducto}</h3>
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border">
+                    <div className="text-xs text-muted-foreground uppercase font-bold">Ajuste</div>
+                    <div className={cn("text-xl font-black", item.tipo.includes('Entrada') ? "text-emerald-400" : "text-red-400")}>
+                        {item.tipo.includes('Entrada') ? '+' : '-'}{item.cantidad.toLocaleString()}
+                    </div>
+                  </div>
+                  {item.justificacion && (
+                    <p className="text-xs text-muted-foreground italic">"{item.justificacion}"</p>
+                  )}
+                </div>
+              )}
+            />
+          </motion.div>
+        )}
+
         {activeTab === 'compras' && (
           <motion.div key="compras" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <UniversalGrid
@@ -646,13 +728,19 @@ export default function InventarioPage() {
 
         {activeTab === 'reportes' && (
           <motion.div key="reportes" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-black text-foreground uppercase tracking-widest">Informes Gerenciales</h2>
+            <div className="flex flex-wrap gap-3 items-center">
+                <h2 className="text-xl font-black text-foreground uppercase tracking-widest mr-auto">Informes Gerenciales</h2>
                 <ReportButton 
-                    label="Descargar Stock PDF" 
+                    label="Historial Movimientos PDF" 
+                    url="/api/inventario/movimientos/reporte" 
+                    fileName={`Movimientos_Inventario_${new Date().toISOString().split('T')[0]}.pdf`}
+                    className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
+                />
+                <ReportButton 
+                    label="Stock Actual PDF" 
                     url="/api/inventario/reportes/stock" 
                     fileName={`Stock_Inventario_${new Date().toISOString().split('T')[0]}.pdf`}
-                    className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                    className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20"
                 />
             </div>
             
@@ -1021,7 +1109,8 @@ function CompraPagosModal({ compraId, onClose }: { compraId: string | null, onCl
     })
 
     const onSubmit = (data: PagoFormValues) => {
-        registrarPago.mutate(data, {
+        const idempotencyKey = crypto.randomUUID()
+        registrarPago.mutate({ data, idempotencyKey }, {
             onSuccess: () => {
                 toast.success('Pago registrado')
                 setIsAddPagoOpen(false)

@@ -9,7 +9,7 @@ public record CrearClienteCommand(
     string Nombre,
     string Ruc,
     string? Direccion,
-    string? Telefono) : IRequest<Guid>;
+    string? Telefono) : IRequest<Guid>, IAuditableCommand;
 
 public class CrearClienteCommandHandler : IRequestHandler<CrearClienteCommand, Guid>
 {

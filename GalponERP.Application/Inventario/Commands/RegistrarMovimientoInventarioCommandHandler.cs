@@ -1,4 +1,6 @@
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
@@ -11,15 +13,18 @@ public class RegistrarMovimientoInventarioCommandHandler : IRequestHandler<Regis
     private readonly IInventarioRepository _inventarioRepository;
     private readonly IProductoRepository _productoRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
     public RegistrarMovimientoInventarioCommandHandler(
         IInventarioRepository inventarioRepository,
         IProductoRepository productoRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IHubContext<NotificationHub> hubContext)
     {
         _inventarioRepository = inventarioRepository;
         _productoRepository = productoRepository;
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     public async Task<Guid> Handle(RegistrarMovimientoInventarioCommand request, CancellationToken cancellationToken)
@@ -51,6 +56,14 @@ public class RegistrarMovimientoInventarioCommandHandler : IRequestHandler<Regis
         // Actualizar el stock en Kg cacheado en el Producto
         producto.ActualizarStock(request.Cantidad, request.Tipo);
         _productoRepository.Actualizar(producto);
+
+        // Notificar si el stock baja del umbral crítico
+        var nuevoStock = await _inventarioRepository.ObtenerStockPorProductoIdAsync(producto.Id);
+        if (nuevoStock < producto.UmbralMinimo)
+        {
+            await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Inventario", 
+                $"ALERTA DE STOCK: El producto {producto.Nombre} ha bajado de su mínimo. Stock actual: {nuevoStock} {producto.Unidad?.Nombre ?? "unidades"}", cancellationToken);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Catalogos.UnidadesMedida.Commands.EliminarUnidadMedida;
 
-public record EliminarUnidadMedidaCommand(Guid Id) : IRequest;
+public record EliminarUnidadMedidaCommand(Guid Id) : IRequest, IAuditableCommand;
 
 public class EliminarUnidadMedidaCommandHandler : IRequestHandler<EliminarUnidadMedidaCommand>
 {

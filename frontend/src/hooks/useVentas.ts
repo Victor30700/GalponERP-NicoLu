@@ -13,6 +13,7 @@ export interface Venta {
   total: number;
   saldoPendiente: number;
   estadoPago: string;
+  version?: string;
 }
 
 export interface Pago {
@@ -36,6 +37,7 @@ export interface ActualizarVentaDto {
   cantidadPollos: number;
   pesoTotalVendido: number;
   precioPorKilo: number;
+  version?: string;
 }
 
 export interface RegistrarPagoDto {
@@ -76,7 +78,8 @@ export function useVentas() {
 
   // POST /api/Ventas/parcial (Registrar Venta)
   const registrarVenta = useMutation({
-    mutationFn: (data: RegistrarVentaDto) => api.post('/api/Ventas/parcial', data),
+    mutationFn: ({ data, idempotencyKey }: { data: RegistrarVentaDto; idempotencyKey?: string }) => 
+      api.post('/api/Ventas/parcial', data, idempotencyKey),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['finanzas', 'cuentas-por-cobrar'] });
@@ -96,8 +99,8 @@ export function useVentas() {
 
   // POST /api/Ventas/{id}/pagos
   const registrarPago = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: RegistrarPagoDto }) => 
-      api.post(`/api/Ventas/${id}/pagos`, data),
+    mutationFn: ({ id, data, idempotencyKey }: { id: string; data: RegistrarPagoDto; idempotencyKey?: string }) => 
+      api.post(`/api/Ventas/${id}/pagos`, data, idempotencyKey),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['ventas', variables.id] });

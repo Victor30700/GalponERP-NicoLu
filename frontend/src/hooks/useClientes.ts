@@ -10,6 +10,7 @@ export interface Cliente {
   email?: string;
   totalVentasRealizadas?: number;
   saldoPendienteTotal?: number;
+  version?: string;
 }
 
 export interface ClienteHistorial {
@@ -27,6 +28,7 @@ export interface ClienteRequest {
   direccion?: string;
   telefono?: string;
   email?: string;
+  version?: string;
 }
 
 export function useClientes() {

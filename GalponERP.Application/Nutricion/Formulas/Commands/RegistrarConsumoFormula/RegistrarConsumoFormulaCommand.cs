@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Nutricion.Formulas.Commands.RegistrarConsumoFormula;
@@ -7,4 +8,4 @@ public record RegistrarConsumoFormulaCommand(
     Guid FormulaId,
     decimal CantidadTotalPreparada,
     DateTime Fecha,
-    string? Justificacion) : IRequest<Guid>;
+    string? Justificacion) : IRequest<Guid>, IAuditableCommand;

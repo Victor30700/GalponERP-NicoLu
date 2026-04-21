@@ -34,6 +34,7 @@ public class ObtenerHistorialClienteQueryHandler : IRequestHandler<ObtenerHistor
             v.PrecioPorKilo.Monto,
             v.Total.Monto,
             v.SaldoPendiente.Monto,
-            v.EstadoPago.ToString()));
+            v.EstadoPago.ToString(),
+            v.Version.ToString()));
     }
 }

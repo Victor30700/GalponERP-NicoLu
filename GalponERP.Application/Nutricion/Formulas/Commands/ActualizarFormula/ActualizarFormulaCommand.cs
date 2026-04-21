@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using GalponERP.Application.Nutricion.Formulas.Commands.CrearFormula;
 using MediatR;
 
@@ -8,4 +9,4 @@ public record ActualizarFormulaCommand(
     string Nombre,
     string Etapa,
     decimal CantidadBase,
-    List<FormulaDetalleDto> Detalles) : IRequest<Unit>;
+    List<FormulaDetalleDto> Detalles) : IRequest<Unit>, IAuditableCommand;

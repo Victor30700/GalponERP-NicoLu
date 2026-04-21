@@ -77,11 +77,3 @@ export function useFormulas() {
     registrarConsumo,
   };
 }
-
-export function useFormula(id: string) {
-  return useQuery({
-    queryKey: ['formulas', id],
-    queryFn: () => api.get<Formula>(`/api/Formulas/${id}`),
-    enabled: !!id,
-  });
-}

@@ -68,5 +68,9 @@ export function useSanidad(loteId?: string) {
     registrarBienestar,
     eliminarBienestar,
     actualizarBienestar,
+    descargarReporteBienestar: (registroId: string) => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      window.open(`${baseUrl}/api/Sanidad/reportes/bienestar/${registroId}`, '_blank');
+    }
   };
 }

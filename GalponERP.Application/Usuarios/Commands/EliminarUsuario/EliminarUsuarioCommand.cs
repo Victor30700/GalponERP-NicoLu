@@ -1,5 +1,6 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.EliminarUsuario;
 
-public record EliminarUsuarioCommand(Guid Id) : IRequest;
+public record EliminarUsuarioCommand(Guid Id) : IRequest, IAuditableCommand;

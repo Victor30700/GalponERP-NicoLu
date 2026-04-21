@@ -31,6 +31,7 @@ public class ObtenerVentasQueryHandler : IRequestHandler<ObtenerVentasQuery, IEn
             v.PrecioPorKilo.Monto,
             v.Total.Monto,
             v.SaldoPendiente.Monto,
-            v.EstadoPago.ToString()));
+            v.EstadoPago.ToString(),
+            v.Version.ToString()));
     }
 }

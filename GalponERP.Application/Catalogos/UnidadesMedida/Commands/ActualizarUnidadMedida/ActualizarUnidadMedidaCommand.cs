@@ -10,7 +10,7 @@ public record ActualizarUnidadMedidaCommand(
     Guid Id,
     string Nombre,
     string Abreviatura,
-    TipoUnidad Tipo) : IRequest;
+    TipoUnidad Tipo) : IRequest, IAuditableCommand;
 
 public class ActualizarUnidadMedidaCommandValidator : AbstractValidator<ActualizarUnidadMedidaCommand>
 {

@@ -1,6 +1,7 @@
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Ventas.Commands.ActualizarVenta;
@@ -23,9 +24,16 @@ public class ActualizarVentaCommandHandler : IRequestHandler<ActualizarVentaComm
 
     public async Task Handle(ActualizarVentaCommand request, CancellationToken cancellationToken)
     {
-        var venta = await _ventaRepository.ObtenerPorIdAsync(request.VentaId);
+        var venta = await _ventaRepository.ObtenerPorIdAsync(request.Id);
         if (venta == null)
-            throw new Exception($"Venta con ID {request.VentaId} no encontrada.");
+            throw new Exception($"Venta con ID {request.Id} no encontrada.");
+
+        // Chequeo de concurrencia optimista
+        if (!string.IsNullOrEmpty(request.Version) && 
+            venta.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
+        }
 
         var lote = await _loteRepository.ObtenerPorIdAsync(venta.LoteId);
         if (lote == null)

@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Edit2, Trash2, User } from 'lucide-react'
+import { Edit2, Trash2, User, FileDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSwal } from '@/hooks/useSwal'
 
@@ -11,10 +11,11 @@ interface OperationHistoryListProps {
   type: 'mortality' | 'feed' | 'water' | 'weight'
   onEdit: (item: any) => void
   onDelete: (id: string) => void
+  onDownload?: (id: string) => void
   isLoading?: boolean
 }
 
-export function OperationHistoryList({ data, type, onEdit, onDelete, isLoading }: OperationHistoryListProps) {
+export function OperationHistoryList({ data, type, onEdit, onDelete, onDownload, isLoading }: OperationHistoryListProps) {
   const { confirm } = useSwal()
 
   const config = {
@@ -123,6 +124,15 @@ export function OperationHistoryList({ data, type, onEdit, onDelete, isLoading }
             </div>
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {type === 'water' && onDownload && (
+                <button
+                  onClick={() => onDownload(item.id)}
+                  className="p-2.5 hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500 rounded-xl transition-colors"
+                  title="Descargar Reporte Bienestar"
+                >
+                  <FileDown size={18} />
+                </button>
+              )}
               <button
                 onClick={() => onEdit(item)}
                 className="p-2.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-xl transition-colors"

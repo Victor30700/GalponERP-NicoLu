@@ -29,6 +29,12 @@ public class ActualizarLoteCommandHandler : IRequestHandler<ActualizarLoteComman
             throw new KeyNotFoundException("Lote no encontrado.");
         }
 
+        // Chequeo de concurrencia optimista
+        if (!string.IsNullOrEmpty(request.Version) && lote.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
+        }
+
         // Validar que el galpón exista
         var galpon = await _galponRepository.ObtenerPorIdAsync(request.GalponId);
         if (galpon == null)

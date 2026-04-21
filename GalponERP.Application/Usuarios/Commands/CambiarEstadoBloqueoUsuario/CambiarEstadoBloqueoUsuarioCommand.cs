@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.CambiarEstadoBloqueoUsuario;
 
-public record CambiarEstadoBloqueoUsuarioCommand(Guid UsuarioId, bool Bloquear) : IRequest<Unit>;
+public record CambiarEstadoBloqueoUsuarioCommand(Guid UsuarioId, bool Bloquear) : IRequest<Unit>, IAuditableCommand;
 
 public class CambiarEstadoBloqueoUsuarioCommandHandler : IRequestHandler<CambiarEstadoBloqueoUsuarioCommand, Unit>
 {

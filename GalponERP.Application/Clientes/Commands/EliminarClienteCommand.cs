@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Clientes.Commands.EliminarCliente;
 
-public record EliminarClienteCommand(Guid Id) : IRequest;
+public record EliminarClienteCommand(Guid Id) : IRequest, IAuditableCommand;
 
 public class EliminarClienteCommandHandler : IRequestHandler<EliminarClienteCommand>
 {

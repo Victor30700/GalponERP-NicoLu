@@ -20,6 +20,7 @@ const clienteSchema = z.object({
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefono: z.string().min(7, 'Teléfono inválido').optional().or(z.literal('')),
   direccion: z.string().optional(),
+  version: z.string().optional(),
 })
 
 type ClienteFormValues = z.infer<typeof clienteSchema>
@@ -47,15 +48,20 @@ export default function ClientesPage() {
 
   const onSubmit = (data: ClienteFormValues) => {
     if (editingClienteId) {
-      actualizarCliente.mutate({ ...data, id: editingClienteId }, {
+      actualizarCliente.mutate({ ...data, id: editingClienteId } as any, {
         onSuccess: () => {
           toast.success('Cliente actualizado con éxito')
           closeForm()
         },
-        onError: (err: any) => toast.error(err.message)
+        onError: (err: any) => {
+          if (err.message !== 'CONCURRENCY_ERROR') {
+            toast.error(err.message)
+          }
+        }
       })
     } else {
-      crearCliente.mutate(data, {
+      const { version, ...createData } = data
+      crearCliente.mutate(createData as any, {
         onSuccess: () => {
           toast.success('Cliente creado con éxito')
           closeForm()
@@ -74,10 +80,11 @@ export default function ClientesPage() {
         email: cliente.email || '',
         telefono: cliente.telefono || '',
         direccion: cliente.direccion || '',
+        version: cliente.version || '',
       })
     } else {
       setEditingClienteId(null)
-      reset({ nombre: '', ruc: '', email: '', telefono: '', direccion: '' })
+      reset({ nombre: '', ruc: '', email: '', telefono: '', direccion: '', version: '' })
     }
     setIsFormOpen(true)
   }

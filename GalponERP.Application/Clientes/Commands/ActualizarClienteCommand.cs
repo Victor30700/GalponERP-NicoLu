@@ -1,3 +1,4 @@
+using GalponERP.Application.Exceptions;
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
@@ -9,7 +10,8 @@ public record ActualizarClienteCommand(
     string Nombre,
     string Ruc,
     string? Direccion,
-    string? Telefono) : IRequest;
+    string? Telefono,
+    string? Version = null) : IRequest, IAuditableCommand;
 
 public class ActualizarClienteCommandHandler : IRequestHandler<ActualizarClienteCommand>
 {
@@ -29,6 +31,11 @@ public class ActualizarClienteCommandHandler : IRequestHandler<ActualizarCliente
         if (cliente == null)
         {
             throw new KeyNotFoundException($"Cliente con ID {request.Id} no encontrado.");
+        }
+
+        if (!string.IsNullOrEmpty(request.Version) && cliente.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         cliente.Actualizar(request.Nombre, request.Ruc, request.Direccion, request.Telefono);

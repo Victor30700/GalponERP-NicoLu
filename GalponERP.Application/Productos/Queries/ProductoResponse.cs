@@ -15,7 +15,8 @@ public record ProductoResponse(
     decimal StockActual,
     decimal StockActualKg,
     bool IsActive,
-    TipoUnidad TipoUnidad)
+    TipoUnidad TipoUnidad,
+    string? Version)
 {
     // Alias para el usuario que pidió ver el total como equivalenciaEnKg en el API
     public decimal EquivalenciaEnKg => StockActualKg;

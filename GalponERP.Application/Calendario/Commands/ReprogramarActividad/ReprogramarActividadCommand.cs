@@ -9,7 +9,7 @@ namespace GalponERP.Application.Calendario.Commands;
 public record ReprogramarActividadCommand(
     Guid ActividadId,
     DateTime NuevaFecha,
-    string Justificacion) : IRequest;
+    string Justificacion) : IRequest, IAuditableCommand;
 
 public class ReprogramarActividadCommandValidator : AbstractValidator<ReprogramarActividadCommand>
 {

@@ -17,12 +17,14 @@ export interface Lote {
   pesoPromedioActual: number;
   costoUnitarioPollito: number;
   fechaFinRetiro?: string;
+  version?: string;
 }
 
 export interface LoteDetalle extends Lote {
   diasEnProduccion: number;
   totalConsumoAlimento: number;
   totalBajas: number;
+  costoTotalAcumulado?: number;
   ultimaTemperatura?: number;
   ultimaHumedad?: number;
 }
@@ -43,6 +45,7 @@ export interface ActualizarLoteRequest {
   fechaIngreso: string;
   cantidadInicial: number;
   costoUnitarioPollito: number;
+  version?: string;
 }
 
 export interface CerrarLoteRequest {

@@ -17,43 +17,44 @@ public class AlertaSanitariaJob : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task EjecutarAlertaSanitariaAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("AlertaSanitariaJob iniciado.");
+        _logger.LogInformation("Ejecutando AlertaSanitariaJob vía Hangfire.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            using (var scope = _scopeFactory.CreateScope())
             {
-                using (var scope = _scopeFactory.CreateScope())
+                var loteRepository = scope.ServiceProvider.GetRequiredService<ILoteRepository>();
+                var calendarioRepository = scope.ServiceProvider.GetRequiredService<ICalendarioSanitarioRepository>();
+
+                var lotesActivos = await loteRepository.ObtenerTodosAsync();
+                
+                foreach (var lote in lotesActivos.Where(l => l.Estado == EstadoLote.Activo))
                 {
-                    var loteRepository = scope.ServiceProvider.GetRequiredService<ILoteRepository>();
-                    var calendarioRepository = scope.ServiceProvider.GetRequiredService<ICalendarioSanitarioRepository>();
-
-                    var lotesActivos = await loteRepository.ObtenerTodosAsync();
+                    var diaActual = (DateTime.UtcNow - lote.FechaIngreso).Days + 1;
+                    var actividades = await calendarioRepository.ObtenerPorLoteIdAsync(lote.Id);
                     
-                    foreach (var lote in lotesActivos.Where(l => l.Estado == EstadoLote.Activo))
-                    {
-                        var diaActual = (DateTime.UtcNow - lote.FechaIngreso).Days + 1;
-                        var actividades = await calendarioRepository.ObtenerPorLoteIdAsync(lote.Id);
-                        
-                        var pendientes = actividades.Where(a => a.Estado == EstadoCalendario.Pendiente && a.DiaDeAplicacion <= diaActual);
+                    var pendientes = actividades.Where(a => a.Estado == EstadoCalendario.Pendiente && a.DiaDeAplicacion <= diaActual);
 
-                        foreach (var pendiente in pendientes)
-                        {
-                            _logger.LogWarning("¡ALERTA SANITARIA! Lote: {LoteId} - Día: {DiaActual}. Vacuna/Tratamiento pendiente: {Descripcion} (Programado para día {DiaProgramado})", 
-                                lote.Id, diaActual, pendiente.DescripcionTratamiento, pendiente.DiaDeAplicacion);
-                        }
+                    foreach (var pendiente in pendientes)
+                    {
+                        _logger.LogWarning("¡ALERTA SANITARIA! Lote: {LoteId} - Día: {DiaActual}. Vacuna/Tratamiento pendiente: {Descripcion} (Programado para día {DiaProgramado})", 
+                            lote.Id, diaActual, pendiente.DescripcionTratamiento, pendiente.DiaDeAplicacion);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error ejecutando AlertaSanitariaJob.");
-            }
-
-            // Esperar 24 horas (en desarrollo tal vez menos, pero el requerimiento dice diariamente)
-            await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error ejecutando AlertaSanitariaJob.");
+            throw;
+        }
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("AlertaSanitariaJob (Legacy BackgroundService) en pausa. Hangfire gestionará esta tarea.");
+        await Task.CompletedTask;
     }
 }

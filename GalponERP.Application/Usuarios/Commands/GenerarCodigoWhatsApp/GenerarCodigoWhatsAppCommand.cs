@@ -4,7 +4,7 @@ using GalponERP.Domain.Interfaces.Repositories;
 
 namespace GalponERP.Application.Usuarios.Commands.GenerarCodigoWhatsApp;
 
-public record GenerarCodigoWhatsAppCommand() : IRequest<string>;
+public record GenerarCodigoWhatsAppCommand() : IRequest<string>, IAuditableCommand;
 
 public class GenerarCodigoWhatsAppCommandHandler : IRequestHandler<GenerarCodigoWhatsAppCommand, string>
 {

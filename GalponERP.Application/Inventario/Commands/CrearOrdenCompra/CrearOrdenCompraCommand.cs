@@ -12,7 +12,7 @@ public record OrdenCompraItemDto(Guid ProductoId, decimal Cantidad, decimal Prec
 public record CrearOrdenCompraCommand(
     Guid ProveedorId,
     List<OrdenCompraItemDto> Items,
-    string? Nota = null) : IRequest<Guid>;
+    string? Nota = null) : IRequest<Guid>, IAuditableCommand;
 
 public class CrearOrdenCompraCommandValidator : AbstractValidator<CrearOrdenCompraCommand>
 {

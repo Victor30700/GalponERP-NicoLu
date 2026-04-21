@@ -6,7 +6,7 @@ using MediatR;
 
 namespace GalponERP.Application.Lotes.Commands.TrasladarLote;
 
-public record TrasladarLoteCommand(Guid Id, Guid NuevoGalponId) : IRequest;
+public record TrasladarLoteCommand(Guid Id, Guid NuevoGalponId) : IRequest, IAuditableCommand;
 
 public class TrasladarLoteCommandHandler : IRequestHandler<TrasladarLoteCommand>
 {

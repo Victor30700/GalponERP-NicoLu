@@ -8,7 +8,7 @@ namespace GalponERP.Application.PlantillasSanitarias.Commands.CrearPlantilla;
 public record CrearPlantillaCommand(
     string Nombre,
     string? Descripcion,
-    List<PlantillaActividadCommand> Actividades) : IRequest<Guid>;
+    List<PlantillaActividadCommand> Actividades) : IRequest<Guid>, IAuditableCommand;
 
 public record PlantillaActividadCommand(
     TipoActividad Tipo,

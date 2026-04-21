@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GalponERP.Application.Agentes.Chat.Commands.ActualizarResumen;
 
-public record ActualizarResumenCommand(Guid ConversacionId, string Resumen, int UltimoIndice) : IRequest;
+public record ActualizarResumenCommand(Guid ConversacionId, string Resumen, int UltimoIndice) : IRequest, IAuditableCommand;
 
 public class ActualizarResumenCommandHandler : IRequestHandler<ActualizarResumenCommand>
 {

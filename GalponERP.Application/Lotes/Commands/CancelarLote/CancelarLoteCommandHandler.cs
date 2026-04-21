@@ -4,7 +4,7 @@ using MediatR;
 
 namespace GalponERP.Application.Lotes.Commands.CancelarLote;
 
-public record CancelarLoteCommand(Guid Id, string Justificacion) : IRequest;
+public record CancelarLoteCommand(Guid Id, string Justificacion) : IRequest, IAuditableCommand;
 
 public class CancelarLoteCommandHandler : IRequestHandler<CancelarLoteCommand>
 {

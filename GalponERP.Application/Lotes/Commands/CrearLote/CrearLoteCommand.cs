@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Lotes.Commands.CrearLote;
@@ -8,4 +9,4 @@ public record CrearLoteCommand(
     DateTime FechaIngreso,
     int CantidadInicial,
     decimal CostoUnitarioPollito,
-    Guid? PlantillaSanitariaId = null) : IRequest<Guid>;
+    Guid? PlantillaSanitariaId = null) : IRequest<Guid>, IAuditableCommand;

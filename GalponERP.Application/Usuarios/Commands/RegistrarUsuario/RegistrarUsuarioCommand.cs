@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Entities;
 using MediatR;
 
@@ -13,4 +14,4 @@ public record RegistrarUsuarioCommand(
     string Profesion,
     string? Telefono,
     RolGalpon Rol,
-    int Active = 1) : IRequest<Guid>;
+    int Active = 1) : IRequest<Guid>, IAuditableCommand;

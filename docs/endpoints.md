@@ -2,6 +2,10 @@
 
 Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Firebase), excepto el endpoint de Login.
 
+**Concurrencia Optimista:** Para evitar la pérdida de datos, las operaciones de actualización (`PUT`, `PATCH`) en entidades críticas (Lotes, Productos, Clientes, Proveedores, Categorías) requieren el envío del campo `version` (Base64 string) obtenido previamente en la consulta GET. Si la versión no coincide, el servidor retornará un error **409 Conflict**.
+
+**Idempotencia:** Los endpoints de creación sensibles (Finanzas, Ventas, Compras) soportan el header `X-Idempotency-Key`. Si se envía una clave ya procesada, el servidor retornará la respuesta cacheada en lugar de procesar el registro nuevamente.
+
 **Nota sobre Auditoría:** El sistema registra automáticamente el `UsuarioId` de quien realiza la transacción a partir del Token JWT. El Frontend **NO** debe enviar el campo `UsuarioId` en ningún JSON de creación o registro; el backend lo extrae de forma segura desde la identidad del usuario autenticado. 
 
 **Log de Auditoría:** Cualquier operación de tipo `PUT`, `DELETE` o `Reabrir` genera automáticamente un registro en la tabla de Auditoría para trazabilidad total.
@@ -194,13 +198,13 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 ## 4. VENTAS Y COBRANZAS
 
 ### Ventas
-- `POST /api/Ventas/parcial` (Registrar venta a crédito)
-- `PUT /api/Ventas/{id}` (Actualizar datos de venta)
+- `POST /api/Ventas/parcial` (Registrar venta a crédito) -> **Soporta X-Idempotency-Key**
+- `PUT /api/Ventas/{id}` (Actualizar datos de venta) -> **Requiere version**
 - `POST /api/Ventas/{id}/anular` (Anular venta - Solo Admin)
 
 ### Pagos de Ventas
 - `GET /api/Ventas/{id}/pagos` (Listar todos los pagos de una venta)
-- `POST /api/Ventas/{id}/pagos` (Registrar pago/abono)
+- `POST /api/Ventas/{id}/pagos` (Registrar pago/abono) -> **Soporta X-Idempotency-Key**
 - `DELETE /api/Ventas/{id}/pagos/{pagoId}` (Anular pago - Solo Admin)
 
 ## 5. INVENTARIO Y COMPRAS
@@ -218,11 +222,11 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 
 ### Compras a Proveedores
 - `GET /api/inventario/compras` (Listar facturas de compra)
-- `POST /api/inventario/compras` (Registrar ingreso de mercadería con costo y proveedor)
+- `POST /api/inventario/compras` (Registrar ingreso de mercadería con costo y proveedor) -> **Soporta X-Idempotency-Key**
 
 ### Pagos de Compras (Cuentas por Pagar)
 - `GET /api/inventario/compras/{id}/pagos` (Listar pagos a una factura)
-- `POST /api/inventario/compras/{id}/pagos` (Registrar abono a proveedor)
+- `POST /api/inventario/compras/{id}/pagos` (Registrar abono a proveedor) -> **Soporta X-Idempotency-Key**
 - `DELETE /api/inventario/compras/{compraId}/pagos/{pagoId}` (Anular pago a proveedor - Solo Admin)
 
 ## 6. SANIDAD Y CALENDARIO
@@ -256,7 +260,7 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - `GET /api/Clientes/{id}`
 - `GET /api/Clientes/{id}/historial` (CRM: Estado de cuenta)
 - `POST /api/Clientes`
-- `PUT /api/Clientes/{id}`
+- `PUT /api/Clientes/{id}` -> **Requiere version**
 - `DELETE /api/Clientes/{id}` (Solo Admin)
 
 ### Proveedores
@@ -264,18 +268,19 @@ Todos los endpoints requieren autenticación mediante **JWT Bearer Token** (Fire
 - `GET /api/Proveedores/{id}`
 - `GET /api/Proveedores/{id}/historial` (CRM: Compras realizadas)
 - `POST /api/Proveedores`
-- `PUT /api/Proveedores/{id}`
+- `PUT /api/Proveedores/{id}` -> **Requiere version**
 - `DELETE /api/Proveedores/{id}` (Solo Admin)
 
 ### Productos
 - `GET /api/Productos`
 - `GET /api/Productos/{id}`
 - `POST /api/Productos`
-- `PUT /api/Productos/{id}`
+- `PUT /api/Productos/{id}` -> **Requiere version**
 - `DELETE /api/Productos/{id}` (Solo Admin)
 
 ### Categorías y Unidades
-- `GET /api/Categorias` ...
+- `GET /api/Categorias`
+- `PUT /api/Categorias/{id}` -> **Requiere version**
 - `GET /api/UnidadesMedida` ...
 
 ## 9. AUDITORÍA Y SEGURIDAD

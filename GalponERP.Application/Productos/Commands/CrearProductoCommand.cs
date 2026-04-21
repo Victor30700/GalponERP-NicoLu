@@ -13,7 +13,7 @@ public record CrearProductoCommand(
     decimal PesoUnitarioKg = 0,
     decimal UmbralMinimo = 0,
     decimal StockInicial = 0,
-    int PeriodoRetiroDias = 0) : IRequest<Guid>;
+    int PeriodoRetiroDias = 0) : IRequest<Guid>, IAuditableCommand;
 
 public class CrearProductoCommandValidator : AbstractValidator<CrearProductoCommand>
 {

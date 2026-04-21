@@ -1,3 +1,4 @@
+using GalponERP.Application.Exceptions;
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
@@ -10,7 +11,8 @@ public record ActualizarProveedorCommand(
     string NitRuc,
     string? Telefono,
     string? Email,
-    string? Direccion) : IRequest;
+    string? Direccion,
+    string? Version = null) : IRequest, IAuditableCommand;
 
 public class ActualizarProveedorCommandHandler : IRequestHandler<ActualizarProveedorCommand>
 {
@@ -30,6 +32,11 @@ public class ActualizarProveedorCommandHandler : IRequestHandler<ActualizarProve
         if (proveedor == null)
         {
             throw new Exception($"Proveedor con ID {request.Id} no encontrado.");
+        }
+
+        if (!string.IsNullOrEmpty(request.Version) && proveedor.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         proveedor.Actualizar(

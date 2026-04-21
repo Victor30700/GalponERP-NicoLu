@@ -51,6 +51,7 @@ export interface Movimiento {
   tipo: string;
   fecha: string;
   justificacion: string | null;
+  version?: string;
 }
 
 export interface Compra {
@@ -69,7 +70,7 @@ export interface PagoCompra {
   id: string;
   monto: number;
   fechaPago: string;
-  metodoPago: string;
+  metodoPago: number;
 }
 
 export interface NivelesAlimento {
@@ -113,6 +114,31 @@ export interface ConciliacionFormValues {
   items: ConciliacionItem[];
 }
 
+export interface AjusteInventario {
+  id: string;
+  productoId: string;
+  nombreProducto: string;
+  cantidad: number;
+  tipo: string;
+  fecha: string;
+  justificacion: string | null;
+  loteId: string | null;
+  usuarioId: string;
+}
+
+export interface ReporteMovimiento {
+  id: string;
+  productoId: string;
+  nombreProducto: string;
+  categoriaProductoId: string | null;
+  nombreCategoria: string;
+  loteId: string | null;
+  cantidad: number;
+  tipo: string;
+  fecha: string;
+  justificacion: string | null;
+}
+
 export function useInventario() {
   const queryClient = useQueryClient();
 
@@ -146,6 +172,12 @@ export function useInventario() {
     refetchInterval: 5000,
   });
 
+  const ajustes = useQuery({
+    queryKey: ['inventario', 'ajustes'],
+    queryFn: () => api.get<AjusteInventario[]>('/api/Inventario/ajustes'),
+    refetchInterval: 5000,
+  });
+
   const compras = useQuery({
     queryKey: ['inventario', 'compras'],
     queryFn: () => api.get<Compra[]>('/api/Inventario/compras'),
@@ -159,7 +191,8 @@ export function useInventario() {
   });
 
   const registrarCompra = useMutation({
-    mutationFn: (data: CompraFormValues) => api.post('/api/Inventario/compras', data),
+    mutationFn: ({ data, idempotencyKey }: { data: CompraFormValues; idempotencyKey?: string }) => 
+      api.post('/api/Inventario/compras', data, idempotencyKey),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
   });
 
@@ -187,6 +220,11 @@ export function useInventario() {
         queryClient.invalidateQueries({ queryKey: ['inventario'] });
         queryClient.invalidateQueries({ queryKey: ['lote'] });
     },
+    onError: (err: any) => {
+        if (err.message !== 'CONCURRENCY_ERROR') {
+            // Manejado globalmente
+        }
+    }
   });
 
   const realizarConciliacion = useMutation({
@@ -209,6 +247,8 @@ export function useInventario() {
     isLoadingProyecciones: proyecciones.isLoading,
     movimientos: movimientos.data || [],
     isLoadingMovimientos: movimientos.isLoading,
+    ajustes: ajustes.data || [],
+    isLoadingAjustes: ajustes.isLoading,
     compras: compras.data || [],
     isLoadingCompras: compras.isLoading,
     nivelesAlimento: nivelesAlimento.data,
@@ -222,6 +262,7 @@ export function useInventario() {
     ajustarStock,
   };
 }
+
 
 export function useProductoDetalle(productoId: string) {
   const stock = useQuery({
@@ -262,7 +303,8 @@ export function useCompraPagos(compraId: string) {
   });
 
   const registrarPago = useMutation({
-    mutationFn: (data: PagoFormValues) => api.post(`/api/Inventario/compras/${compraId}/pagos`, data),
+    mutationFn: ({ data, idempotencyKey }: { data: PagoFormValues; idempotencyKey?: string }) => 
+      api.post(`/api/Inventario/compras/${compraId}/pagos`, data, idempotencyKey),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventario', 'compra', compraId, 'pagos'] });
       queryClient.invalidateQueries({ queryKey: ['inventario', 'compras'] });

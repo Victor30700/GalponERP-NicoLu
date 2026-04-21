@@ -9,7 +9,7 @@ public record ActualizarPlantillaCommand(
     Guid Id,
     string Nombre,
     string? Descripcion,
-    List<PlantillaActividadCommand> Actividades) : IRequest;
+    List<PlantillaActividadCommand> Actividades) : IRequest, IAuditableCommand;
 
 public class ActualizarPlantillaCommandHandler : IRequestHandler<ActualizarPlantillaCommand>
 {

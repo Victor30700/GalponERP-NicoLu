@@ -9,23 +9,25 @@ export interface Proveedor {
   email: string;
   direccion: string;
   isActive: boolean;
+  version?: string;
 }
 
 export interface CreateProveedorRequest {
   razonSocial: string;
   nitRuc: string;
-  telefono: string;
-  email: string;
-  direccion: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
 }
 
 export interface UpdateProveedorRequest {
   id: string;
   razonSocial: string;
   nitRuc: string;
-  telefono: string;
-  email: string;
-  direccion: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  version?: string;
 }
 
 export function useProveedores() {
@@ -41,11 +43,27 @@ export function useProveedores() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['proveedores'] }),
   });
 
+  const updateProveedor = useMutation({
+    mutationFn: (data: UpdateProveedorRequest) => api.put(`/api/Proveedores/${data.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proveedores'] });
+    },
+  });
+
+  const deleteProveedor = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/Proveedores/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proveedores'] });
+    },
+  });
+
   return {
     proveedores: proveedores.data || [],
     isLoading: proveedores.isLoading,
     error: proveedores.error,
     createProveedor,
+    updateProveedor,
+    deleteProveedor,
     refresh: () => proveedores.refetch(),
   };
 }
@@ -59,21 +77,6 @@ export function useProveedor(id: string) {
     enabled: !!id,
   });
 
-  const updateProveedor = useMutation({
-    mutationFn: (data: UpdateProveedorRequest) => api.put(`/api/Proveedores/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['proveedores'] });
-      queryClient.invalidateQueries({ queryKey: ['proveedores', id] });
-    },
-  });
-
-  const deleteProveedor = useMutation({
-    mutationFn: () => api.delete(`/api/Proveedores/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['proveedores'] });
-    },
-  });
-
   const historial = useQuery({
     queryKey: ['proveedores', id, 'historial'],
     queryFn: () => api.get<any[]>(`/api/Proveedores/${id}/historial`),
@@ -84,8 +87,6 @@ export function useProveedor(id: string) {
     proveedor: proveedor.data,
     isLoading: proveedor.isLoading,
     error: proveedor.error,
-    updateProveedor,
-    deleteProveedor,
     historial: historial.data || [],
     isLoadingHistorial: historial.isLoading,
   };

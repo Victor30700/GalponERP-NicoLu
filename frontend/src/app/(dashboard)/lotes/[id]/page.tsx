@@ -68,7 +68,12 @@ export default function LoteDashboard() {
 
   const { pesajes, isLoading: isLoadingPesajes, eliminarPesaje } = usePesajes(id as string)
   const { mortalidad, isLoading: isLoadingMortalidad, eliminarMortalidad } = useMortalidad(id as string)
-  const { historialBienestar, isLoadingHistorial: isLoadingSanidad, eliminarBienestar } = useSanidad(id as string)
+  const { 
+    historialBienestar, 
+    isLoadingHistorial: isLoadingSanidad, 
+    eliminarBienestar,
+    descargarReporteBienestar
+  } = useSanidad(id as string)
   const { data: movimientos = [], isLoading: isLoadingMovimientosLote } = useMovimientosLote(id as string)
   const { eliminarMovimiento } = useInventario()
 
@@ -466,6 +471,7 @@ export default function LoteDashboard() {
                   else if (historyTab === 'feed') eliminarMovimiento.mutate(id);
                   else if (historyTab === 'water') eliminarBienestar.mutate(id);
                 }}
+                onDownload={historyTab === 'water' ? descargarReporteBienestar : undefined}
               />
             </div>
           </div>

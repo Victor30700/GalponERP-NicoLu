@@ -12,6 +12,10 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Reflection;
+using Hangfire;
+using Hangfire.PostgreSql;
+
+using GalponERP.Application.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +88,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add services to the container.
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddMemoryCache(); // Requerido por IdempotencyMiddleware
 
 builder.Services.AddCors(options =>
 {
@@ -92,15 +97,23 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000", "https://localhost:3000", "https://127.0.0.1:3000")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         });
 });
 
-builder.Services.AddHostedService<AlertaInventarioJob>();
-builder.Services.AddHostedService<AlertaSanitariaJob>();
-builder.Services.AddHostedService<AnalisisDatosJob>();
+// Comentado para migración a Hangfire
+// builder.Services.AddHostedService<AlertaInventarioJob>();
+// builder.Services.AddHostedService<AlertaSanitariaJob>();
+// builder.Services.AddHostedService<AnalisisDatosJob>();
+
+// Configuración de Hangfire
+builder.Services.AddHangfire(config => 
+    config.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -161,13 +174,35 @@ app.MapGet("/", context =>
 });
 
 app.UseExceptionHandler();
+app.UseMiddleware<IdempotencyMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHangfireDashboard(); // Habilitar Dashboard de Hangfire en /hangfire
+
+// Programar tareas recurrentes
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    
+    // Tarea de Alerta de Inventario (cada 24 horas)
+    recurringJobManager.AddOrUpdate<AlertaInventarioJob>(
+        "alerta-inventario", 
+        job => job.EjecutarAlertaAsync(CancellationToken.None), 
+        Cron.Daily);
+
+    // Tarea de Alerta Sanitaria (cada 12 horas)
+    recurringJobManager.AddOrUpdate<AlertaSanitariaJob>(
+        "alerta-sanitaria",
+        job => job.EjecutarAlertaSanitariaAsync(CancellationToken.None),
+        Cron.HourInterval(12));
+}
+
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 // Seeding Automático del Admin y Catálogos
 using (var scope = app.Services.CreateScope())

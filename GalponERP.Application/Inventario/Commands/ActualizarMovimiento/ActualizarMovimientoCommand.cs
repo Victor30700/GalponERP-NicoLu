@@ -1,3 +1,4 @@
+using GalponERP.Application.Interfaces;
 using MediatR;
 
 namespace GalponERP.Application.Inventario.Commands.ActualizarMovimiento;
@@ -8,4 +9,5 @@ public record ActualizarMovimientoCommand(
     decimal Cantidad,
     DateTime Fecha,
     string? Justificacion,
-    Guid UsuarioId) : IRequest;
+    Guid UsuarioId,
+    string? Version = null) : IRequest, IAuditableCommand;

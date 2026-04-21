@@ -26,7 +26,7 @@ const actividadSchema = z.object({
   diaDeAplicacion: z.number().min(0, 'Día inválido'),
   descripcion: z.string().min(3, 'Descripción muy corta'),
   productoIdRecomendado: z.string().uuid('Producto inválido').nullable().optional(),
-  cantidadRecomendada: z.number().min(0, 'No puede ser negativa').default(0),
+  cantidadRecomendada: z.number().min(0, 'No puede ser negativa'),
 })
 
 const plantillaSchema = z.object({
@@ -76,7 +76,7 @@ export default function PlantillasPage() {
   const { register, control, handleSubmit, reset, formState: { errors } } = useForm<PlantillaFormValues>({
     resolver: zodResolver(plantillaSchema),
     defaultValues: {
-      actividades: [{ tipo: 1, diaDeAplicacion: 1, descripcion: '', productoIdRecomendado: null }]
+      actividades: [{ tipo: 1, diaDeAplicacion: 1, descripcion: '', productoIdRecomendado: null, cantidadRecomendada: 0 }]
     }
   })
 

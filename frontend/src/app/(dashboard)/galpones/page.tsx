@@ -33,7 +33,13 @@ export default function GalponesPage() {
   const onSubmit = (data: GalponFormValues) => {
     const values = { ...data, capacidad: Number(data.capacidad) }
     if (editingGalponId) {
-      actualizarGalpon.mutate(values, {
+      const existingGalpon = galpones.find(g => g.id === editingGalponId)
+      actualizarGalpon.mutate({ 
+        ...existingGalpon, 
+        ...values, 
+        id: editingGalponId,
+        isActive: existingGalpon?.isActive ?? true 
+      } as Galpon, {
         onSuccess: () => {
           toast.success('Galpón actualizado')
           closeForm()

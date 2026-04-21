@@ -8,11 +8,15 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { hasAccess } from '@/lib/rbac'
 import { navigationSections } from '@/config/navigation'
+import { useSignalR } from '@/hooks/useSignalR'
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { profile, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  
+  // Activar conexión de notificaciones en tiempo real
+  useSignalR()
 
   useEffect(() => {
     if (!loading) {

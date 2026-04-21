@@ -92,6 +92,14 @@ public class GalponDbContext : DbContext, IGalponDbContext
             if (typeof(Entity).IsAssignableFrom(entityType.ClrType))
             {
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(ConvertFilterExpression<Entity>(e => e.IsActive, entityType.ClrType));
+                
+                // Configuración de Concurrencia Optimista usando xmin de PostgreSQL
+                modelBuilder.Entity(entityType.ClrType)
+                    .Property<uint>("Version")
+                    .HasColumnName("xmin")
+                    .HasColumnType("xid")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .IsConcurrencyToken();
             }
         }
 
