@@ -15,20 +15,27 @@ public class GastoOperativoRepository : IGastoOperativoRepository
 
     public async Task<GastoOperativo?> ObtenerPorIdAsync(Guid id)
     {
-        return await _context.GastosOperativos.FirstOrDefaultAsync(g => g.Id == id && g.IsActive);
+        return await _context.GastosOperativos.FirstOrDefaultAsync(g => g.Id == id);
     }
 
     public async Task<IEnumerable<GastoOperativo>> ObtenerPorGalponAsync(Guid galponId)
     {
         return await _context.GastosOperativos
-            .Where(g => g.GalponId == galponId && g.IsActive)
+            .Where(g => g.GalponId == galponId)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<GastoOperativo>> ObtenerPorLoteAsync(Guid loteId)
     {
         return await _context.GastosOperativos
-            .Where(g => g.LoteId == loteId && g.IsActive)
+            .Where(g => g.LoteId == loteId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<GastoOperativo>> ObtenerPorVariosLotesAsync(IEnumerable<Guid> loteIds)
+    {
+        return await _context.GastosOperativos
+            .Where(g => g.LoteId != null && loteIds.Contains(g.LoteId.Value))
             .ToListAsync();
     }
 
@@ -38,14 +45,13 @@ public class GastoOperativoRepository : IGastoOperativoRepository
         var end = fin.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(fin, DateTimeKind.Utc) : fin.ToUniversalTime();
 
         return await _context.GastosOperativos
-            .Where(g => g.Fecha >= start && g.Fecha <= end && g.IsActive)
+            .Where(g => g.Fecha >= start && g.Fecha <= end)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<GastoOperativo>> ObtenerTodosAsync()
     {
         return await _context.GastosOperativos
-            .Where(g => g.IsActive)
             .OrderByDescending(g => g.Fecha)
             .ToListAsync();
     }

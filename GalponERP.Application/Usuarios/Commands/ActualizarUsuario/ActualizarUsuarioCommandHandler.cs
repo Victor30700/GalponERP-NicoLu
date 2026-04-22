@@ -1,6 +1,7 @@
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.Exceptions;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Usuarios.Commands.ActualizarUsuario;
@@ -23,6 +24,11 @@ public class ActualizarUsuarioCommandHandler : IRequestHandler<ActualizarUsuario
         if (usuario == null)
         {
             throw new Exception("Usuario no encontrado.");
+        }
+
+        if (usuario.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         // Verificar duplicidad de teléfono si se está cambiando

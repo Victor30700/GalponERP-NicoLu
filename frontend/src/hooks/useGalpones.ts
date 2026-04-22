@@ -21,7 +21,6 @@ export function useGalpones() {
   const galpones = useQuery({
     queryKey: ['galpones'],
     queryFn: () => api.get<Galpon[]>('/api/Galpones'),
-    refetchInterval: 5000, // Real-time polling cada 5 segundos
   });
 
   const crearGalpon = useMutation({
@@ -44,7 +43,6 @@ export function useGalpon(id: string) {
     queryKey: ['galpones', id],
     queryFn: () => api.get<Galpon>(`/api/Galpones/${id}`),
     enabled: !!id,
-    refetchInterval: 5000,
   });
 
   const actualizarGalpon = useMutation({

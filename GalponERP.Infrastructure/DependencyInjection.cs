@@ -8,7 +8,6 @@ using GalponERP.Infrastructure.Reporting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.SemanticKernel;
 
 namespace GalponERP.Infrastructure;
 
@@ -56,13 +55,6 @@ public static class DependencyInjection
         services.AddScoped<IPdfService, PdfService>();
         services.AddHttpClient();
         services.AddHttpContextAccessor();
-
-        // Configuración de Semantic Kernel con Ollama
-        services.AddKernel()
-                .AddOllamaChatCompletion(
-                    modelId: "gemma4:e4b",
-                    endpoint: new Uri("http://localhost:11434")
-                );
 
         return services;
     }

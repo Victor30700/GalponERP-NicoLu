@@ -17,14 +17,14 @@ public class CompraInventarioRepository : ICompraInventarioRepository
     {
         return await _context.ComprasInventario
             .Include(c => c.Pagos)
-            .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<IEnumerable<CompraInventario>> ObtenerPorProveedorIdAsync(Guid proveedorId)
     {
         return await _context.ComprasInventario
             .Include(c => c.Pagos)
-            .Where(c => c.ProveedorId == proveedorId && c.IsActive)
+            .Where(c => c.ProveedorId == proveedorId)
             .OrderByDescending(c => c.Fecha)
             .ToListAsync();
     }
@@ -33,7 +33,6 @@ public class CompraInventarioRepository : ICompraInventarioRepository
     {
         return await _context.ComprasInventario
             .Include(c => c.Pagos)
-            .Where(c => c.IsActive)
             .OrderByDescending(c => c.Fecha)
             .ToListAsync();
     }
@@ -42,7 +41,6 @@ public class CompraInventarioRepository : ICompraInventarioRepository
     {
         var result = await (from compra in _context.ComprasInventario.Include(c => c.Pagos).AsNoTracking()
                      join proveedor in _context.Proveedores.AsNoTracking() on compra.ProveedorId equals proveedor.Id
-                     where compra.IsActive
                      orderby compra.Fecha descending
                      select new { Compra = compra, ProveedorNombre = proveedor.RazonSocial })
                      .ToListAsync();
@@ -54,7 +52,7 @@ public class CompraInventarioRepository : ICompraInventarioRepository
     {
         var result = await (from compra in _context.ComprasInventario.Include(c => c.Pagos).AsNoTracking()
                      join proveedor in _context.Proveedores.AsNoTracking() on compra.ProveedorId equals proveedor.Id
-                     where compra.ProveedorId == proveedorId && compra.IsActive
+                     where compra.ProveedorId == proveedorId
                      orderby compra.Fecha descending
                      select new { Compra = compra, ProveedorNombre = proveedor.RazonSocial })
                      .ToListAsync();

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using GalponERP.Application.Agentes;
+using System.Text;
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Infrastructure.Authentication;
@@ -11,41 +11,35 @@ namespace GalponERP.Api.Controllers;
 [Route("api/whatsapp")]
 public class WhatsAppWebhookController : ControllerBase
 {
-    private readonly IAgenteOrquestadorService _agenteOrquestador;
     private readonly IWhatsAppService _whatsAppService;
     private readonly IVoiceService _voiceService;
     private readonly IUsuarioRepository _usuarioRepository;
-    private readonly IConversacionRepository _conversacionRepository;
     private readonly ICurrentUserContext _currentUserContext;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<WhatsAppWebhookController> _logger;
 
     public WhatsAppWebhookController(
-        IAgenteOrquestadorService agenteOrquestador,
         IWhatsAppService whatsAppService,
         IVoiceService voiceService,
         IUsuarioRepository usuarioRepository,
-        IConversacionRepository conversacionRepository,
         ICurrentUserContext currentUserContext,
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
+        IHttpClientFactory httpClientFactory,
         ILogger<WhatsAppWebhookController> logger)
     {
-        _agenteOrquestador = agenteOrquestador;
         _whatsAppService = whatsAppService;
         _voiceService = voiceService;
         _usuarioRepository = usuarioRepository;
-        _conversacionRepository = conversacionRepository;
         _currentUserContext = currentUserContext;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Verificación del Webhook por parte de Meta (GET)
-    /// </summary>
     [HttpGet("webhook")]
     public IActionResult VerifyWebhook(
         [FromQuery(Name = "hub.mode")] string mode,
@@ -63,9 +57,6 @@ public class WhatsAppWebhookController : ControllerBase
         return Forbid();
     }
 
-    /// <summary>
-    /// Recepción de mensajes de WhatsApp (POST)
-    /// </summary>
     [HttpPost("webhook")]
     public async Task<IActionResult> ReceiveMessage([FromBody] JsonElement body)
     {
@@ -73,18 +64,15 @@ public class WhatsAppWebhookController : ControllerBase
         {
             _logger.LogInformation("Mensaje recibido de WhatsApp: {Body}", body.GetRawText());
 
-            // 1. Extraer datos básicos del mensaje
             if (!TryExtractMessageData(body, out var telefono, out var mensaje, out var mediaId))
             {
                 return Ok();
             }
 
-            // 2. Buscar usuario por WhatsApp vinculado
             var usuario = await _usuarioRepository.ObtenerPorWhatsAppAsync(telefono);
             
             if (usuario == null)
             {
-                // Intento de vinculación: ¿El mensaje es un código de 6 dígitos?
                 if (!string.IsNullOrEmpty(mensaje) && mensaje.Trim().Length == 6 && int.TryParse(mensaje.Trim(), out _))
                 {
                     var codigo = mensaje.Trim();
@@ -108,13 +96,12 @@ public class WhatsAppWebhookController : ControllerBase
                 return Ok();
             }
 
-            // 3. Establecer contexto de usuario para auditoría
+            // Establecer contexto de usuario para auditoría (aunque el orquestador ahora es n8n)
             if (_currentUserContext is CurrentUserContext context)
             {
                 context.SetUser(usuario.Id, usuario.FirebaseUid);
             }
 
-            // 4. Procesar audio si es necesario
             if (!string.IsNullOrEmpty(mediaId))
             {
                 var audioBytes = await _whatsAppService.DescargarMediaAsync(mediaId);
@@ -122,7 +109,6 @@ public class WhatsAppWebhookController : ControllerBase
                 {
                     using var ms = new MemoryStream(audioBytes);
                     mensaje = await _voiceService.TranscribirAudioAsync(ms, "voice.ogg");
-                    _logger.LogInformation("Transcripción de voz: {Texto}", mensaje);
                 }
             }
 
@@ -131,15 +117,23 @@ public class WhatsAppWebhookController : ControllerBase
                 return Ok();
             }
 
-            // 5. Obtener conversación activa
-            var conversaciones = await _conversacionRepository.ObtenerPorUsuarioAsync(usuario.Id);
-            var conversacionActiva = conversaciones.FirstOrDefault(c => c.Estado == "Activa");
+            // Reenviar a n8n
+            var n8nWebhookUrl = _configuration["Integrations:N8nWhatsAppWebhookUrl"];
+            if (!string.IsNullOrEmpty(n8nWebhookUrl))
+            {
+                var payload = new
+                {
+                    UsuarioId = usuario.Id,
+                    Nombre = usuario.Nombre,
+                    Telefono = telefono,
+                    Mensaje = mensaje,
+                    FullBody = body
+                };
 
-            // 6. Procesar con el Agente Orquestador
-            var respuesta = await _agenteOrquestador.ProcesarMensajeAsync(mensaje, conversacionActiva?.Id);
-
-            // 7. Enviar respuesta por WhatsApp
-            await _whatsAppService.EnviarMensajeTextoAsync(telefono, respuesta.Respuesta);
+                using var client = _httpClientFactory.CreateClient();
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                await client.PostAsync(n8nWebhookUrl, content);
+            }
 
             return Ok();
         }

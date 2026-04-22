@@ -11,5 +11,6 @@ public class ActualizarPesajeCommandValidator : AbstractValidator<ActualizarPesa
             .LessThanOrEqualTo(x => DateTime.UtcNow.AddMinutes(5)).WithMessage("La fecha no puede ser futura.");
         RuleFor(x => x.PesoPromedioGramos).GreaterThan(0).WithMessage("El peso promedio debe ser mayor a cero.");
         RuleFor(x => x.CantidadMuestreada).GreaterThan(0).WithMessage("La cantidad muestreada debe ser mayor a cero.");
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }

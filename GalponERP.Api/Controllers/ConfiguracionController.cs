@@ -3,10 +3,11 @@ using GalponERP.Application.Configuracion.Queries.ObtenerConfiguracion;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class ConfiguracionController : ControllerBase
@@ -25,7 +26,7 @@ public class ConfiguracionController : ControllerBase
         return Ok(config);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpPost]
     public async Task<IActionResult> Actualizar([FromBody] ActualizarConfiguracionCommand command)
     {

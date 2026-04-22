@@ -26,13 +26,13 @@ public class MortalidadRepository : IMortalidadRepository
     public async Task<MortalidadDiaria?> ObtenerPorIdAsync(Guid id)
     {
         return await _context.Mortalidades
-            .FirstOrDefaultAsync(m => m.Id == id && m.IsActive);
+            .FirstOrDefaultAsync(m => m.Id == id);
     }
 
     public async Task<IEnumerable<MortalidadDiaria>> ObtenerPorLoteAsync(Guid loteId)
     {
         return await _context.Mortalidades
-            .Where(m => m.LoteId == loteId && m.IsActive)
+            .Where(m => m.LoteId == loteId)
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
     }
@@ -44,14 +44,13 @@ public class MortalidadRepository : IMortalidadRepository
         var end = fin.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(fin, DateTimeKind.Utc) : fin.ToUniversalTime();
 
         return await _context.Mortalidades
-            .Where(m => m.Fecha >= start && m.Fecha <= end && m.IsActive)
+            .Where(m => m.Fecha >= start && m.Fecha <= end)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<MortalidadDiaria>> ObtenerTodasAsync()
     {
         return await _context.Mortalidades
-            .Where(m => m.IsActive)
             .ToListAsync();
     }
 }

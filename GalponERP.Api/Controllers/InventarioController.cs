@@ -24,10 +24,11 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class InventarioController : ControllerBase
@@ -49,7 +50,7 @@ public class InventarioController : ControllerBase
     }
 
     [HttpPost("ajustar-stock")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> AjustarStock([FromBody] AjustarStockCommand command)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
@@ -61,7 +62,7 @@ public class InventarioController : ControllerBase
     }
 
     [HttpDelete("movimiento/{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     public async Task<IActionResult> EliminarMovimiento(Guid id)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
@@ -72,7 +73,7 @@ public class InventarioController : ControllerBase
     }
 
     [HttpPut("movimiento/{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> ActualizarMovimiento(Guid id, [FromBody] ActualizarMovimientoCommand command)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
@@ -164,7 +165,7 @@ public class InventarioController : ControllerBase
         return Ok(compras);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost("compras")]
     public async Task<IActionResult> RegistrarCompra([FromBody] RegistrarIngresoMercaderiaCommand command)
     {
@@ -176,7 +177,7 @@ public class InventarioController : ControllerBase
         return Ok(new { CompraId = id });
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost("compras/{id}/pagos")]
     public async Task<IActionResult> RegistrarPagoCompra(Guid id, [FromBody] RegistrarPagoCompraCommand command)
     {
@@ -189,7 +190,7 @@ public class InventarioController : ControllerBase
         return Ok(new { PagoId = pagoId });
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("compras/{compraId}/pagos/{pagoId}")]
     public async Task<IActionResult> AnularPagoCompra(Guid compraId, Guid pagoId)
     {
@@ -218,7 +219,7 @@ public class InventarioController : ControllerBase
         return Ok(new { MovimientoId = id });
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPut("ajuste")]
     public async Task<IActionResult> AjustarInventario([FromBody] RegistrarMovimientoInventarioCommand command)
     {
@@ -263,7 +264,7 @@ public class InventarioController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost("conciliacion")]
     public async Task<IActionResult> ConciliarInventario([FromBody] RegistrarConciliacionStockCommand command)
     {

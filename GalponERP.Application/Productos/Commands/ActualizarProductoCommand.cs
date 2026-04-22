@@ -72,6 +72,8 @@ public class ActualizarProductoCommandValidator : AbstractValidator<ActualizarPr
 
         RuleFor(x => x.StockInicial)
             .GreaterThanOrEqualTo(0).WithMessage("El stock inicial no puede ser negativo.");
+
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }
 

@@ -9,4 +9,5 @@ public record ActualizarFormulaCommand(
     string Nombre,
     string Etapa,
     decimal CantidadBase,
-    List<FormulaDetalleDto> Detalles) : IRequest<Unit>, IAuditableCommand;
+    List<FormulaDetalleDto> Detalles,
+    string? Version = null) : IRequest<Unit>, IAuditableCommand;

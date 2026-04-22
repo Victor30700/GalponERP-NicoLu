@@ -20,5 +20,8 @@ public class ActualizarLoteCommandValidator : AbstractValidator<ActualizarLoteCo
 
         RuleFor(x => x.CantidadInicial).GreaterThan(0).WithMessage("La cantidad inicial debe ser mayor a cero.");
         RuleFor(x => x.CostoUnitarioPollito).GreaterThanOrEqualTo(0).WithMessage("El costo unitario debe ser mayor o igual a cero.");
+        
+        RuleFor(x => x.Version)
+            .NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }

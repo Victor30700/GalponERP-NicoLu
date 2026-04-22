@@ -6,10 +6,11 @@ using GalponERP.Application.Nutricion.Formulas.Queries.GetFormulaById;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class FormulasController : ControllerBase
@@ -37,7 +38,7 @@ public class FormulasController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> Crear([FromBody] CrearFormulaCommand command)
     {
         var id = await _mediator.Send(command);
@@ -45,7 +46,7 @@ public class FormulasController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarFormulaCommand command)
     {
         if (id != command.Id) return BadRequest("ID de la URL no coincide con el comando.");
@@ -54,7 +55,7 @@ public class FormulasController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> Eliminar(Guid id)
     {
         await _mediator.Send(new EliminarFormulaCommand(id));

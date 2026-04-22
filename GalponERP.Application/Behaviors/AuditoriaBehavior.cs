@@ -62,6 +62,26 @@ public class AuditoriaBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest
                 .Replace("Registrar", "")
                 .Replace("Command", "");
 
+            var requestJson = JsonSerializer.Serialize(request);
+            
+            // Enmascarar datos sensibles si existen en el cuerpo del request
+            if (requestJson.Contains("x-api-key", StringComparison.OrdinalIgnoreCase))
+            {
+                requestJson = System.Text.RegularExpressions.Regex.Replace(
+                    requestJson, 
+                    @"""x-api-key""\s*:\s*""[^""]+""", 
+                    @"""x-api-key"": ""***MASKED***""", 
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            }
+            if (requestJson.Contains("ApiKey", StringComparison.OrdinalIgnoreCase))
+            {
+                requestJson = System.Text.RegularExpressions.Regex.Replace(
+                    requestJson, 
+                    @"""ApiKey""\s*:\s*""[^""]+""", 
+                    @"""ApiKey"": ""***MASKED***""", 
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            }
+
             var log = new AuditoriaLog(
                 Guid.NewGuid(),
                 usuarioId,
@@ -71,7 +91,7 @@ public class AuditoriaBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest
                 entidad, 
                 entidadId,
                 $"Ejecución de {requestName} vía IAuditableCommand",
-                JsonSerializer.Serialize(request)
+                requestJson
             );
 
             _auditoriaRepository.Agregar(log);

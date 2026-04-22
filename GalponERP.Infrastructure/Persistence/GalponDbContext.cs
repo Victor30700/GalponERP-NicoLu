@@ -54,14 +54,73 @@ public class GalponDbContext : DbContext, IGalponDbContext
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        var auditEntries = OnBeforeSaveChangesAsync();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        await OnAfterSaveChangesAsync(auditEntries, cancellationToken);
+        return result;
+    }
+
+    private List<AuditEntry> OnBeforeSaveChangesAsync()
+    {
+        ChangeTracker.DetectChanges();
+        var auditEntries = new List<AuditEntry>();
         var entries = ChangeTracker.Entries<Entity>();
         var usuarioId = _currentUserContext.UsuarioId ?? Guid.Empty;
+        var usuarioNombre = _currentUserContext.NombreUsuario ?? "Sistema";
         var now = DateTime.UtcNow;
 
         foreach (var entry in entries)
         {
+            if (entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
+                continue;
+
+            var auditEntry = new AuditEntry(entry)
+            {
+                TableName = entry.Entity.GetType().Name,
+                UsuarioId = usuarioId,
+                UsuarioNombre = usuarioNombre,
+                Action = entry.State.ToString()
+            };
+            auditEntries.Add(auditEntry);
+
+            foreach (var property in entry.Properties)
+            {
+                // Asegurar que todos los DateTime tengan Kind=Utc para PostgreSQL
+                if (property.CurrentValue is DateTime dateTime && dateTime.Kind == DateTimeKind.Unspecified)
+                {
+                    property.CurrentValue = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+                }
+
+                string propertyName = property.Metadata.Name;
+                if (property.Metadata.IsPrimaryKey())
+                {
+                    auditEntry.KeyValues[propertyName] = property.CurrentValue;
+                    continue;
+                }
+
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        auditEntry.NewValues[propertyName] = property.CurrentValue;
+                        break;
+
+                    case EntityState.Deleted:
+                        auditEntry.OldValues[propertyName] = property.OriginalValue;
+                        break;
+
+                    case EntityState.Modified:
+                        if (property.IsModified)
+                        {
+                            auditEntry.OldValues[propertyName] = property.OriginalValue;
+                            auditEntry.NewValues[propertyName] = property.CurrentValue;
+                        }
+                        break;
+                }
+            }
+
+            // Lógica existente para auditoría de creación/modificación
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.SetAuditoriaCreacion(now, usuarioId);
@@ -76,10 +135,40 @@ public class GalponDbContext : DbContext, IGalponDbContext
                 entry.State = EntityState.Modified;
                 entry.Entity.Desactivar();
                 entry.Entity.SetAuditoriaModificacion(now, usuarioId);
+                
+                // Actualizar la acción del log de auditoría
+                auditEntry.Action = "SoftDelete";
+                auditEntry.NewValues["IsActive"] = false;
+                auditEntry.OldValues["IsActive"] = true;
             }
         }
 
-        return base.SaveChangesAsync(cancellationToken);
+        return auditEntries;
+    }
+
+    private async Task OnAfterSaveChangesAsync(List<AuditEntry> auditEntries, CancellationToken cancellationToken)
+    {
+        if (auditEntries == null || auditEntries.Count == 0)
+            return;
+
+        foreach (var auditEntry in auditEntries)
+        {
+            foreach (var prop in auditEntry.TemporaryProperties)
+            {
+                if (prop.Metadata.IsPrimaryKey())
+                {
+                    auditEntry.KeyValues[prop.Metadata.Name] = prop.CurrentValue;
+                }
+                else
+                {
+                    auditEntry.NewValues[prop.Metadata.Name] = prop.CurrentValue;
+                }
+            }
+
+            AuditoriaLogs.Add(auditEntry.ToAudit());
+        }
+
+        await base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -30,6 +30,13 @@ public class ClienteRepository : IClienteRepository
         return await _context.Set<Cliente>().ToListAsync();
     }
 
+    public async Task<Cliente?> ObtenerPorRucAsync(string ruc)
+    {
+        return await _context.Set<Cliente>()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Ruc == ruc);
+    }
+
     public void Agregar(Cliente cliente)
     {
         _context.Set<Cliente>().Add(cliente);

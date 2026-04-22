@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GalponERP.Api.BackgroundJobs;
 
-public class AlertaSanitariaJob : BackgroundService
+public class AlertaSanitariaJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<AlertaSanitariaJob> _logger;
@@ -50,11 +50,5 @@ public class AlertaSanitariaJob : BackgroundService
             _logger.LogError(ex, "Error ejecutando AlertaSanitariaJob.");
             throw;
         }
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("AlertaSanitariaJob (Legacy BackgroundService) en pausa. Hangfire gestionará esta tarea.");
-        await Task.CompletedTask;
     }
 }

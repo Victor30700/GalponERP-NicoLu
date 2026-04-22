@@ -6,10 +6,11 @@ using GalponERP.Application.Galpones.Queries.ObtenerGalponPorId;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class GalponesController : ControllerBase
@@ -55,7 +56,7 @@ public class GalponesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     public async Task<IActionResult> Eliminar(Guid id)
     {
         await _mediator.Send(new EliminarGalponCommand(id));

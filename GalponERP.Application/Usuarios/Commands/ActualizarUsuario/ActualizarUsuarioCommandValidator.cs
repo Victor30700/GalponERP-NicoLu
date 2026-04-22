@@ -26,6 +26,8 @@ public class ActualizarUsuarioCommandValidator : AbstractValidator<ActualizarUsu
             .MustAsync(BeUniquePhone)
             .WithMessage(x => $"El número de teléfono {x.Telefono} ya está registrado con otro usuario.")
             .When(x => !string.IsNullOrWhiteSpace(x.Telefono));
+
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 
     private async Task<bool> BeUniquePhone(ActualizarUsuarioCommand command, string? telefono, CancellationToken cancellationToken)

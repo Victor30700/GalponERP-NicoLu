@@ -6,48 +6,58 @@ using Google.Cloud.Firestore;
 using Microsoft.Extensions.Configuration;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace GalponERP.Infrastructure.Authentication;
 
 public class FirebaseAuthService : IAuthenticationService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly FirestoreDb _firestoreDb;
+    private readonly FirestoreDb? _firestoreDb;
+    private readonly ILogger<FirebaseAuthService> _logger;
 
-    public FirebaseAuthService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IWebHostEnvironment env)
+    public FirebaseAuthService(
+        IHttpContextAccessor httpContextAccessor, 
+        IConfiguration configuration, 
+        IWebHostEnvironment env,
+        ILogger<FirebaseAuthService> logger)
     {
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
         
         var projectId = configuration["Firebase:ProjectId"] ?? "galpon-erp-default";
         
-        // Intentar encontrar el archivo en varios lugares posibles
-        var pathsToTry = new[] 
+        try 
         {
-            Path.Combine(env.ContentRootPath, "firebase-admin.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firebase-admin.json"),
-            Path.Combine(Directory.GetCurrentDirectory(), "firebase-admin.json"),
-            // Ruta específica para tu entorno local si las anteriores fallan
-            "D:\\scripts-csharp\\Pollos_NicoLu\\Pollos-NicoLu\\GalponERP.Api\\firebase-admin.json"
-        };
-
-        string? credentialPath = pathsToTry.FirstOrDefault(File.Exists);
-        
-        if (credentialPath != null)
-        {
-            Console.WriteLine($"[FirebaseService] Credenciales cargadas desde: {credentialPath}");
-            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialPath);
-            _firestoreDb = new FirestoreDbBuilder
-            {
-                ProjectId = projectId,
-                Credential = GoogleCredential.GetApplicationDefault()
-            }.Build();
-        }
-        else
-        {
-            Console.WriteLine("[FirebaseService] ¡ERROR CRÍTICO! No se encontró firebase-admin.json en ninguna de las rutas intentadas:");
-            foreach(var p in pathsToTry) Console.WriteLine($" - {p}");
+            // Buscar ruta de credenciales en configuración o usar ContentRootPath por defecto
+            var credentialPath = configuration["Firebase:CredentialPath"];
             
-            _firestoreDb = FirestoreDb.Create(projectId);
+            if (string.IsNullOrEmpty(credentialPath))
+            {
+                credentialPath = Path.Combine(env.ContentRootPath, "firebase-admin.json");
+            }
+
+            if (File.Exists(credentialPath))
+            {
+                _logger.LogInformation("Cargando credenciales de Firebase desde: {Path}", credentialPath);
+                Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialPath);
+                _firestoreDb = new FirestoreDbBuilder
+                {
+                    ProjectId = projectId,
+                    Credential = GoogleCredential.GetApplicationDefault()
+                }.Build();
+            }
+            else
+            {
+                _logger.LogCritical("FALTA ARCHIVO DE CONFIGURACIÓN: No se encontró 'firebase-admin.json' en {Path}. Las funciones de autenticación y Firestore fallarán.", credentialPath);
+                // Permitimos que la app arranque, pero Firestore será nulo o fallará al usarse
+                _firestoreDb = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "Error crítico al inicializar Firebase Service.");
+            _firestoreDb = null;
         }
     }
 
@@ -77,6 +87,16 @@ public class FirebaseAuthService : IAuthenticationService
 
     public async Task<string> CreateUserAsync(string email, string password, string displayName, IDictionary<string, object>? extraUserData = null)
     {
+        if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
+        {
+            throw new InvalidOperationException("Firebase Admin SDK no ha sido inicializado. Verifique el archivo firebase-admin.json.");
+        }
+
+        if (_firestoreDb == null)
+        {
+            throw new InvalidOperationException("Firestore no ha sido inicializado. Verifique el archivo firebase-admin.json.");
+        }
+
         var userArgs = new UserRecordArgs
         {
             Email = email,
@@ -114,6 +134,12 @@ public class FirebaseAuthService : IAuthenticationService
 
     public async Task<string?> GetUidByEmailAsync(string email)
     {
+        if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
+        {
+            _logger.LogWarning("Intentando usar Firebase Auth sin inicialización.");
+            return null;
+        }
+
         try
         {
             var userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);

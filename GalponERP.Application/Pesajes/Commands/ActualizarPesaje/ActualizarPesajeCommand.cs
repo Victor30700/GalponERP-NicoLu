@@ -8,7 +8,8 @@ public record ActualizarPesajeCommand(
     Guid Id,
     DateTime Fecha,
     decimal PesoPromedioGramos,
-    int CantidadMuestreada) : IRequest<Unit>, IAuditableCommand
+    int CantidadMuestreada,
+    string? Version = null) : IRequest<Unit>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

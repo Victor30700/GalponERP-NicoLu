@@ -6,10 +6,11 @@ using GalponERP.Application.Catalogos.Categorias.Queries.ObtenerCategoriaPorId;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriasController : ControllerBase
@@ -34,7 +35,7 @@ public class CategoriasController : ControllerBase
         return result != null ? Ok(result) : NotFound();
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearCategoriaCommand command)
     {
@@ -42,7 +43,7 @@ public class CategoriasController : ControllerBase
         return CreatedAtAction(nameof(ObtenerPorId), new { id }, id);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarCategoriaCommand command)
     {
@@ -51,7 +52,7 @@ public class CategoriasController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

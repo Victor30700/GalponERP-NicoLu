@@ -43,11 +43,10 @@ public class RegistrarPagoVentaCommandHandler : IRequestHandler<RegistrarPagoVen
             request.MetodoPago,
             request.UsuarioId);
 
-        // Notificar ingreso financiero
-        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Finanzas", 
-            $"PAGO RECIBIDO: Se ha registrado un pago de {request.Monto:C} para la venta {venta.Id}.", cancellationToken);
-
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Notificar ingreso financiero
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Finanzas", "PagoRegistrado", cancellationToken);
 
         return pagoId;
     }

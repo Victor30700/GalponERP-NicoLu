@@ -7,15 +7,23 @@ export interface Lote {
   nombreLote?: string;
   galponId: string;
   galponNombre: string;
+  nombreGalpon?: string;
   fechaInicio: string;
+  fechaIngreso: string;
   fechaCierre?: string;
   cantidadInicial: number;
+  cantidadActual: number;
   avesVivas: number;
+  mortalidadAcumulada: number;
+  pollosVendidos: number;
   estado: 'Activo' | 'Cerrado' | 'Cancelado';
   fcrActual: number;
   mortalidadPorcentaje: number;
-  pesoPromedioActual: number;
+  viabilidad: number;
+  costoPorAve: number;
+  pesoPromedioActual?: number;
   costoUnitarioPollito: number;
+  edadSemanas?: number;
   fechaFinRetiro?: string;
   version?: string;
 }
@@ -67,12 +75,49 @@ export function useLotes(filters?: { soloActivos?: boolean; busqueda?: string; m
   const lotes = useQuery({
     queryKey: ['lotes', filters],
     queryFn: () => api.get<Lote[]>(`/api/Lotes?${queryParams.toString()}`),
-    refetchInterval: 5000,
   });
 
   const crearLote = useMutation({
-    mutationFn: (data: CrearLoteRequest) => api.post('/api/Lotes', data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotes'] }),
+    mutationFn: ({ data, idempotencyKey }: { data: CrearLoteRequest; idempotencyKey?: string }) => 
+      api.post('/api/Lotes', data, idempotencyKey),
+    onMutate: async ({ data: newLote }) => {
+      await queryClient.cancelQueries({ queryKey: ['lotes'] });
+      const previousLotes = queryClient.getQueryData<Lote[]>(['lotes']);
+
+      if (previousLotes) {
+        queryClient.setQueryData<Lote[]>(['lotes'], [
+          {
+            id: 'temp-' + Date.now(),
+            nombre: newLote.nombre,
+            galponId: newLote.galponId,
+            galponNombre: 'Cargando...',
+            fechaInicio: newLote.fechaIngreso,
+            fechaIngreso: newLote.fechaIngreso,
+            cantidadInicial: newLote.cantidadInicial,
+            cantidadActual: newLote.cantidadInicial,
+            avesVivas: newLote.cantidadInicial,
+            mortalidadAcumulada: 0,
+            pollosVendidos: 0,
+            estado: 'Activo',
+            fcrActual: 0,
+            mortalidadPorcentaje: 0,
+            viabilidad: 100,
+            costoPorAve: newLote.costoUnitarioPollito,
+            costoUnitarioPollito: newLote.costoUnitarioPollito
+          } as Lote,
+          ...previousLotes
+        ]);
+      }
+      return { previousLotes };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousLotes) {
+        queryClient.setQueryData(['lotes'], context.previousLotes);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['lotes'] });
+    },
   });
 
   return {
@@ -91,12 +136,43 @@ export function useLote(id: string) {
     queryKey: ['lote', id],
     queryFn: () => api.get<LoteDetalle>(`/api/Lotes/${id}`),
     enabled: !!id,
-    refetchInterval: 5000,
   });
 
   const actualizarLote = useMutation({
-    mutationFn: (data: ActualizarLoteRequest) => api.put(`/api/Lotes/${id}`, data),
-    onSuccess: () => {
+    mutationFn: ({ data, idempotencyKey }: { data: ActualizarLoteRequest; idempotencyKey?: string }) => 
+      api.put(`/api/Lotes/${id}`, data, idempotencyKey),
+    onMutate: async ({ data: updatedLote }) => {
+      await queryClient.cancelQueries({ queryKey: ['lote', id] });
+      await queryClient.cancelQueries({ queryKey: ['lotes'] });
+
+      const previousLote = queryClient.getQueryData<LoteDetalle>(['lote', id]);
+      const previousLotes = queryClient.getQueryData<Lote[]>(['lotes']);
+
+      if (previousLote) {
+        queryClient.setQueryData<LoteDetalle>(['lote', id], {
+          ...previousLote,
+          ...updatedLote
+        });
+      }
+
+      if (previousLotes) {
+        queryClient.setQueryData<Lote[]>(
+          ['lotes'],
+          previousLotes.map(l => l.id === id ? { ...l, ...updatedLote } : l)
+        );
+      }
+
+      return { previousLote, previousLotes };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousLote) {
+        queryClient.setQueryData(['lote', id], context.previousLote);
+      }
+      if (context?.previousLotes) {
+        queryClient.setQueryData(['lotes'], context.previousLotes);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['lotes'] });
       queryClient.invalidateQueries({ queryKey: ['lote', id] });
     },
@@ -143,7 +219,6 @@ export function useLote(id: string) {
     queryKey: ['lote', id, 'rendimiento'],
     queryFn: () => api.get<any>(`/api/Lotes/${id}/rendimiento-vivo`),
     enabled: !!id,
-    refetchInterval: 10000,
   });
 
   const descargarReportePdf = async () => {

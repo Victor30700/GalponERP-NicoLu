@@ -47,7 +47,6 @@ export function useProductos() {
   const productos = useQuery({
     queryKey: ['productos'],
     queryFn: () => api.get<Producto[]>('/api/Productos'),
-    refetchInterval: 5000,
   });
 
   const crearProducto = useMutation({

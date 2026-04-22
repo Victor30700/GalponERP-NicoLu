@@ -64,9 +64,10 @@ export const api = {
 
   async post<T>(endpoint: string, body: any, idempotencyKey?: string): Promise<T> {
     const headers = await getHeaders();
-    if (idempotencyKey) {
-      headers['X-Idempotency-Key'] = idempotencyKey;
-    }
+    
+    // Si ya se proporciona una clave de idempotencia (por ejemplo desde un componente para persistir reintentos), la usamos.
+    // De lo contrario, generamos una nueva.
+    headers['X-Idempotency-Key'] = idempotencyKey || crypto.randomUUID();
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
@@ -79,9 +80,9 @@ export const api = {
 
   async put<T>(endpoint: string, body: any, idempotencyKey?: string): Promise<T> {
     const headers = await getHeaders();
-    if (idempotencyKey) {
-      headers['X-Idempotency-Key'] = idempotencyKey;
-    }
+    
+    // Si ya se proporciona una clave de idempotencia, la usamos para evitar duplicados en reintentos automáticos.
+    headers['X-Idempotency-Key'] = idempotencyKey || crypto.randomUUID();
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'PUT',

@@ -3,10 +3,11 @@ using GalponERP.Application.Auditoria.Commands.RestaurarEntidad;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = PolicyNames.AdminOnly)]
 [ApiController]
 [Route("api/[controller]")]
 public class AuditoriaController : ControllerBase

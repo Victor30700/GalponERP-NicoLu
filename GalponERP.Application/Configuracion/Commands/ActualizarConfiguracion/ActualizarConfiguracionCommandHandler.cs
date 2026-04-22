@@ -1,6 +1,7 @@
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Configuracion.Commands.ActualizarConfiguracion;
@@ -22,23 +23,15 @@ public class ActualizarConfiguracionCommandHandler : IRequestHandler<ActualizarC
 
         if (config == null)
         {
-            // Solo creamos una vez con un ID fijo (podría ser Guid.NewGuid() ya que el repositorio solo devuelve el primero)
-            config = new ConfiguracionSistema(
-                Guid.NewGuid(),
-                request.NombreEmpresa,
-                request.Nit,
-                request.Telefono,
-                request.Email,
-                request.Direccion,
-                request.MonedaPorDefecto);
-            
-            if (!string.IsNullOrEmpty(request.LogoUrl))
-                config.SetLogo(request.LogoUrl);
-
-            _configuracionRepository.Agregar(config);
+            // ...
         }
         else
         {
+            if (!string.IsNullOrEmpty(request.Version) && config.Version.ToString() != request.Version)
+            {
+                throw new ConcurrencyException();
+            }
+
             config.Actualizar(
                 request.NombreEmpresa,
                 request.Nit,

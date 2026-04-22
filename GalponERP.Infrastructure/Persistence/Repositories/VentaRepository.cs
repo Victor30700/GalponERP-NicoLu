@@ -45,7 +45,7 @@ public class VentaRepository : IVentaRepository
 
         return await _context.Ventas
             .Include(v => v.Pagos)
-            .Where(v => v.Fecha >= start && v.Fecha <= end && v.IsActive)
+            .Where(v => v.Fecha >= start && v.Fecha <= end)
             .ToListAsync();
     }
 
@@ -53,7 +53,6 @@ public class VentaRepository : IVentaRepository
     {
         return await _context.Ventas
             .Include(v => v.Pagos)
-            .Where(v => v.IsActive)
             .OrderByDescending(v => v.Fecha)
             .ToListAsync();
     }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
 using GalponERP.Domain.Entities;
 using GalponERP.Domain.Interfaces.Repositories;
 using MediatR;
@@ -10,7 +11,8 @@ public record ActualizarUnidadMedidaCommand(
     Guid Id,
     string Nombre,
     string Abreviatura,
-    TipoUnidad Tipo) : IRequest, IAuditableCommand;
+    TipoUnidad Tipo,
+    string? Version = null) : IRequest, IAuditableCommand;
 
 public class ActualizarUnidadMedidaCommandValidator : AbstractValidator<ActualizarUnidadMedidaCommand>
 {
@@ -28,6 +30,8 @@ public class ActualizarUnidadMedidaCommandValidator : AbstractValidator<Actualiz
 
         RuleFor(x => x.Tipo)
             .IsInEnum().WithMessage("El tipo de unidad no es válido.");
+
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }
 
@@ -47,6 +51,11 @@ public class ActualizarUnidadMedidaCommandHandler : IRequestHandler<ActualizarUn
         var unidad = await _unidadMedidaRepository.ObtenerPorIdAsync(request.Id);
         if (unidad == null)
             throw new Exception("Unidad de medida no encontrada");
+
+        if (!string.IsNullOrEmpty(request.Version) && unidad.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
+        }
 
         unidad.Actualizar(request.Nombre, request.Abreviatura, request.Tipo);
         

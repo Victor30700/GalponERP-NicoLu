@@ -5,10 +5,11 @@ using GalponERP.Application.Galpones.Queries.ObtenerComparativaEficiencia;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin")]
+[Authorize(Policy = PolicyNames.Management)]
 [ApiController]
 [Route("api/[controller]")]
 public class DashboardController : ControllerBase

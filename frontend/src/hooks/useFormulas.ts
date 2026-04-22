@@ -41,7 +41,6 @@ export function useFormulas() {
   const formulas = useQuery({
     queryKey: ['formulas'],
     queryFn: () => api.get<Formula[]>('/api/Formulas'),
-    refetchInterval: 5000,
   });
 
   const crearFormula = useMutation({
@@ -60,8 +59,8 @@ export function useFormulas() {
   });
 
   const registrarConsumo = useMutation({
-    mutationFn: (data: ConsumoFormulaFormValues) => 
-      api.post(`/api/Lotes/${data.loteId}/consumo-formula`, data),
+    mutationFn: ({ data, idempotencyKey }: { data: ConsumoFormulaFormValues; idempotencyKey?: string }) => 
+      api.post(`/api/Lotes/${data.loteId}/consumo-formula`, data, idempotencyKey),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventario'] });
       queryClient.invalidateQueries({ queryKey: ['lotes'] });

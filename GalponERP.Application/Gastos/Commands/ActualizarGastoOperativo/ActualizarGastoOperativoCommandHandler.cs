@@ -1,6 +1,7 @@
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Gastos.Commands.ActualizarGastoOperativo;
@@ -25,6 +26,11 @@ public class ActualizarGastoOperativoCommandHandler : IRequestHandler<Actualizar
         if (gasto == null || !gasto.IsActive)
         {
             throw new ArgumentException("El gasto operativo no existe o ya ha sido eliminado.", nameof(request.Id));
+        }
+
+        if (gasto.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         var monto = new Moneda(request.Monto);

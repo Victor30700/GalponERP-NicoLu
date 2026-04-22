@@ -9,10 +9,11 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class SanidadController : ControllerBase
@@ -27,7 +28,7 @@ public class SanidadController : ControllerBase
     }
 
     [HttpDelete("bienestar/{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     public async Task<IActionResult> EliminarBienestar(Guid id)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
@@ -38,7 +39,7 @@ public class SanidadController : ControllerBase
     }
 
     [HttpPut("bienestar/{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> ActualizarBienestar(Guid id, [FromBody] ActualizarBienestarCommand command)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 

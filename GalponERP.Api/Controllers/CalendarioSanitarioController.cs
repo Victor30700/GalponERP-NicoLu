@@ -4,10 +4,11 @@ using GalponERP.Application.Calendario.Queries.ObtenerCalendarioPorLote;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class CalendarioSanitarioController : ControllerBase
@@ -42,7 +43,7 @@ public class CalendarioSanitarioController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost("actividad-manual")]
     public async Task<IActionResult> AgregarActividadManual([FromBody] AgregarActividadManualCommand command)
     {
@@ -57,7 +58,7 @@ public class CalendarioSanitarioController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPut("{id}/reprogramar")]
     public async Task<IActionResult> ReprogramarActividad(Guid id, [FromBody] ReprogramarActividadCommand command)
     {

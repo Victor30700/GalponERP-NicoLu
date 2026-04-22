@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GalponERP.Api.BackgroundJobs;
 
-public class AlertaInventarioJob : BackgroundService
+public class AlertaInventarioJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<AlertaInventarioJob> _logger;
@@ -61,11 +61,5 @@ public class AlertaInventarioJob : BackgroundService
             _logger.LogError(ex, "Error ejecutando AlertaInventarioJob.");
             throw; // Re-lanzar para que Hangfire pueda reintentar
         }
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("AlertaInventarioJob (Legacy BackgroundService) en pausa. Hangfire gestionará esta tarea.");
-        await Task.CompletedTask;
     }
 }

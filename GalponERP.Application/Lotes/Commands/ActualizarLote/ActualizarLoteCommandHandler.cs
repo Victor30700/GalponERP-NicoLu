@@ -4,6 +4,8 @@ using FluentValidation.Results;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
+using GalponERP.Application.Hubs;
 
 namespace GalponERP.Application.Lotes.Commands.ActualizarLote;
 
@@ -12,12 +14,18 @@ public class ActualizarLoteCommandHandler : IRequestHandler<ActualizarLoteComman
     private readonly ILoteRepository _loteRepository;
     private readonly IGalponRepository _galponRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public ActualizarLoteCommandHandler(ILoteRepository loteRepository, IGalponRepository galponRepository, IUnitOfWork unitOfWork)
+    public ActualizarLoteCommandHandler(
+        ILoteRepository loteRepository, 
+        IGalponRepository galponRepository, 
+        IUnitOfWork unitOfWork,
+        IHubContext<NotificationHub> hubContext)
     {
         _loteRepository = loteRepository;
         _galponRepository = galponRepository;
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     public async Task<Unit> Handle(ActualizarLoteCommand request, CancellationToken cancellationToken)
@@ -70,6 +78,8 @@ public class ActualizarLoteCommandHandler : IRequestHandler<ActualizarLoteComman
         _loteRepository.Actualizar(lote);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Lote", "LoteActualizado", cancellationToken);
 
         return Unit.Value;
     }

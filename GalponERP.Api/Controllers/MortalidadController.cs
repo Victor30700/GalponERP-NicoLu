@@ -10,10 +10,11 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class MortalidadController : ControllerBase
@@ -49,7 +50,7 @@ public class MortalidadController : ControllerBase
     }
 
     [HttpGet("reporte-transversal")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> ObtenerReporteTransversal([FromQuery] DateTime inicio, [FromQuery] DateTime fin)
     {
         if (inicio == default || fin == default)
@@ -81,7 +82,7 @@ public class MortalidadController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> ActualizarMortalidad(Guid id, [FromBody] ActualizarMortalidadCommand command)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 
@@ -109,7 +110,7 @@ public class MortalidadController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     public async Task<IActionResult> Eliminar(Guid id)
     {
         if (!_currentUserContext.UsuarioId.HasValue || _currentUserContext.UsuarioId == Guid.Empty) 

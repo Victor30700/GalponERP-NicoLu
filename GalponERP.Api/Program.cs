@@ -67,7 +67,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         return;
                     }
 
-                    currentUserContext?.SetUser(usuario.Id, firebaseUid);
+                    currentUserContext?.SetUser(usuario.Id, firebaseUid, usuario.Nombre);
                     
                     var claims = new List<System.Security.Claims.Claim>
                     {
@@ -90,6 +90,10 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMemoryCache(); // Requerido por IdempotencyMiddleware
 
+// Background Jobs (para Hangfire)
+builder.Services.AddScoped<AlertaInventarioJob>();
+builder.Services.AddScoped<AlertaSanitariaJob>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -111,6 +115,25 @@ builder.Services.AddCors(options =>
 builder.Services.AddHangfire(config => 
     config.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHangfireServer();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(PolicyNames.AdminOnly, policy => 
+        policy.RequireRole(GalponERP.Domain.Entities.RolGalpon.Admin.ToString(), GalponERP.Domain.Entities.RolGalpon.ServiceAccount.ToString()));
+    
+    options.AddPolicy(PolicyNames.Management, policy => 
+        policy.RequireRole(
+            GalponERP.Domain.Entities.RolGalpon.Admin.ToString(), 
+            GalponERP.Domain.Entities.RolGalpon.SubAdmin.ToString(), 
+            GalponERP.Domain.Entities.RolGalpon.ServiceAccount.ToString()));
+
+    options.AddPolicy(PolicyNames.AnyUser, policy => 
+        policy.RequireRole(
+            GalponERP.Domain.Entities.RolGalpon.Admin.ToString(), 
+            GalponERP.Domain.Entities.RolGalpon.SubAdmin.ToString(), 
+            GalponERP.Domain.Entities.RolGalpon.Empleado.ToString(), 
+            GalponERP.Domain.Entities.RolGalpon.ServiceAccount.ToString()));
+});
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
@@ -178,6 +201,7 @@ app.UseMiddleware<IdempotencyMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
+app.UseMiddleware<ApiKeyMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -225,15 +249,33 @@ using (var scope = app.Services.CreateScope())
                 "admin@galponerp.com",
                 "Admin Maestro", 
                 "Principal", 
-                new DateTime(1980, 1, 1), 
+                new DateTime(1980, 1, 1, 0, 0, 0, DateTimeKind.Utc), 
                 "Dirección del Galpón", 
                 "Gerente", 
                 "0000000000",
                 GalponERP.Domain.Entities.RolGalpon.Admin);
-            context.Usuarios.Add(admin);
-            await context.SaveChangesAsync();
-        }
-    }
+                context.Usuarios.Add(admin);
+                await context.SaveChangesAsync();
+                }
+
+                var serviceAccountUid = "service-account-n8n";
+                var existingServiceAccount = await context.Usuarios.FirstOrDefaultAsync(u => u.FirebaseUid == serviceAccountUid);
+                if (existingServiceAccount == null)
+                {
+                var serviceAccount = new GalponERP.Domain.Entities.Usuario(
+                Guid.NewGuid(),
+                serviceAccountUid,
+                "n8n@galponerp.com",
+                "n8n Service Account",
+                "System",
+                new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc), 
+                "System", 
+                "IA Orchestrator",
+                null,
+                GalponERP.Domain.Entities.RolGalpon.ServiceAccount);
+                context.Usuarios.Add(serviceAccount);
+                await context.SaveChangesAsync();
+                }    }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();

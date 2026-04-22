@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProviderWrapper } from "@/components/providers/ThemeProviderWrapper";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { SignalRProvider } from "@/context/SignalRProvider";
 import { ToasterWrapper } from "@/components/shared/ToasterWrapper";
 
 const geistSans = Geist({
@@ -52,7 +53,9 @@ export default function RootLayout({
         <ThemeProviderWrapper>
           <AuthProvider>
             <QueryProvider>
-              {children}
+              <SignalRProvider>
+                {children}
+              </SignalRProvider>
               <ToasterWrapper />
             </QueryProvider>
           </AuthProvider>

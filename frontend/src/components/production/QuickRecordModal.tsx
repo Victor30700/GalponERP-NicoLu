@@ -112,9 +112,9 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
   }, [isEditing, initialData, isOpen, type, productos])
 
   const mutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: ({ data, idempotencyKey }: { data: any, idempotencyKey: string }) => {
       if (type === 'feed' && recordMode === 'formula') {
-        return registrarConsumo.mutateAsync(data)
+        return registrarConsumo.mutateAsync({ data, idempotencyKey })
       }
 
       let endpoint = '/api/Mortalidad'
@@ -124,14 +124,14 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       
       if (isEditing) {
           if (type === 'mortality' || type === 'weight') {
-              return api.put(`${endpoint}/${initialData.id}`, data)
+              return api.put(`${endpoint}/${initialData.id}`, data, idempotencyKey)
           }
           // Para alimento y agua, si no hay PUT explícito, el POST puede actuar como upsert
           // o necesitaremos implementar el PUT en el backend.
-          return api.post(endpoint, data)
+          return api.post(endpoint, data, idempotencyKey)
       }
       
-      return api.post(endpoint, data)
+      return api.post(endpoint, data, idempotencyKey)
     },
     onSuccess: () => {
       const keysToInvalidate = [
@@ -163,24 +163,34 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
         return
     }
 
+    const idempotencyKey = crypto.randomUUID()
+
     if (type === 'feed' && recordMode === 'formula') {
       if (!selectedFormulaId) {
         toast.error('Debe seleccionar una fórmula.')
         return
       }
       mutation.mutate({
-        loteId,
-        formulaId: selectedFormulaId,
-        cantidadTotalPreparada: Number(value),
-        fecha: new Date(fecha).toISOString(),
-        justificacion: nota
+        data: {
+          loteId,
+          formulaId: selectedFormulaId,
+          cantidadTotalPreparada: Number(value),
+          fecha: new Date(fecha).toISOString(),
+          justificacion: nota
+        },
+        idempotencyKey
       })
       return
     }
 
     let data: any = { loteId, fecha: new Date(fecha).toISOString() }
 
-    if (isEditing) data.id = initialData.id
+    if (isEditing) {
+      data.id = initialData.id
+      if (type === 'mortality') {
+        data.version = initialData.version
+      }
+    }
 
     if (type === 'mortality') {
       data = { ...data, cantidad: Number(value), causa: nota || 'Registro rutinario' }
@@ -222,7 +232,7 @@ export function QuickRecordModal({ isOpen, onClose, loteId, type, lote, initialD
       }
     }
 
-    mutation.mutate(data)
+    mutation.mutate({ data, idempotencyKey })
   }
 
   const config = {

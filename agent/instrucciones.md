@@ -1,38 +1,64 @@
-# ROL Y CONTEXTO OPERATIVO
-Eres un Ingeniero de Software Principal enfocado en Resiliencia y Experiencia de Usuario (UX). Tras estabilizar la Fase 4, tu misión es ejecutar la **Fase 5: Robustez, Persistencia y Pulido de UX**. Tu objetivo es asegurar que el sistema sea tolerante a fallos de infraestructura (reinicios), proteja la integridad de los datos financieros (idempotencia) y proporcione una interfaz reactiva y amigable al usuario.
+# 🛠️ INSTRUCCIONES DE IMPLEMENTACIÓN: REFUERZO Y RESILIENCIA
 
-## DIRECTIVAS DE EJECUCIÓN (FASE 5)
+Actúa como un **Senior Backend & Frontend Engineer**. Tu objetivo es ejecutar el "Plan de Refuerzo de Casos de Borde" detallado en `plan.md` para blindar GalponERP contra fallos de concurrencia e infraestructura.
 
-### 1. Persistencia de Infraestructura (Hangfire + PostgreSQL)
-*   **Mandato:** Eliminar la dependencia de `MemoryStorage` en los procesos de fondo.
-*   **Acción:** Migrar Hangfire a PostgreSQL. Asegurar que las tablas de esquema se generen en el esquema correcto (o por defecto) de la base de datos `GalponERP`.
-*   **Validación:** Tras reiniciar el servicio, los jobs programados en `Program.cs` deben aparecer como "Scheduled" en el dashboard de Hangfire sin duplicarse.
+---
 
-### 2. Ciclo de Concurrencia End-to-End
-*   **Mandato:** La protección de concurrencia optimista debe ser visible y funcional para el usuario final.
-*   **Acción:** 
-    *   Refactorizar los componentes de formulario en React para incluir el campo `version` (hidden o en estado) y enviarlo en las mutaciones.
-    *   Implementar un interceptor de errores en `frontend/src/lib/api.ts` que capture el error `409 Conflict`.
-    *   Al detectar un 409, disparar una alerta visual que impida el guardado y sugiera refrescar los datos.
-*   **UX:** No permitir que un error de concurrencia resulte en un "Crash" o mensaje genérico.
+## 🏗️ REGLAS GENERALES
+1.  **Surgical Updates:** Realiza cambios mínimos necesarios. No refactorices código que ya funciona y no está en el plan.
+2.  **Concurrency First:** La integridad de los datos es la prioridad #1. Ninguna mutación `Update` debe quedar sin su chequeo de `xmin`.
+3.  **No Crashing:** La API debe ser capaz de informar que faltan credenciales sin entrar en un bucle de reinicio infinito (Crash-loop).
 
-### 3. Idempotencia Financiera
-*   **Mandato:** Cero tolerancia a pagos duplicados.
-*   **Acción:** 
-    *   Activar el uso de `X-Idempotency-Key` en los hooks de Ventas y Pagos.
-    *   Asegurar que el header se genere en el Frontend antes de enviar la petición (un UUID por intención de transacción).
-    *   Validar en el Backend que el middleware de idempotencia esté correctamente registrado para los endpoints de `POST /api/Ventas` y `POST /api/Ventas/{id}/pagos`.
+---
 
-### 4. Feedback Visual Reactivo (SignalR)
-*   **Mandato:** Las notificaciones de SignalR deben ser percibidas por el usuario, no solo enviadas por el servidor.
-*   **Acción:** 
-    *   Integrar una librería de notificaciones visuales (Toasts) en el componente `Notifications.tsx`.
-    *   Asegurar que los mensajes de "Mortalidad Alta" y "Stock Crítico" aparezcan como ventanas emergentes persistentes o semi-persistentes.
+## 🎯 FASE 1: BLINDAJE DE CONCURRENCIA (BACKEND)
 
-## ESTÁNDARES DE CALIDAD Y VALIDACIÓN
-1.  **Surgical Updates:** Realiza cambios precisos. Si modificas un componente de React, asegúrate de mantener las convenciones de Tailwind/CSS existentes.
-2.  **Infrastructure Safety:** Al modificar la persistencia de Hangfire, verifica las cadenas de conexión y asegúrate de no exponer secretos.
-3.  **Traceability:** Cada paso del Plan de Trabajo (`agent/plan.md`) debe marcarse con una [x] al ser completado y validado.
-4.  **Confirmación:** No realices cambios masivos en el Frontend (UI) sin antes validar la estructura de los componentes que vas a intervenir.
+### 1.1 Unificación de Comandos
+*   Busca todos los archivos `Actualizar...Command.cs`.
+*   Asegura que la propiedad de concurrencia se llame `string? Version`.
+*   **Crítico:** En `ActualizarMortalidadCommand`, cambia el tipo de `uint` a `string?`.
 
-**NO procedas con la ejecución de la Fase 5 sin confirmar que has comprendido cómo el Interceptor de API en el Frontend debe orquestar el flujo de errores de Concurrencia (409).**
+### 1.2 Implementación en Handlers
+En los Handlers de **Mortalidad, Usuario, GastoOperativo, Bienestar (Sanidad), Pesaje y Formula**:
+*   Obtén la entidad del repositorio.
+*   Compara `entidad.Version.ToString() != request.Version`.
+*   Si no coincide, lanza `throw new ConcurrencyException();`.
+*   Asegúrate de importar `GalponERP.Application.Exceptions`.
+
+### 1.3 Validación Estricta
+*   En cada `Actualizar...CommandValidator`, añade la regla para que `Version` no sea nulo ni vacío.
+
+---
+
+## ⚙️ FASE 2: RESILIENCIA Y SEGURIDAD (CORE)
+
+### 2.1 Robustez de Firebase
+*   En `FirebaseAuthService.cs`, envuelve la lógica de inicialización en bloques que capturen excepciones.
+*   Si `firebase-admin.json` no existe, registra un `_logger.LogCritical` indicando exactamente qué falta, pero permite que el servicio se instancie (aunque falle en tiempo de ejecución al usarse) para evitar que el contenedor de DI falle al arrancar la app.
+
+### 2.2 Enmascaramiento de API Key
+*   Revisa `AuditoriaBehavior.cs` (MediatR pipeline). Si registra los headers o el cuerpo del request, asegúrate de que el valor de `x-api-key` sea reemplazado por `***MASKED***`.
+*   Haz lo mismo en `GlobalExceptionHandler.cs` si imprime detalles del request en logs.
+
+---
+
+## 💻 FASE 3: RESILIENCIA FRONTEND (NEXT.JS)
+
+### 3.1 Snapshot Integrity (React Query)
+En `useInventario.ts`, `useVentas.ts` y `useSanidad.ts`:
+*   Dentro de `onMutate`, llama a `await queryClient.cancelQueries({ queryKey: [...] })` para todas las llaves relacionadas antes de modificar el caché.
+*   Asegúrate de que el `onError` haga el rollback al `context.previousData`.
+
+### 3.2 Idempotencia en UI
+*   Revisa los componentes que disparan registros (Ventas, Compras, Pagos).
+*   La `idempotencyKey = crypto.randomUUID()` debe generarse en el `handleSubmit` o función del componente, NO dentro del `mutationFn` del hook, para que si TanStack Query reintenta la petición por red, use la MISMA llave.
+
+---
+
+## ✅ VALIDACIÓN FINAL
+1.  **Build:** `dotnet build GalponERP.sln` debe pasar sin errores.
+2.  **Audit Logs:** Verifica que no aparezcan API Keys en los logs de consola.
+3.  **Concurrency:** Simula un cambio de versión manual en la base de datos y verifica que el frontend muestre el `toast` de "Conflicto de edición".
+
+---
+*Instrucciones para el Agente de Desarrollo - GalponERP v1.1*

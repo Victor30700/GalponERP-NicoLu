@@ -10,7 +10,8 @@ public record ActualizarGastoOperativoCommand(
     decimal Monto,
     DateTime Fecha,
     string TipoGasto,
-    Guid? LoteId = null) : IRequest<Unit>, IAuditableCommand
+    Guid? LoteId = null,
+    string? Version = null) : IRequest<Unit>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

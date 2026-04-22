@@ -11,10 +11,11 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin")]
+[Authorize(Policy = PolicyNames.Management)]
 [ApiController]
 [Route("api/[controller]")]
 public class VentasController : ControllerBase
@@ -82,7 +83,7 @@ public class VentasController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpPost("{id}/anular")]
     public async Task<IActionResult> Anular(Guid id)
     {
@@ -106,7 +107,7 @@ public class VentasController : ControllerBase
         return Ok(new { PagoId = pagoId });
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("{id}/pagos/{pagoId}")]
     public async Task<IActionResult> AnularPago(Guid id, Guid pagoId)
     {

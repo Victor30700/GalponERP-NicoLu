@@ -21,5 +21,7 @@ public class ActualizarGastoOperativoCommandValidator : AbstractValidator<Actual
 
         RuleFor(x => x.TipoGasto)
             .NotEmpty().WithMessage("El tipo de gasto es requerido.");
+
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }

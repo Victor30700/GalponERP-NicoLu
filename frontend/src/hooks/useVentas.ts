@@ -80,6 +80,16 @@ export function useVentas() {
   const registrarVenta = useMutation({
     mutationFn: ({ data, idempotencyKey }: { data: RegistrarVentaDto; idempotencyKey?: string }) => 
       api.post('/api/Ventas/parcial', data, idempotencyKey),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['ventas'] });
+      const previousData = queryClient.getQueryData(['ventas']);
+      return { previousData };
+    },
+    onError: (err, newData, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['ventas'], context.previousData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['finanzas', 'cuentas-por-cobrar'] });
@@ -90,6 +100,17 @@ export function useVentas() {
   const actualizarVenta = useMutation({
     mutationFn: ({ id, data }: { id: string; data: ActualizarVentaDto }) => 
       api.put(`/api/Ventas/${id}`, data),
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: ['ventas'] });
+      await queryClient.cancelQueries({ queryKey: ['ventas', id] });
+      const previousVentas = queryClient.getQueryData(['ventas']);
+      const previousVenta = queryClient.getQueryData(['ventas', id]);
+      return { previousVentas, previousVenta };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.previousVentas) queryClient.setQueryData(['ventas'], context.previousVentas);
+      if (context?.previousVenta) queryClient.setQueryData(['ventas', id], context.previousVenta);
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['ventas', variables.id] });
@@ -101,6 +122,16 @@ export function useVentas() {
   const registrarPago = useMutation({
     mutationFn: ({ id, data, idempotencyKey }: { id: string; data: RegistrarPagoDto; idempotencyKey?: string }) => 
       api.post(`/api/Ventas/${id}/pagos`, data, idempotencyKey),
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: ['ventas', id, 'pagos'] });
+      const previousData = queryClient.getQueryData(['ventas', id, 'pagos']);
+      return { previousData };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['ventas', id, 'pagos'], context.previousData);
+      }
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['ventas', variables.id] });
@@ -112,6 +143,17 @@ export function useVentas() {
   // POST /api/Ventas/{id}/anular
   const anularVenta = useMutation({
     mutationFn: (id: string) => api.post(`/api/Ventas/${id}/anular`, {}),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['ventas'] });
+      await queryClient.cancelQueries({ queryKey: ['ventas', id] });
+      const previousVentas = queryClient.getQueryData(['ventas']);
+      const previousVenta = queryClient.getQueryData(['ventas', id]);
+      return { previousVentas, previousVenta };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousVentas) queryClient.setQueryData(['ventas'], context.previousVentas);
+      if (context?.previousVenta) queryClient.setQueryData(['ventas', id], context.previousVenta);
+    },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['ventas', id] });
@@ -123,6 +165,16 @@ export function useVentas() {
   const eliminarPago = useMutation({
     mutationFn: ({ ventaId, pagoId }: { ventaId: string; pagoId: string }) => 
       api.delete(`/api/Ventas/${ventaId}/pagos/${pagoId}`),
+    onMutate: async ({ ventaId }) => {
+      await queryClient.cancelQueries({ queryKey: ['ventas', ventaId, 'pagos'] });
+      const previousData = queryClient.getQueryData(['ventas', ventaId, 'pagos']);
+      return { previousData };
+    },
+    onError: (err, { ventaId }, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['ventas', ventaId, 'pagos'], context.previousData);
+      }
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ventas'] });
       queryClient.invalidateQueries({ queryKey: ['ventas', variables.ventaId] });

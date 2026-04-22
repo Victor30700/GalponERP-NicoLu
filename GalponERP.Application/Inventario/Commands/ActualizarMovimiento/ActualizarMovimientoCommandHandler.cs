@@ -3,6 +3,8 @@ using GalponERP.Application.Exceptions;
 using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
+using GalponERP.Application.Hubs;
 
 namespace GalponERP.Application.Inventario.Commands.ActualizarMovimiento;
 
@@ -11,15 +13,18 @@ public class ActualizarMovimientoCommandHandler : IRequestHandler<ActualizarMovi
     private readonly IGalponDbContext _context;
     private readonly IProductoRepository _productoRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
     public ActualizarMovimientoCommandHandler(
         IGalponDbContext context, 
         IProductoRepository productoRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IHubContext<NotificationHub> hubContext)
     {
         _context = context;
         _productoRepository = productoRepository;
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     public async Task Handle(ActualizarMovimientoCommand request, CancellationToken cancellationToken)
@@ -76,5 +81,7 @@ public class ActualizarMovimientoCommandHandler : IRequestHandler<ActualizarMovi
         movimiento.SetAuditoriaModificacion(DateTime.UtcNow, request.UsuarioId);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Inventario", "InventarioActualizado", cancellationToken);
     }
 }

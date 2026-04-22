@@ -22,9 +22,17 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        var request = httpContext.Request;
+        var maskedHeaders = request.Headers
+            .Where(h => h.Key.ToLower() != "authorization") // También ocultamos Authorization por seguridad
+            .Select(h => $"{h.Key}: {(h.Key.ToLower() == "x-api-key" ? "***MASKED***" : h.Value.ToString())}");
+
         _logger.LogError(
             exception,
-            "Exception occurred: {Message}",
+            "Exception occurred on {Method} {Path}. Headers: {Headers}. Message: {Message}",
+            request.Method,
+            request.Path,
+            string.Join(", ", maskedHeaders),
             exception.Message);
 
         (int statusCode, string title, string detail, object? errors) = exception switch

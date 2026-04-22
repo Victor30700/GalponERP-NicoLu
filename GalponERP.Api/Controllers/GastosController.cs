@@ -7,10 +7,11 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class GastosController : ControllerBase
@@ -38,7 +39,7 @@ public class GastosController : ControllerBase
         return result != null ? Ok(result) : NotFound();
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost]
     public async Task<IActionResult> RegistrarGasto([FromBody] RegistrarGastoOperativoCommand command)
     {
@@ -50,7 +51,7 @@ public class GastosController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPut("{id}")]
     public async Task<IActionResult> ActualizarGasto(Guid id, [FromBody] ActualizarGastoOperativoCommand command)
     {
@@ -67,7 +68,7 @@ public class GastosController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> EliminarGasto(Guid id)
     {

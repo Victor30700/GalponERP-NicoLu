@@ -1,5 +1,6 @@
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Mortalidad.Commands.ActualizarMortalidad;
@@ -27,6 +28,11 @@ public class ActualizarMortalidadCommandHandler : IRequestHandler<ActualizarMort
         if (mortalidad == null)
         {
             throw new Exception("Registro de mortalidad no encontrado.");
+        }
+
+        if (mortalidad.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         var lote = await _loteRepository.ObtenerPorIdAsync(mortalidad.LoteId);

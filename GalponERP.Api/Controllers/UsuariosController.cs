@@ -9,6 +9,7 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
@@ -26,7 +27,7 @@ public class UsuariosController : ControllerBase
         _currentUserContext = currentUserContext;
     }
 
-    [Authorize(Roles = "Admin,SubAdmin,Empleado")]
+    [Authorize(Policy = PolicyNames.AnyUser)]
     [HttpGet("me")]
     public async Task<IActionResult> GetMe()
     {
@@ -44,7 +45,7 @@ public class UsuariosController : ControllerBase
         return Ok(usuario);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin,Empleado")]
+    [Authorize(Policy = PolicyNames.AnyUser)]
     [HttpPost("me/whatsapp/code")]
     public async Task<IActionResult> GenerarCodigoWhatsApp()
     {
@@ -52,7 +53,7 @@ public class UsuariosController : ControllerBase
         return Ok(new { Codigo = codigo });
     }
 
-    [Authorize(Roles = "Admin,SubAdmin,Empleado")]
+    [Authorize(Policy = PolicyNames.AnyUser)]
     [HttpDelete("me/whatsapp")]
     public async Task<IActionResult> DesvincularWhatsApp()
     {
@@ -60,7 +61,7 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpPost]
     public async Task<IActionResult> Registrar([FromBody] RegistrarUsuarioCommand command)
     {
@@ -68,7 +69,7 @@ public class UsuariosController : ControllerBase
         return Ok(new { UsuarioId = id });
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpGet]
     public async Task<IActionResult> ObtenerTodos()
     {
@@ -76,7 +77,7 @@ public class UsuariosController : ControllerBase
         return Ok(usuarios);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarUsuarioCommand command)
     {
@@ -89,7 +90,7 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

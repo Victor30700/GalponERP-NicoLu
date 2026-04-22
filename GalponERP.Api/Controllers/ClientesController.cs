@@ -7,10 +7,11 @@ using GalponERP.Application.Clientes.Queries.ObtenerHistorialCliente;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class ClientesController : ControllerBase
@@ -47,7 +48,7 @@ public class ClientesController : ControllerBase
         return Ok(historial);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearClienteCommand command)
     {
@@ -55,7 +56,7 @@ public class ClientesController : ControllerBase
         return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { ClienteId = id });
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarClienteCommand command)
     {
@@ -68,7 +69,7 @@ public class ClientesController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

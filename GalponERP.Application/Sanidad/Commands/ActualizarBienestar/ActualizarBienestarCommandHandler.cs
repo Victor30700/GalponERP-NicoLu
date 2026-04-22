@@ -1,4 +1,5 @@
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Sanidad.Commands.ActualizarBienestar;
@@ -21,6 +22,11 @@ public class ActualizarBienestarCommandHandler : IRequestHandler<ActualizarBiene
         if (registro == null)
         {
             throw new Exception("El registro de bienestar no existe.");
+        }
+
+        if (registro.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         registro.Actualizar(

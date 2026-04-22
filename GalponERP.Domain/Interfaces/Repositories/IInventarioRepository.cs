@@ -8,6 +8,7 @@ namespace GalponERP.Domain.Interfaces.Repositories;
 public interface IInventarioRepository
 {
     Task<IEnumerable<MovimientoInventario>> ObtenerPorLoteIdAsync(Guid loteId);
+    Task<IEnumerable<MovimientoInventario>> ObtenerPorVariosLotesAsync(IEnumerable<Guid> loteIds);
     Task<IEnumerable<MovimientoInventario>> ObtenerPorProductoIdAsync(Guid productoId);
     Task<IEnumerable<MovimientoInventario>> ObtenerTodosAsync();
     Task<decimal> ObtenerStockPorProductoIdAsync(Guid productoId);

@@ -10,4 +10,5 @@ public record ActualizarBienestarCommand(
     decimal Humedad,
     decimal ConsumoAgua,
     string? Observaciones,
-    Guid UsuarioId) : IRequest, IAuditableCommand;
+    Guid UsuarioId,
+    string? Version = null) : IRequest, IAuditableCommand;

@@ -148,13 +148,11 @@ export function useInventario() {
       const data = await api.get<StockProducto[]>('/api/Inventario/stock');
       return data.map(item => ({ ...item, id: item.id || item.productoId }));
     },
-    refetchInterval: 5000,
   });
 
   const valoracion = useQuery({
     queryKey: ['inventario', 'valoracion'],
     queryFn: () => api.get<ValoracionInventario>('/api/Inventario/valoracion'),
-    refetchInterval: 30000, // La valoración no necesita ser tan frecuente
   });
 
   const proyecciones = useQuery({
@@ -163,51 +161,190 @@ export function useInventario() {
       const data = await api.get<ProyeccionInventario[]>('/api/Inventario/proyecciones');
       return data.map(item => ({ ...item, id: item.id || item.productoId }));
     },
-    refetchInterval: 60000,
   });
 
   const movimientos = useQuery({
     queryKey: ['inventario', 'movimientos'],
     queryFn: () => api.get<Movimiento[]>('/api/Inventario/movimientos'),
-    refetchInterval: 5000,
   });
 
   const ajustes = useQuery({
     queryKey: ['inventario', 'ajustes'],
     queryFn: () => api.get<AjusteInventario[]>('/api/Inventario/ajustes'),
-    refetchInterval: 5000,
   });
 
   const compras = useQuery({
     queryKey: ['inventario', 'compras'],
     queryFn: () => api.get<Compra[]>('/api/Inventario/compras'),
-    refetchInterval: 5000,
   });
 
   const nivelesAlimento = useQuery({
     queryKey: ['inventario', 'niveles-alimento'],
     queryFn: () => api.get<NivelesAlimento>('/api/Inventario/niveles-alimento'),
-    refetchInterval: 5000,
   });
 
   const registrarCompra = useMutation({
     mutationFn: ({ data, idempotencyKey }: { data: CompraFormValues; idempotencyKey?: string }) => 
       api.post('/api/Inventario/compras', data, idempotencyKey),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+      const previousData = queryClient.getQueryData(['inventario', 'compras']);
+      return { previousData };
+    },
+    onError: (err, newData, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['inventario', 'compras'], context.previousData);
+      }
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
   });
 
   const registrarAjuste = useMutation({
     mutationFn: (data: any) => api.put('/api/Inventario/ajuste', data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
+    onMutate: async (newAjuste) => {
+      // Cancelar refetches en curso
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+
+      // Capturar estados anteriores
+      const previousStock = queryClient.getQueryData<StockProducto[]>(['inventario', 'stock']);
+      const previousMovimientos = queryClient.getQueryData<Movimiento[]>(['inventario', 'movimientos']);
+      const previousAjustes = queryClient.getQueryData<AjusteInventario[]>(['inventario', 'ajustes']);
+
+      // Actualizar Stock
+      if (previousStock) {
+        queryClient.setQueryData<StockProducto[]>(['inventario', 'stock'], 
+          previousStock.map(p => {
+            if (p.productoId === newAjuste.productoId) {
+              const diff = newAjuste.tipo === 0 ? newAjuste.cantidad : -newAjuste.cantidad;
+              const newStockActual = p.stockActual + diff;
+              return {
+                ...p,
+                stockActual: newStockActual,
+                stockActualKg: newStockActual * (p.pesoUnitarioKg || 0)
+              };
+            }
+            return p;
+          })
+        );
+      }
+
+      // Actualizar Movimientos
+      if (previousMovimientos) {
+        const product = previousStock?.find(p => p.productoId === newAjuste.productoId);
+        queryClient.setQueryData<Movimiento[]>(['inventario', 'movimientos'], [
+          {
+            id: 'temp-' + Date.now(),
+            productoId: newAjuste.productoId,
+            nombreProducto: product?.nombreProducto || 'Producto',
+            loteId: newAjuste.loteId || null,
+            cantidad: newAjuste.cantidad,
+            tipo: newAjuste.tipo === 0 ? 'Entrada' : 'Salida',
+            fecha: newAjuste.fecha || new Date().toISOString(),
+            justificacion: newAjuste.justificacion,
+          } as Movimiento,
+          ...previousMovimientos
+        ]);
+      }
+
+      // Actualizar Ajustes
+      if (previousAjustes) {
+        const product = previousStock?.find(p => p.productoId === newAjuste.productoId);
+        queryClient.setQueryData<AjusteInventario[]>(['inventario', 'ajustes'], [
+          {
+            id: 'temp-' + Date.now(),
+            productoId: newAjuste.productoId,
+            nombreProducto: product?.nombreProducto || 'Producto',
+            cantidad: newAjuste.cantidad,
+            tipo: newAjuste.tipo === 0 ? 'Entrada' : 'Salida',
+            fecha: newAjuste.fecha || new Date().toISOString(),
+            justificacion: newAjuste.justificacion,
+            loteId: newAjuste.loteId || null,
+            usuarioId: 'temp-user',
+          } as AjusteInventario,
+          ...previousAjustes
+        ]);
+      }
+
+      return { previousStock, previousMovimientos, previousAjustes };
+    },
+    onError: (err, newAjuste, context) => {
+      if (context?.previousStock) queryClient.setQueryData(['inventario', 'stock'], context.previousStock);
+      if (context?.previousMovimientos) queryClient.setQueryData(['inventario', 'movimientos'], context.previousMovimientos);
+      if (context?.previousAjustes) queryClient.setQueryData(['inventario', 'ajustes'], context.previousAjustes);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventario'] });
+    },
   });
 
   const registrarConsumoDiario = useMutation({
     mutationFn: (data: any) => api.post('/api/Inventario/consumo-diario', data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
+    onMutate: async (newConsumo) => {
+      // Cancelar refetches en curso
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+
+      // Capturar estados anteriores
+      const previousStock = queryClient.getQueryData<StockProducto[]>(['inventario', 'stock']);
+      const previousMovimientos = queryClient.getQueryData<Movimiento[]>(['inventario', 'movimientos']);
+
+      // Actualizar Stock (Consumo es Salida)
+      if (previousStock) {
+        queryClient.setQueryData<StockProducto[]>(['inventario', 'stock'], 
+          previousStock.map(p => {
+            if (p.productoId === newConsumo.productoId) {
+              const newStockActualKg = (p.stockActualKg || 0) - newConsumo.cantidad;
+              return {
+                ...p,
+                stockActualKg: newStockActualKg,
+                stockActual: p.pesoUnitarioKg > 0 ? newStockActualKg / p.pesoUnitarioKg : p.stockActual
+              };
+            }
+            return p;
+          })
+        );
+      }
+
+      // Actualizar Movimientos
+      if (previousMovimientos) {
+        const product = previousStock?.find(p => p.productoId === newConsumo.productoId);
+        queryClient.setQueryData<Movimiento[]>(['inventario', 'movimientos'], [
+          {
+            id: 'temp-' + Date.now(),
+            productoId: newConsumo.productoId,
+            nombreProducto: product?.nombreProducto || 'Alimento',
+            loteId: newConsumo.loteId,
+            cantidad: newConsumo.cantidad,
+            tipo: 'Salida',
+            fecha: newConsumo.fecha || new Date().toISOString(),
+            justificacion: newConsumo.justificacion || 'Consumo diario',
+          } as Movimiento,
+          ...previousMovimientos
+        ]);
+      }
+
+      return { previousStock, previousMovimientos };
+    },
+    onError: (err, newConsumo, context) => {
+      if (context?.previousStock) queryClient.setQueryData(['inventario', 'stock'], context.previousStock);
+      if (context?.previousMovimientos) queryClient.setQueryData(['inventario', 'movimientos'], context.previousMovimientos);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventario'] });
+    },
   });
 
   const eliminarMovimiento = useMutation({
     mutationFn: (id: string) => api.delete(`/api/Inventario/movimiento/${id}`),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+      const previousData = queryClient.getQueryData(['inventario', 'movimientos']);
+      return { previousData };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['inventario', 'movimientos'], context.previousData);
+      }
+    },
     onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['inventario'] });
         queryClient.invalidateQueries({ queryKey: ['lote'] });
@@ -216,25 +353,53 @@ export function useInventario() {
 
   const actualizarMovimiento = useMutation({
     mutationFn: (data: any) => api.put(`/api/Inventario/movimiento/${data.id}`, data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+      const previousData = queryClient.getQueryData(['inventario', 'movimientos']);
+      return { previousData };
+    },
+    onError: (err: any, data, context) => {
+        if (context?.previousData) {
+            queryClient.setQueryData(['inventario', 'movimientos'], context.previousData);
+        }
+        if (err.message !== 'CONCURRENCY_ERROR') {
+            // Manejado globalmente
+        }
+    },
     onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['inventario'] });
         queryClient.invalidateQueries({ queryKey: ['lote'] });
     },
-    onError: (err: any) => {
-        if (err.message !== 'CONCURRENCY_ERROR') {
-            // Manejado globalmente
-        }
-    }
   });
 
   const realizarConciliacion = useMutation({
     mutationFn: (data: ConciliacionFormValues) => api.post('/api/Inventario/conciliacion', data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+      const previousData = queryClient.getQueryData(['inventario', 'stock']);
+      return { previousData };
+    },
+    onError: (err, data, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['inventario', 'stock'], context.previousData);
+      }
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
   });
 
   const ajustarStock = useMutation({
     mutationFn: (data: { productoId: string; cantidadFisica: number; nota?: string }) => 
       api.post('/api/Inventario/ajustar-stock', data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario'] });
+      const previousData = queryClient.getQueryData(['inventario', 'stock']);
+      return { previousData };
+    },
+    onError: (err, data, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['inventario', 'stock'], context.previousData);
+      }
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventario'] }),
   });
 
@@ -305,6 +470,16 @@ export function useCompraPagos(compraId: string) {
   const registrarPago = useMutation({
     mutationFn: ({ data, idempotencyKey }: { data: PagoFormValues; idempotencyKey?: string }) => 
       api.post(`/api/Inventario/compras/${compraId}/pagos`, data, idempotencyKey),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario', 'compra', compraId, 'pagos'] });
+      const previousData = queryClient.getQueryData(['inventario', 'compra', compraId, 'pagos']);
+      return { previousData };
+    },
+    onError: (err, newData, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['inventario', 'compra', compraId, 'pagos'], context.previousData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventario', 'compra', compraId, 'pagos'] });
       queryClient.invalidateQueries({ queryKey: ['inventario', 'compras'] });
@@ -313,6 +488,16 @@ export function useCompraPagos(compraId: string) {
 
   const eliminarPago = useMutation({
     mutationFn: (pagoId: string) => api.delete(`/api/Inventario/compras/${compraId}/pagos/${pagoId}`),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['inventario', 'compra', compraId, 'pagos'] });
+      const previousData = queryClient.getQueryData(['inventario', 'compra', compraId, 'pagos']);
+      return { previousData };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['inventario', 'compra', compraId, 'pagos'], context.previousData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventario', 'compra', compraId, 'pagos'] });
       queryClient.invalidateQueries({ queryKey: ['inventario', 'compras'] });

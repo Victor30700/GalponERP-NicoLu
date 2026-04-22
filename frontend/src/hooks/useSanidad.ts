@@ -33,6 +33,16 @@ export function useSanidad(loteId?: string) {
 
   const registrarBienestar = useMutation({
     mutationFn: (data: BienestarRequest) => api.post<{ registroId: string }>('/api/Sanidad/bienestar', data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['sanidad'] });
+      const previousData = queryClient.getQueryData(['sanidad', 'bienestar', 'lote', loteId]);
+      return { previousData };
+    },
+    onError: (err, newData, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['sanidad', 'bienestar', 'lote', loteId], context.previousData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sanidad'] });
       queryClient.invalidateQueries({ queryKey: ['lotes'] });
@@ -44,6 +54,16 @@ export function useSanidad(loteId?: string) {
 
   const eliminarBienestar = useMutation({
     mutationFn: (id: string) => api.delete(`/api/Sanidad/bienestar/${id}`),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['sanidad'] });
+      const previousData = queryClient.getQueryData(['sanidad', 'bienestar', 'lote', loteId]);
+      return { previousData };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['sanidad', 'bienestar', 'lote', loteId], context.previousData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sanidad'] });
       if (loteId) {
@@ -54,6 +74,16 @@ export function useSanidad(loteId?: string) {
 
   const actualizarBienestar = useMutation({
     mutationFn: (data: any) => api.put(`/api/Sanidad/bienestar/${data.id}`, data),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['sanidad'] });
+      const previousData = queryClient.getQueryData(['sanidad', 'bienestar', 'lote', loteId]);
+      return { previousData };
+    },
+    onError: (err, newData, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['sanidad', 'bienestar', 'lote', loteId], context.previousData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sanidad'] });
       if (loteId) {

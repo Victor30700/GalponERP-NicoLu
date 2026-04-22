@@ -8,7 +8,8 @@ public record ActualizarMortalidadCommand(
     Guid Id,
     int Cantidad,
     string Causa,
-    DateTime Fecha) : IRequest<Unit>, IAuditableCommand
+    DateTime Fecha,
+    string? Version = null) : IRequest<Unit>, IAuditableCommand
 {
     [JsonIgnore]
     public Guid UsuarioId { get; set; }

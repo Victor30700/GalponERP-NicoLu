@@ -19,10 +19,11 @@ using GalponERP.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class LotesController : ControllerBase
@@ -63,7 +64,7 @@ public class LotesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarLoteCommand command)
     {
         if (id != command.Id) return BadRequest("El ID del comando no coincide con el ID de la URL.");
@@ -76,7 +77,7 @@ public class LotesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     public async Task<IActionResult> Eliminar(Guid id)
     {
         if (!_currentUserContext.UsuarioId.HasValue) return Unauthorized("Usuario no identificado.");
@@ -98,7 +99,7 @@ public class LotesController : ControllerBase
     }
 
     [HttpPut("{id}/reabrir")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     public async Task<IActionResult> Reabrir(Guid id)
     {
         await _mediator.Send(new ReabrirLoteCommand(id));
@@ -106,7 +107,7 @@ public class LotesController : ControllerBase
     }
 
     [HttpPost("{id}/cancelar")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> Cancelar(Guid id, [FromBody] string justificacion)
     {
         await _mediator.Send(new CancelarLoteCommand(id, justificacion));
@@ -164,7 +165,7 @@ public class LotesController : ControllerBase
     }
 
     [HttpPost("{id}/trasladar")]
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     public async Task<IActionResult> Trasladar(Guid id, [FromBody] Guid nuevoGalponId)
     {
         await _mediator.Send(new TrasladarLoteCommand(id, nuevoGalponId));

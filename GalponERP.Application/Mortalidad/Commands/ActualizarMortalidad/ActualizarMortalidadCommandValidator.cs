@@ -19,5 +19,7 @@ public class ActualizarMortalidadCommandValidator : AbstractValidator<Actualizar
         RuleFor(x => x.Fecha)
             .NotEmpty().WithMessage("La fecha es obligatoria.")
             .LessThanOrEqualTo(x => DateTime.UtcNow.AddMinutes(5)).WithMessage("La fecha no puede ser futura.");
+
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }

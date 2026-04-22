@@ -1,4 +1,5 @@
-using GalponERP.Application.Agentes;
+using System.Text;
+using System.Text.Json;
 using GalponERP.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +11,20 @@ namespace GalponERP.Api.Controllers;
 [Route("api/voice")]
 public class VoiceChatController : ControllerBase
 {
-    private readonly IAgenteOrquestadorService _agenteOrquestador;
     private readonly IVoiceService _voiceService;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<VoiceChatController> _logger;
 
     public VoiceChatController(
-        IAgenteOrquestadorService agenteOrquestador,
         IVoiceService voiceService,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration,
         ILogger<VoiceChatController> logger)
     {
-        _agenteOrquestador = agenteOrquestador;
         _voiceService = voiceService;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -39,18 +43,42 @@ public class VoiceChatController : ControllerBase
             if (string.IsNullOrWhiteSpace(transcript))
                 return BadRequest("No se pudo transcribir el audio.");
 
-            // 2. Procesar con el Agente
-            var response = await _agenteOrquestador.ProcesarMensajeAsync(transcript, request.ConversacionId);
+            // 2. Reenviar a n8n para obtener respuesta de IA
+            var n8nWebhookUrl = _configuration["Integrations:N8nVoiceChatWebhookUrl"];
+            if (string.IsNullOrEmpty(n8nWebhookUrl))
+            {
+                return StatusCode(500, "n8n voice chat webhook URL is not configured.");
+            }
+
+            var payload = new
+            {
+                Transcripcion = transcript,
+                ConversacionId = request.ConversacionId
+            };
+
+            using var client = _httpClientFactory.CreateClient();
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(n8nWebhookUrl, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode, "Error processing with n8n.");
+            }
+
+            var resultJson = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(resultJson);
+            var respuestaTexto = doc.RootElement.GetProperty("respuesta").GetString() ?? string.Empty;
+            var nuevaConversacionId = request.ConversacionId ?? (doc.RootElement.TryGetProperty("conversacionId", out var idProp) ? idProp.GetGuid() : Guid.Empty);
 
             // 3. Sintetizar respuesta a audio (TTS)
-            var audioBytes = await _voiceService.SintetizarVozAsync(response.Respuesta);
+            var audioBytes = await _voiceService.SintetizarVozAsync(respuestaTexto);
 
             return Ok(new VoiceChatResponse
             {
                 Transcripcion = transcript,
-                RespuestaTexto = response.Respuesta,
+                RespuestaTexto = respuestaTexto,
                 RespuestaAudioBase64 = Convert.ToBase64String(audioBytes),
-                ConversacionId = response.ConversacionId
+                ConversacionId = nuevaConversacionId
             });
         }
         catch (Exception ex)

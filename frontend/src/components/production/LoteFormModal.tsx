@@ -72,7 +72,9 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
     if (isEditing) {
       // Omitir plantillaSanitariaId ya que ActualizarLoteCommand no lo soporta en el backend
       const { plantillaSanitariaId, ...updateData } = payload
-      actualizarLote.mutate({ ...updateData, id: lote.id }, {
+      const idempotencyKey = crypto.randomUUID()
+      
+      actualizarLote.mutate({ data: { ...updateData, id: lote.id }, idempotencyKey }, {
         onSuccess: () => {
           toast.success('Lote actualizado correctamente')
           onClose()
@@ -85,7 +87,9 @@ export function LoteFormModal({ isOpen, onClose, lote }: LoteFormModalProps) {
       })
     } else {
       const { version, ...createData } = payload
-      crearLote.mutate(createData, {
+      const idempotencyKey = crypto.randomUUID()
+
+      crearLote.mutate({ data: createData, idempotencyKey }, {
         onSuccess: () => {
           toast.success('Lote creado correctamente')
           onClose()

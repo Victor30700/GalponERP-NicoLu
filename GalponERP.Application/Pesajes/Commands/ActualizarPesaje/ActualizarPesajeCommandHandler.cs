@@ -1,5 +1,6 @@
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Pesajes.Commands.ActualizarPesaje;
@@ -27,6 +28,11 @@ public class ActualizarPesajeCommandHandler : IRequestHandler<ActualizarPesajeCo
         if (pesaje == null)
         {
             throw new Exception("Registro de pesaje no encontrado.");
+        }
+
+        if (pesaje.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
         }
 
         var lote = await _loteRepository.ObtenerPorIdAsync(pesaje.LoteId);

@@ -3,6 +3,8 @@ using GalponERP.Domain.Interfaces.Repositories;
 using GalponERP.Domain.ValueObjects;
 using GalponERP.Domain.Exceptions;
 using GalponERP.Application.Interfaces;
+using GalponERP.Application.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using MediatR;
 
 namespace GalponERP.Application.Ventas.Commands.RegistrarVentaParcial;
@@ -13,17 +15,20 @@ public class RegistrarVentaParcialCommandHandler : IRequestHandler<RegistrarVent
     private readonly ILoteRepository _loteRepository;
     private readonly IClienteRepository _clienteRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
     public RegistrarVentaParcialCommandHandler(
         IVentaRepository ventaRepository,
         ILoteRepository loteRepository,
         IClienteRepository clienteRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IHubContext<NotificationHub> hubContext)
     {
         _ventaRepository = ventaRepository;
         _loteRepository = loteRepository;
         _clienteRepository = clienteRepository;
         _unitOfWork = unitOfWork;
+        _hubContext = hubContext;
     }
 
     public async Task<Guid> Handle(RegistrarVentaParcialCommand request, CancellationToken cancellationToken)
@@ -59,6 +64,9 @@ public class RegistrarVentaParcialCommandHandler : IRequestHandler<RegistrarVent
         _loteRepository.Actualizar(lote);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Notificar venta registrada
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Finanzas", "VentaRegistrada", cancellationToken);
 
         return ventaId;
     }

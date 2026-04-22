@@ -27,6 +27,8 @@ public class ActualizarCategoriaCommandValidator : AbstractValidator<ActualizarC
             
         RuleFor(x => x.Descripcion)
             .MaximumLength(500).WithMessage("La descripción no puede exceder los 500 caracteres.");
+
+        RuleFor(x => x.Version).NotEmpty().WithMessage("La versión de concurrencia es obligatoria.");
     }
 }
 

@@ -14,4 +14,5 @@ public record ActualizarUsuarioCommand(
     string Profesion,
     string? Telefono,
     RolGalpon Rol,
-    int Active) : IRequest, IAuditableCommand;
+    int Active,
+    string? Version = null) : IRequest, IAuditableCommand;

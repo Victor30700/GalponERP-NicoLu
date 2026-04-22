@@ -5,10 +5,11 @@ using GalponERP.Application.PlantillasSanitarias.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GalponERP.Infrastructure.Authentication;
 
 namespace GalponERP.Api.Controllers;
 
-[Authorize(Roles = "Admin,SubAdmin,Empleado")]
+[Authorize(Policy = PolicyNames.AnyUser)]
 [ApiController]
 [Route("api/[controller]")]
 public class PlantillasController : ControllerBase
@@ -35,7 +36,7 @@ public class PlantillasController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearPlantillaCommand command)
     {
@@ -43,7 +44,7 @@ public class PlantillasController : ControllerBase
         return CreatedAtAction(nameof(ObtenerPorId), new { id }, new { Id = id });
     }
 
-    [Authorize(Roles = "Admin,SubAdmin")]
+    [Authorize(Policy = PolicyNames.Management)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(Guid id, [FromBody] ActualizarPlantillaCommand command)
     {
@@ -52,7 +53,7 @@ public class PlantillasController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = PolicyNames.AdminOnly)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(Guid id)
     {

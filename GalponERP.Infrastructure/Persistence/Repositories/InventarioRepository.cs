@@ -15,9 +15,16 @@ public class InventarioRepository : IInventarioRepository
 
     public async Task<IEnumerable<MovimientoInventario>> ObtenerPorLoteIdAsync(Guid loteId)
     {
-        return await _context.MovimientosInventario
+        return await _context.Set<MovimientoInventario>()
             .Where(m => m.LoteId == loteId)
             .OrderByDescending(m => m.Fecha)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<MovimientoInventario>> ObtenerPorVariosLotesAsync(IEnumerable<Guid> loteIds)
+    {
+        return await _context.Set<MovimientoInventario>()
+            .Where(m => m.LoteId != null && loteIds.Contains(m.LoteId.Value))
             .ToListAsync();
     }
 

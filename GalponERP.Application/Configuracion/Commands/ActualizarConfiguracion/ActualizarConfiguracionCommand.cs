@@ -10,4 +10,5 @@ public record ActualizarConfiguracionCommand(
     string? Email,
     string? Direccion,
     string MonedaPorDefecto,
-    string? LogoUrl) : IRequest, IAuditableCommand;
+    string? LogoUrl,
+    string? Version = null) : IRequest, IAuditableCommand;

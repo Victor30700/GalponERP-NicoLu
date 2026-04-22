@@ -66,6 +66,8 @@ public class RegistrarMortalidadCommandHandler : IRequestHandler<RegistrarMortal
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Lote", "LoteActualizado", cancellationToken);
+
         return mortalidad.Id;
     }
 }

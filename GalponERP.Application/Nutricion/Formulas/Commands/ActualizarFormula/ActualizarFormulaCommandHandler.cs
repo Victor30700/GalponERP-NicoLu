@@ -1,6 +1,7 @@
 using GalponERP.Application.Interfaces;
 using GalponERP.Domain.Exceptions;
 using GalponERP.Domain.Interfaces.Repositories;
+using GalponERP.Application.Exceptions;
 using MediatR;
 
 namespace GalponERP.Application.Nutricion.Formulas.Commands.ActualizarFormula;
@@ -26,6 +27,11 @@ public class ActualizarFormulaCommandHandler : IRequestHandler<ActualizarFormula
         var formula = await _formulaRepository.ObtenerPorIdAsync(request.Id);
         if (formula == null)
             throw new FormulaDomainException($"La fórmula con ID {request.Id} no existe.");
+
+        if (formula.Version.ToString() != request.Version)
+        {
+            throw new ConcurrencyException();
+        }
 
         formula.Actualizar(request.Nombre, request.Etapa, request.CantidadBase);
         

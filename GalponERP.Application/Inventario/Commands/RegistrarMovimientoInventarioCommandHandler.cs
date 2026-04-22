@@ -67,6 +67,8 @@ public class RegistrarMovimientoInventarioCommandHandler : IRequestHandler<Regis
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", "Inventario", "InventarioActualizado", cancellationToken);
+
         return movimientoId;
     }
 }
